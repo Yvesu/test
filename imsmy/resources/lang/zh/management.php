@@ -1,0 +1,55 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: mabiao
+ * Date: 2016/3/15
+ * Time: 12:08
+ */
+return [
+    'name'                              =>  '姓名',
+    'email'                             =>  '邮箱',
+    'permissions'                       =>  '权限',
+    'actions'                           =>  '操作',
+    'department'                        =>  '部门',
+    'position'                          =>  '职位',
+    'nickname'                          =>  '昵称',
+    'all_members'                       =>  '全部成员',
+    'disabled_members'                  =>  '停用成员',
+    'member'                            =>  '成员',
+    'deactivated'                       =>  '已停用',
+    'all_users'                         =>  '全部用户',
+    'disabled_users'                    =>  '屏蔽用户',
+    'menu'                              =>  '菜单',
+    'add_dept'                          =>  '添加部门',
+    'add_post'                          =>  '添加职位',
+    'add_admin'                         =>  '添加成员',
+    'edit_admin'                        =>  '编辑成员',
+    'dept_name'                         =>  '部门名称(英文)',
+    'dept_name_placeholder'             =>  '例:development',
+    'dept_description'                  =>  '部门描述(中文)',
+    'dept_description_placeholder'      =>  '例:开发部',
+    'add_permission'                    =>  '添加权限',
+    'deptName'                          =>  '部门名称',
+    'deptDescription'                   =>  '部门描述',
+    'postName'                          =>  '职位名称',
+    'postDescription'                   =>  '职位描述',
+    'operating'                         =>  '运作中',
+    'disabled'                          =>  '停用',
+    'enable'                            =>  '启用',
+    'commit'                            =>  '提交',
+    'review'                            =>  '待审查',
+    'personal'                          =>  '个人',
+    'details'                           =>  '详细',
+    'extra'                             =>  '其他',
+    'secondary_contact'                 =>  '第二联系人',
+    'secondary_contact_name'            =>  '第二联系人姓名',
+    'secondary_contact_phone'           =>  '第二联系人电话',
+    'secondary_contact_relationship'    =>  '与第二联系人关系',
+    'view_more'                         =>  '查看更多',
+    'father'                            =>  '父亲',
+    'mother'                            =>  '母亲',
+    'brother'                           =>  '兄弟',
+    'sister'                            =>  '姐妹',
+    'IDCard'                            =>  '身份证扫描件',
+    'APPUserID'                         =>  'APP用户ID'
+];
