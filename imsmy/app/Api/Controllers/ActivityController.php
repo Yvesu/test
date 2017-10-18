@@ -59,6 +59,7 @@ class ActivityController extends BaseController
      */
     public function rotation()
     {
+        //尝试操作
         try{
             $ads = Cache::remember('advertising_rotation', 1440, function() {
 
