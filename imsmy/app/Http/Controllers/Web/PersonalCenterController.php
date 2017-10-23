@@ -64,7 +64,7 @@ class PersonalCenterController extends Controller
 //            $user = session('users');
             $user = session('users',User::find(1000240));   // TODO 临时测试，待删除
 
-            // 类型，1'我的热门', 2'好友动态', 3'为您推荐'
+            // 类型，1'我的热门', 2'好友动态', 3'为您推荐'     测试
             $type = $request -> get('type');
 
             if(!in_array($type, [1,2,3]))
