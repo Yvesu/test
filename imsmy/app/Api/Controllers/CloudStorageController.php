@@ -38,6 +38,7 @@ class CloudStorageController extends BaseController
     {
         $policy = null;
         $parameters = $request->only(['url','body']);
+
         if(isset($parameters['url'])){
             $policy['callbackUrl'] = $request->get('url');
         }

@@ -7,7 +7,7 @@ $api = app('Dingo\Api\Routing\Router');
  */
 $api -> version('v1', ['prefix' => 'user','namespace' => 'App\Http\Controllers\Web'], function($api) {
 
-    $api -> post('/info/index','CentePersonalrController@index');
+    $api -> post('/info/index','PersonalCenterController@index');
     $api -> post('/tweet/index','PersonalCenterController@tweet');
     $api -> post('/contribution/index','PersonalCenterController@contribution');
     $api -> post('/tweet/hot','PersonalCenterController@hot');
@@ -1117,7 +1117,9 @@ Route::group(['prefix' => 'admin','namespace' => 'Admin','middleware' => ['web']
         Route::get('department/{id}','DepartmentController@show');
 
         Route::get('/userID','UserController@checkUserID');
+
     });
 
 });
+
 

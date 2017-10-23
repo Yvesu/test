@@ -85,7 +85,8 @@ class UserController extends BaseController
     public function avatar(Request $request,$id)
     {
         try {
-            $avatar_url = asset($request->getRequestUri());;
+            $avatar_url = asset($request->getRequestUri());
+
             \Log::info($avatar_url);
             if(!CloudStorage::verityCallback($avatar_url)){
                 throw new \Exception('storage_unauthorized',401);
@@ -312,7 +313,7 @@ class UserController extends BaseController
     public function set($id,Request $request)
     {
         try {
-            $user = User::findOrFail($id);;
+            $user = User::findOrFail($id);
 
             $settings = $request -> all();
 

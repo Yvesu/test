@@ -955,6 +955,13 @@ $api->version(['v1'],function($api){
         // 视频自动播放，次数+1
         $api->post('/video/increment/{id}','TweetPlayController@videoIncrement')
             ->where('id','[0-9]+');
+        //赛事搜索
+        $api->post('/activity/search','ActivitySearchController@search');
+
+        //搜索后的排行作品列表
+        $api->post('/activity/searchlist','ActivitySearchController@searchlist');
+        //搜索赛事后的全部
+        $api->post('/activity/alllist','ActivitySearchController@alllist');
 
     });
 });
