@@ -105,7 +105,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                 $api->post('/manage', 'ManageController@manage');
 
                 /**
-                 * 内容 TODO 新版接口
+                 * 内容 TODO 新版接口  视频部分
                  */
                 $api->group(['prefix' => 'video'], function ($api) {
 
@@ -161,6 +161,19 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                     $api->post('/check', 'VideosController@check');
 
                 });
+
+                /**
+                 * 内容  热搜词管理9
+                 */
+                $api->group(['prefix' => 'hotsearch'], function ($api){
+
+                    /**
+                     * 热搜详情
+                     */
+                    $api->post('/index','SearchController@index');
+
+                });
+
             });
         });
     });

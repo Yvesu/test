@@ -24,6 +24,8 @@ use App\Api\Transformer\AdsDiscoverTransformer;
 use App\Models\Activity;
 use App\Models\Blacklist;
 use App\Models\Friend;
+use App\Models\HotSearch;
+use App\Models\Keywords;
 use App\Models\Make\MakeTemplateFile;
 use App\Models\TweetActivity;
 use App\Models\TweetContent;
@@ -44,6 +46,7 @@ use App\Models\TweetReply;
 use App\Models\TweetTrophyLog;
 use App\Models\UserSearchLog;
 use App\Models\User;
+use App\Models\Word_filter;
 use Carbon\Carbon;
 use CloudStorage;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -2015,6 +2018,63 @@ class TweetController extends BaseController
                 throw new \Exception('bad_request',400);
             }
 
+            //  判断关键词表中有无该关键词
+            $keyword = Keywords::where('keyword','LIKE BINARY', '%' . $name . '%')->first();
+//            dd($keyword->count());
+//            die($name);
+            //  如果没有该关键词则加入过渡表
+//            die($keyword);
+            if(!$keyword)
+            {
+                //  判断过渡表中有无该词
+                $filterKeyword = Word_filter::where('keyword',$name)->first();
+//                dd($filterKeyword);
+                //  如果没有则加入
+                if(!$filterKeyword){
+                    $newfilterword = new Word_filter;
+                    $newfilterword->keyword = $name;
+                    $newfilterword->count_sum = 1;
+                    $newfilterword->create_at = time();
+                    $newfilterword->update_at = time();
+
+                    $newfilterword->save();
+//                    DB::table('word_filter')->insert([
+//                        'word' => $name,
+//                        'count_sum' => 1,
+//                        'create_at' => time(),
+//                        'update_at' => time()
+//                    ]);
+
+
+                }else{
+                //  如果有就加一次搜索次数
+                    $filterKeyword->count_sum = ++$filterKeyword->count_sum;
+                    $filterKeyword->count_day = ++$filterKeyword->count_day;
+                    $filterKeyword->count_week = ++$filterKeyword->count_week;
+                    $filterKeyword->update_at = time();
+                    $filterKeyword->save();
+                }
+
+            }else{
+
+            //  如果有就更新每日、每周以及总的搜索数
+                $keyword->count_sum = ++$keyword->count_sum;
+                $keyword->count_day = ++$keyword->count_day;
+                $keyword->count_week = ++$keyword->count_week;
+                $keyword->update_at = time();
+//                dd($keyword->count_sum);
+                $keyword->save();
+            }
+
+            $hotsearchword = HotSearch::where('hot_word',$name)->first();
+//            dd($hotsearchword);
+            if($hotsearchword)
+            {
+               $hotsearchword->sort  = ++$hotsearchword->sort;
+               $hotsearchword->time_update = time();
+               $hotsearchword->save();
+            }
+
             // 验证格式
 //            list($timestamp, $limit) = $this->transformerTimeAndLimit($request);
 
@@ -2052,6 +2112,21 @@ class TweetController extends BaseController
                     $tweets->prepend($name_tweet);
                 });
             }
+
+//            // 如果能精确匹配成功数据，将数据添加至总数据集合中
+//            if ($name_tweets !== null) {
+//
+//
+//
+//                $name_tweets->each(function($name_tweet)use($tweets){
+//
+//                    $tweets->prepend($name_tweet);
+//                });
+//
+//
+//
+//
+//            }
 
             // 判断用户登录状态
             if($user = Auth::guard('api')->user()){
