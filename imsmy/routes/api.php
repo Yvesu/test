@@ -726,6 +726,7 @@ $api->version(['v1'],function($api){
                 $api->get('/{id}','UserController@show')
                     ->where('id','[0-9]+');
 
+
                 // 获取某个用户的动态
                 $api->get('/{id}/tweets','TweetController@index')
                     ->where('id','[0-9]+');
@@ -958,10 +959,36 @@ $api->version(['v1'],function($api){
         //赛事搜索
         $api->post('/activity/search','ActivitySearchController@search');
 
-        //搜索后的排行作品列表
-        $api->post('/activity/searchlist','ActivitySearchController@searchlist');
-        //搜索赛事后的全部
-        $api->post('/activity/alllist','ActivitySearchController@alllist');
+
+
+        /**
+         *   片段  fragment
+         */
+
+        $api->group(['prefix' => 'fragment'],function($api){
+
+            // 片段首页
+            $api -> post('/','FragmentController@index');
+
+            // 附近的片段
+            $api -> post('/nearby','FragmentController@nearby');
+
+            // 收藏表
+            $api -> post('/collect','FragmentController@collect');
+
+            // 大家都在搜
+           // $api -> post('/search','DiscoveryController@search');
+
+            // 精选媒体
+          //  $api -> post('/featured','DiscoveryController@featured');
+
+        });
+
+        //获取某个人的用户信息  通过姓名
+        $api->post('/person','UserController@person' );
+
+        //后增话题详情
+        $api->post('/topics/details','TopicController@afterdetails');
 
     });
 });

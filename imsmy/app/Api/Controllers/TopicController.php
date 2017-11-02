@@ -165,6 +165,46 @@ class TopicController extends BaseController
     }
 
     /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function  afterdetails(Request $request)
+    {
+        try{
+
+            $name = $request->get('name');
+
+            if(!$name){
+                return [
+                    'status_code'=> 400,
+                    'error'=> 'name is empty'
+                ];
+            }
+
+            $topic = Topic::with(['belongsToCompere' => function($q){
+                    $q -> with(['belongsToUser' => function($q){
+                        $q -> select('id','nickname');
+                    }]) -> select('id','topic_id','user_id');
+                }])
+                    -> able()
+                    ->where('name','=',$name)
+                    -> first();
+
+
+            // 返回数据
+            return response()->json($this->topicNewTransformer->transform($topic));
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error'=>'not_found'], 404);
+        } catch (\Exception $e){
+
+            return response()->json(['error'=>'bad_request'], 403);
+        }
+    }
+
+
+    /**
      * 话题参与者
      * @param Request $request
      * @return array

@@ -844,4 +844,14 @@ class UserController extends BaseController
 
         return array($date, $limit);
     }
+
+    public function person(Request $request)
+    {
+        $nickname = $request->get('username');
+        $user = User::where('nickname','=',$nickname)->first();
+        return $this->userInfomationTransformer->transform($user);
+    }
+
+
+
 }

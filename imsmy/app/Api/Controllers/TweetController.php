@@ -23,6 +23,7 @@ use App\Api\Transformer\TemplateDiscoverTransformer;
 use App\Api\Transformer\AdsDiscoverTransformer;
 use App\Models\Activity;
 use App\Models\Blacklist;
+use App\Models\Channel;
 use App\Models\Friend;
 use App\Models\HotSearch;
 use App\Models\Keywords;
@@ -393,8 +394,8 @@ class TweetController extends BaseController
                 'belongsToManyTopic',
                 'hasManyAt',
                 'belongsToUser'=>function($q){
-                $q -> select('id', 'advertisement');
-            }])
+                    $q -> select('id', 'advertisement','nickname','avatar','hash_avatar','verify');
+                }])
                 -> able()
                 -> findOrFail($id);
 
@@ -511,7 +512,7 @@ class TweetController extends BaseController
             // 动态浏览次数 +1
             $tweetPlay = new TweetPlayController();
             $tweetPlay -> countIncrement($tweets_data -> id, $user);
-
+//            dd($tweets_data->toArray());
             // 返回数据
             return [
 
@@ -2090,6 +2091,10 @@ class TweetController extends BaseController
                -> forPage($page, $this->paginate)
                -> orderBy('id','desc')
                -> get();
+        dd($name_tweets);
+
+
+
 
             if($name_tweets->count() < $this -> paginate) {
 

@@ -88,6 +88,7 @@ class DiscoveryController extends BaseController
      */
     public function index(Request $request)
     {
+        dd($request);
         try {
 
             // 获取 page

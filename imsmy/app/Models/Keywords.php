@@ -19,7 +19,6 @@ class Keywords extends Model
         'create_at',
         'update_at',
         'type',
-
     ];
 
     public $timestamps = false;
