@@ -1,0 +1,25 @@
+.btn-upload{
+    width: 50px;
+    height: 32px;
+    opacity: 0;
+    cursor: pointer;
+    color: transparent;
+}
+.blur-nav > a,.form-material > a.label{
+    line-height: 2;
+    font-size:15px;
+    font-weight: normal;
+    white-space: nowrap;
+}
+.form-material .label > a{
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-material .label > a:hover{
+    color: rgba(255, 255, 255, 0.75);
+}
+
+#blur-step5 .dropzone .dz-preview .dz-image{
+    width:90px;
+}

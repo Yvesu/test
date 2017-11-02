@@ -1,0 +1,16 @@
+.margin{
+  margin: 0px !important;
+}
+
+.title-text{
+  font-size: 20px;
+  font-weight: 700;
+  line-height:60px;
+}
+
+@media (min-width: 768px){
+  .header-md .navbar-brand img {
+    max-height: 50px;
+    margin: 0 0 0 1px;
+  }
+}

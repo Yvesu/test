@@ -1,0 +1,26 @@
+.modal.fade .checkbox-inline{
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+}
+.upload{
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    opacity: 0;
+    -ms-filter: 'alpha(opacity=0)';
+    font-size: 200px !important;
+    direction: ltr;
+    cursor: pointer;
+}
+.margin-10 > .row > div{
+    margin-top: 10px;
+}
+
+#upload-image{
+    width: 87px;
+    height: 32px;
+    opacity: 0;
+    cursor: pointer;
+    color: transparent;
+}
