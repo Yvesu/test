@@ -15,9 +15,7 @@ class Word_filter extends Model
         'keyword',
         'count_sum_ip',
         'create_at',
-        'update_at',
-        'count_sum_pv',
-        
+        'update_at'
     ];
 
     public $timestamps = false;

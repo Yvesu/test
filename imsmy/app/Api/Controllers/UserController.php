@@ -852,6 +852,4 @@ class UserController extends BaseController
         return $this->userInfomationTransformer->transform($user);
     }
 
-
-
 }

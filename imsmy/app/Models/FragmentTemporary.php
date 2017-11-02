@@ -31,7 +31,9 @@ class FragmentTemporary extends Model
         'count',
         'active',
         'time_add',
-        'time_update'
+        'time_update',
+        'vipfree',
+        'recommend'
     ];
 
     /**
@@ -60,11 +62,11 @@ class FragmentTemporary extends Model
     }
 
     /**
-     * 与频道_片段中间表  ChannelFragment
+     * 与频道_片段中间表  FragmentTypeFragment
      */
     public function Channel()
     {
-        return $this->belongsToMany('App\Models\Channel','channel_fragment','fragment_temporary_id','channel_id');
+        return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_temporary_id','fragmentType_id');
     }
 
     public $timestamps = false;

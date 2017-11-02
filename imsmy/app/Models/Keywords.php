@@ -18,7 +18,7 @@ class Keywords extends Model
         'count_week',
         'create_at',
         'update_at',
-        'type',
+        'type'
     ];
 
     public $timestamps = false;

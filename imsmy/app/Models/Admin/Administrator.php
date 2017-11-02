@@ -88,4 +88,13 @@ class Administrator extends Model implements AuthenticatableContract,
     {
         return $this->hasMany('App\Models\Admin\AdminLoginLog','aid','id');
     }
+
+    /**
+     * 一对一关系，绑定管理员在APP端注册的用户
+     */
+    public function hasOneUser()
+    {
+        return $this->hasOne('App\Models\User','id','user_id');
+    }
+
 }

@@ -990,5 +990,40 @@ $api->version(['v1'],function($api){
         //后增话题详情
         $api->post('/topics/details','TopicController@afterdetails');
 
+        //赛事搜索
+        $api->post('/activity/search','ActivitySearchController@search');
+
+
+
+        /**
+         *   片段  fragment
+         */
+
+        $api->group(['prefix' => 'fragment'],function($api){
+
+            // 片段首页
+            $api -> post('/','FragmentController@index');
+
+            // 附近的片段
+            $api -> post('/nearby','FragmentController@nearby');
+
+            // 收藏表
+            $api -> post('/collect','FragmentController@collect');
+
+            // 大家都在搜
+           // $api -> post('/search','DiscoveryController@search');
+
+            // 精选媒体
+          //  $api -> post('/featured','DiscoveryController@featured');
+
+        });
+
+        //获取某个人的用户信息  通过姓名
+        $api->post('/person','UserController@person' );
+
+        //后增话题详情
+        $api->post('/topics/details','TopicController@afterdetails');
+
+
     });
 });

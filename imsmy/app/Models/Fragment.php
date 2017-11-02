@@ -63,6 +63,7 @@ class Fragment extends Model
         return $this->belongsToMany('App\Models\Keywords','keyword_fragment','fragment_id','keyword_id');
     }
 
+
     /**
      * 关联用用户
      */
@@ -70,4 +71,5 @@ class Fragment extends Model
     {
         return $this->belongsToMany('App\Models\User','fragment_user_collect','fragment_id','user_id');
     }
+
 }
