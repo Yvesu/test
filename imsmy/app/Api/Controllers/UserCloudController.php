@@ -229,7 +229,7 @@ class UserCloudController extends BaseController
                     $value['name'] .= '(1)';
 
                 // 获取文件在七牛上的详情
-                $file_info = json_decode(file_get_contents(CloudStorage::downloadUrl($value['address']).'?stat'),true);
+                $file_info = json_decode(file_get_contents(CloudStorage::downloadUrl($value['addressp']).'?stat'),true);
 
                 // 获取文件类型
                 switch(explode('/',$file_info['mimeType'])[0]){

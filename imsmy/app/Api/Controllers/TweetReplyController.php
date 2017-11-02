@@ -69,7 +69,7 @@ class TweetReplyController extends BaseController
             $content = removeXSS($request->get('content'));
 
             // 判断内容是否为空或者长度超过144个汉字，返回错误
-            if(null == $content || mb_strlen($content,'utf-8') > 144){
+            if(null == $content || mb_strlen($content,'utf-8') > 300){
                 return response()->json(['error' => 'content_not_standard'], 403);
             }
 

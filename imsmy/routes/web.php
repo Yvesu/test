@@ -174,6 +174,47 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
 
                 });
 
+                /**
+                 * 素材
+                 */
+                $api->group(['prefix' => 'fodder'],function($api){
+
+                    /**
+                     * 平台看板
+                     */
+                   $api->post('/index','FodderController@index');
+
+                   /**
+                    * 发布片段-基本信息添加
+                    */
+
+                   $api->post('/issue/fragment/base','FodderController@isserFragmentBase');
+
+                    /**
+                     * 发布片段-添加分类
+                     */
+                    $api->post('/issue/fragment/addtype','FodderController@isserFragmentAddtype');
+
+                   /**
+                    * 发布片段-上传资源
+                    */
+                   $api->post('/issue/fragment/resource','FodderController@isserFragmentResource');
+
+                   /**
+                    * 模板
+                    */
+                   $api->group(['prefix' => 'template'],function ($api){
+
+                       /**
+                        * 分类-添加分类
+                        */
+                       $api->post('/add/type','TemplateController@addType');
+
+                   });
+
+
+                });
+
             });
         });
     });

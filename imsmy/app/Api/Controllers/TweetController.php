@@ -23,6 +23,7 @@ use App\Api\Transformer\TemplateDiscoverTransformer;
 use App\Api\Transformer\AdsDiscoverTransformer;
 use App\Models\Activity;
 use App\Models\Blacklist;
+use App\Models\Channel;
 use App\Models\Friend;
 use App\Models\HotSearch;
 use App\Models\Keywords;
@@ -392,11 +393,13 @@ class TweetController extends BaseController
                 'hasOneContent',
                 'belongsToManyTopic',
                 'hasManyAt',
-                'belongsToUser'=>function($q){
-                $q -> select('id', 'advertisement');
-            }])
+                'belongsToUser'])
                 -> able()
                 -> findOrFail($id);
+
+
+                $data_later = \DB::table('location')->where('id','=',$tweets_data->location_id)->get()[0]->formattedAddress;
+            $tweets_data->location_name = '大时代';
 
             // 判断用户是否为登录状态
             $user = Auth::guard('api')->user();
@@ -520,6 +523,8 @@ class TweetController extends BaseController
 
                 // 该动态详情与发表用户详情
                 'tweets_data' => $this -> tweetsDetailsTransformer->transform($tweets_data),
+
+                'location' => $data_later,
 
                 // 推荐动态信息
                 'recommend_tweets' => $this -> related($id),
@@ -2090,6 +2095,10 @@ class TweetController extends BaseController
                -> forPage($page, $this->paginate)
                -> orderBy('id','desc')
                -> get();
+        dd($name_tweets);
+
+
+
 
             if($name_tweets->count() < $this -> paginate) {
 

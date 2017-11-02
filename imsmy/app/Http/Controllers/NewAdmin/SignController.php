@@ -40,7 +40,7 @@ class SignController extends Controller
                 return response()->json(['error' => 'invalid_credentials'], 401);
             }
 
-            return ['token' => $token];
+            return response()->json(['token' => $token],'200');
 
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'invalid_credentials'],401);
