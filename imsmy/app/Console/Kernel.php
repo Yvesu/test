@@ -37,6 +37,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('statistics')
             ->daily();
 
+
         $schedule->call(function () {
 
             /**
@@ -254,7 +255,6 @@ class Kernel extends ConsoleKernel
                 \DB::table('keywords')->where('keyword','=',$k)->update(['count_prev_week_ip'=>$v,'count_week_ip'=>0]);
             }
         })->weekly();
-
 
 
 //        $schedule->command('channel:ranking')

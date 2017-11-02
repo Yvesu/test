@@ -726,7 +726,6 @@ $api->version(['v1'],function($api){
                 $api->get('/{id}','UserController@show')
                     ->where('id','[0-9]+');
 
-
                 // 获取某个用户的动态
                 $api->get('/{id}/tweets','TweetController@index')
                     ->where('id','[0-9]+');
@@ -956,6 +955,7 @@ $api->version(['v1'],function($api){
         // 视频自动播放，次数+1
         $api->post('/video/increment/{id}','TweetPlayController@videoIncrement')
             ->where('id','[0-9]+');
+
         //赛事搜索
         $api->post('/activity/search','ActivitySearchController@search');
 
@@ -989,6 +989,7 @@ $api->version(['v1'],function($api){
 
         //后增话题详情
         $api->post('/topics/details','TopicController@afterdetails');
+
 
     });
 });

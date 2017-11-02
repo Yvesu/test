@@ -7,6 +7,7 @@ $api = app('Dingo\Api\Routing\Router');
  */
 $api -> version('v1', ['prefix' => 'user','namespace' => 'App\Http\Controllers\Web'], function($api) {
 
+
     $api -> post('/info/index','PersonalCenterController@index');
     $api -> post('/tweet/index','PersonalCenterController@tweet');
     $api -> post('/contribution/index','PersonalCenterController@contribution');
@@ -171,6 +172,48 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                      * 热搜详情
                      */
                     $api->post('/index','SearchController@index');
+
+                });
+
+
+                /**
+                 * 素材
+                 */
+                $api->group(['prefix' => 'fodder'],function($api){
+
+                    /**
+                     * 平台看板
+                     */
+                   $api->post('/index','FodderController@index');
+
+                   /**
+                    * 发布片段-基本信息添加
+                    */
+
+                   $api->post('/issue/fragment/base','FodderController@isserFragmentBase');
+
+                    /**
+                     * 发布片段-添加分类
+                     */
+                    $api->post('/issue/fragment/addtype','FodderController@isserFragmentAddtype');
+
+                   /**
+                    * 发布片段-上传资源
+                    */
+                   $api->post('/issue/fragment/resource','FodderController@isserFragmentResource');
+
+                   /**
+                    * 模板
+                    */
+                   $api->group(['prefix' => 'template'],function ($api){
+
+                       /**
+                        * 分类-添加分类
+                        */
+                       $api->post('/add/type','TemplateController@addType');
+
+                   });
+
 
                 });
 
@@ -1134,5 +1177,4 @@ Route::group(['prefix' => 'admin','namespace' => 'Admin','middleware' => ['web']
     });
 
 });
-
 

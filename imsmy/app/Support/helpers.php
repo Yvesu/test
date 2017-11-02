@@ -647,27 +647,6 @@ if( !function_exists('floorFloat')){
     }
 }
 
-/**
- * 二维数组去重
- */
- /*   function array_unique_fb($array2D)
-    {
-        foreach ($array2D as $v)
-        {
-            $v = join(",",$v);
-            $temp[] = $v;
-        }
-        $temp = array_unique($temp);
-        foreach ($temp as $k => $v)
-        {
-            $temp[$k] = explode(",",$v);
-        }
-        return $temp;
-    }
-
-*/
-
-
 
 //二维数组去掉重复值,并保留键值
 function array_unique_fb($array2D){
@@ -686,4 +665,5 @@ function array_unique_fb($array2D){
     }
     return $temp2;
 }
+
 

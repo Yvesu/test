@@ -86,7 +86,6 @@ class UserController extends BaseController
     {
         try {
             $avatar_url = asset($request->getRequestUri());
-
             \Log::info($avatar_url);
             if(!CloudStorage::verityCallback($avatar_url)){
                 throw new \Exception('storage_unauthorized',401);
@@ -314,7 +313,6 @@ class UserController extends BaseController
     {
         try {
             $user = User::findOrFail($id);
-
             $settings = $request -> all();
 
             // 判断是否为空
@@ -845,13 +843,12 @@ class UserController extends BaseController
         return array($date, $limit);
     }
 
+
     public function person(Request $request)
     {
         $nickname = $request->get('username');
         $user = User::where('nickname','=',$nickname)->first();
         return $this->userInfomationTransformer->transform($user);
     }
-
-
 
 }

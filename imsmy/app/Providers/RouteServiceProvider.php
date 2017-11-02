@@ -69,10 +69,4 @@ class RouteServiceProvider extends ServiceProvider
             ->group(base_path('routes/api.php'));
     }
 
-    protected function mapAppRoutes()
-    {
-        Route::namespace($this->namespace)
-            ->group(base_path('routes/app.php'));
-    }
-
 }

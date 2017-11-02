@@ -13,11 +13,9 @@ class Word_filter extends Model
 
     protected $fillable = [
         'keyword',
-        'count_sum_ip',
+        'count_sum',
         'create_at',
-        'update_at',
-        'count_sum_pv',
-        
+        'update_at'
     ];
 
     public $timestamps = false;
