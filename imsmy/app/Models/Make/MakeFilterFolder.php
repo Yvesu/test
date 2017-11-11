@@ -20,6 +20,7 @@ class MakeFilterFolder extends Common
         'active',
         'time_add',
         'time_update',
+        'operator_id',
     ];
 
     public $timestamps = false;
@@ -46,6 +47,11 @@ class MakeFilterFolder extends Common
             default:
                 return $query;
         }
+    }
+
+    public function belongsToManyFilter()
+    {
+        return $this->belongsToMany('App\Models\Make\MakeFilterFile','filter_folder','folder_id','filter_id');
     }
 
 }

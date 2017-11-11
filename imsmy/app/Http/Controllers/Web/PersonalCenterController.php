@@ -32,13 +32,11 @@ class PersonalCenterController extends Controller
      */
     public function index()
     {
-
         try{
 
             // 用户信息
 //            $user = session('users');
             $user = session('users',User::find(1000240));   // TODO 临时测试，待删除
-
 
             $info = User::with(['hasOneGoldAccount' => function($q){
                 $q -> select('id','user_id','gold_total');
@@ -60,7 +58,6 @@ class PersonalCenterController extends Controller
     // 用户中心的tweet
     public function tweet(Request $request)
     {
-        dd('asdasd');
         try{
 
             // 用户信息

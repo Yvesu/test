@@ -26,6 +26,9 @@ class MakeFilterFile extends Common
         'active',
         'time_add',
         'time_update',
+        'operator_id',
+        'texture_id',
+        'ishot',
     ];
 
     public $timestamps = false;
@@ -110,5 +113,99 @@ class MakeFilterFile extends Common
         }
     }
 
+    /**
+     * 多条件搜索-名称
+     */
+    /**
+     * @param $query
+     * @param $name
+     * @return mixed
+     */
+    public function scopeName($query,$name)
+    {
+        return $query->where('name','like',"%$name%");
+    }
 
+    /**
+     * @param $query
+     * @param $folder_id
+     * @return mixed
+     * 多条件搜索-类别
+     */
+    public function scopeFolderId($query,$folder_id)
+    {
+        if(!empty($folder_id)){
+
+            return $query->where('folder_id','=',$folder_id);
+
+        }else{
+            return$query;
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $operator_id
+     * @return mixed
+     * 多条件搜索-操作员
+     */
+    public function scopeOperatorId($query,$operator_id)
+    {
+        if(!empty($operator_id))
+        {
+            return $query->where('operator_id','=',$operator_id);
+        }else{
+            return $query;
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $integral
+     * @return mixed
+     * 多条件搜索-下载费用
+     */
+    public function scopeIntegral($query,$integral)
+    {
+        if(!empty($integral)){
+            return $query->where('integral','=',$integral);
+        }else{
+            return $query;
+        }
+
+    }
+
+
+    /**
+     * @param $query
+     * @param $count
+     * @return mixed
+     * 多条件搜索-下载量
+     */
+    public function scopeCount($query,$count)
+    {
+        return $query->where('count','>=',$count);
+    }
+
+    /**
+     * @param $query
+     * @param $time
+     * @return mixed
+     * 多条件搜索-时间
+     */
+    public function scopeTime($query,$time)
+    {
+        return $query->where('time_add','>=',$time);
+    }
+
+    public function hasOneAdministrator()
+    {
+        return $this->hasOne('App\Models\Admin\Administrator','id','operator_id');
+    }
+
+
+    public function belongsToManyFolder()
+    {
+        return $this->belongsToMany('App\Models\Make\MakeFilterFolder','filter_folder','filter_id','folder_id');
+    }
 }
