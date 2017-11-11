@@ -58,6 +58,9 @@ class ChannelTweetsTransformer extends Transformer
 //            $already_fans = Subscription::ofAttention($tweet->belongsToUser->user_id, $user_from->id)->first();
 //        }
 
+        // 评论分数判断
+        $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;
+
         return [
             'id'            => $tweet->id,
             'type'          => $tweet->type,
@@ -67,6 +70,8 @@ class ChannelTweetsTransformer extends Transformer
             'browse_times'  => $tweet->browse_times,
             'like_count'    => $tweet->like_count,
             'reply_count'   => $tweet->reply_count,
+            'location'      => $tweet->location,
+            'grade'   =>  $grade <= 9.8 ? $grade : 9.8,
             'video'         => CloudStorage::downloadUrl($tweet->video),
             'channel'       => $tweet->belongsToManyChannel->count() ? $tweet->belongsToManyChannel->first()->name : '',
             // 视频截图

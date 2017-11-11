@@ -55,6 +55,7 @@ class TweetsDetailsTransformer extends Transformer
             'at'            =>  $tweet->hasManyAt,
             'original'      =>  $tweet->original,
             'retweet'       =>  $tweet->retweet,
+            'location'      => $tweet ->location,
         ];
     }
 }

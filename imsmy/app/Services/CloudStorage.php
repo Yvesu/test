@@ -9,6 +9,7 @@
 namespace App\Services;
 
 
+
 use Qiniu\Auth;
 use Qiniu\Processing\PersistentFop;
 use Qiniu\Storage\BucketManager;
@@ -73,6 +74,7 @@ class CloudStorage
      */
     public function verityCallback($url)
     {
+
         //获取回调的body信息
         $callbackBody = file_get_contents('php://input');
 

@@ -973,14 +973,31 @@ $api->version(['v1'],function($api){
             // 附近的片段
             $api -> post('/nearby','FragmentController@nearby');
 
-            // 收藏表
-            $api -> post('/collect','FragmentController@collect');
+            // 分类详情
+            $api -> get('/details/{id}','FragmentController@details')
+                 -> where('id','[0-9]+');
 
-            // 大家都在搜
-           // $api -> post('/search','DiscoveryController@search');
+            //最新片段
+            $api -> get('/newlist/{id}','FragmentController@newlist')
+                -> where('id','[0-9]+');
 
-            // 精选媒体
-          //  $api -> post('/featured','DiscoveryController@featured');
+            //片段详情
+            $api -> get('fragdetail/{id}','FragmentController@fragdetail')
+                 -> where('id','[0-9]+');
+
+//            $api->group(['middleware' => 'jwt.auth'],function ($api) {
+
+                // 收藏
+                $api -> post('/collect','FragmentController@collect');
+
+                // 下载
+                $api -> post('/download','FragmentController@download');
+
+                //使用且开拍
+                $api -> post('useOrFilm/{fram_id}','FragmentController@useOrFilm')
+                    ->where('fram_id','[0-9]+');
+//            });
+
 
         });
 
@@ -990,6 +1007,7 @@ $api->version(['v1'],function($api){
         //后增话题详情
         $api->post('/topics/details','TopicController@afterdetails');
 
-
+        //置顶
+        $api->get('/topper','TopperController@index');
     });
 });

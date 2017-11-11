@@ -16,10 +16,10 @@ class FeaturedMediaTransformer extends Transformer
 
         return [
             'user_id'     => $data -> user_id,
-            'nickname'    => $data -> belongsToUser -> nickname,
-            'verify'      => $data -> belongsToUser -> verify,
-            'verify_info' => $data -> belongsToUser -> verify_info,
-            'avatar'      => CloudStorage::downloadUrl($data -> belongsToUser -> avatar),
+            'nickname'    => $data -> belongsToUser['nickname'],
+            'verify'      => $data -> belongsToUser['verify'],
+            'verify_info' => $data -> belongsToUser['verify_info'],
+            'avatar'      => CloudStorage::downloadUrl($data -> belongsToUser['avatar']),
         ];
     }
 }

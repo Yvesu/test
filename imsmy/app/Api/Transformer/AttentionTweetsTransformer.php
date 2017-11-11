@@ -31,6 +31,9 @@ class AttentionTweetsTransformer extends Transformer
 //            $tweetPlay -> countIncrement($tweet->id,$user);
 //        }
 
+        // 评论分数判断
+        $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;
+
         return [
             'id'            => $tweet->id,
             'type'          => $tweet->type,
@@ -38,6 +41,7 @@ class AttentionTweetsTransformer extends Transformer
             'video'         =>  CloudStorage::downloadUrl($tweet->video),
             'browse_times'  => $tweet->browse_times,
             'like_count'    => $tweet->like_count,
+            'grade'   =>  $grade <= 9.8 ? $grade : 9.8,
             'channel'       => $tweet->belongsToManyChannel->count() ? $tweet->belongsToManyChannel->first()->name : '',
             'reply_count'   => $tweet->reply_count,
             'already_like'  => $user ? (TweetLike::where('user_id',$user->id)->where('tweet_id',$tweet->id)->first() ? 1 : 0) : 0,

@@ -16,6 +16,8 @@ class TweetsAtTransformer extends Transformer
             'duration'      =>  $tweet -> duration,
             'created_at'    =>  strtotime($tweet->created_at),
             'nickname'      =>  $tweet->belongsToUser->nickname,
+            'browse_times'  =>  $tweet->browse_times,
+            'video' =>  CloudStorage::downloadUrl( $tweet ->video),
             'picture'       =>  CloudStorage::downloadUrl($tweet->type == 0 ? $tweet->screen_shot : json_decode($tweet->photo,true)[0]),
         ];
     }

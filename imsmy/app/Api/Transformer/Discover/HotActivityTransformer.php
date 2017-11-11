@@ -60,4 +60,24 @@ class HotActivityTransformer extends Transformer
             'tweets'            => $tweets,    // 取前五个
         ];
     }
+
+
+    public function ptransform($data)
+    {
+        $a = [];
+
+        foreach ($data as $v){
+            $a[] = [
+                'id' =>$v['id'],
+                'user_id'=>$v['user_id'],
+                'name'=>$v['name'],
+                'duration' =>$v['duration'],
+                'cover' =>$v['cover'],
+                'label'=>$v['key_word'],
+                'type'=>$v['belongs_to_many_fragment_type']
+            ];
+        }
+
+        return $a;
+    }
 }

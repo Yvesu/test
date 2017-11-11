@@ -32,6 +32,7 @@ class UsersSearchTransformer extends Transformer
             'num_attention'=>  $user->num_attention,
             'already_like' =>  $already_follow ?  ($already_fans ?  '2' : '1') : '0',
             'verify'       =>  $user->verify,
+            'verify_info'  =>  $user->verify_info,
         ];
     }
 }
