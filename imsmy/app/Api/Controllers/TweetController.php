@@ -414,13 +414,14 @@ class TweetController extends BaseController
             }])
                 -> where('tweet_id',$id)
                 -> where('reply_id',NULL)
-                -> orderBy('id','desc')
+                -> orderBy('like_count','desc')
                 -> status()
                 -> forPage($page, $this -> paginate)
                 -> get(['id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
 
             // 统计或获取数据的数量
             $count = $replys->count();
+
 
             // 非第一次请求，只返回评论信息
             if($page > 1) {
@@ -477,19 +478,36 @@ class TweetController extends BaseController
                 }
             }
 
+            //TODO
+            $hot_set = 10;
+
             // 取出热评信息，目前暂定20个赞以上为热评
             $hot_replys = TweetReply::with(['belongsToUser' => function($q){
                 $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
             }])
                 -> where('tweet_id', $id)
-                -> where('like_count', '>', 20)
+                -> where('like_count', '>', $hot_set)
                 -> status()
                 -> orderBy('like_count', 'DESC')
-                -> take(20)
+                -> take(3)
                 -> get(['id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
 
+            //按时间排序的评论
+            $now_replys = TweetReply::with(['belongsToUser' => function($q){
+                $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
+            }])
+                -> where('tweet_id', $id)
+                -> status()
+                -> orderBy('created_at', 'DESC')
+                -> forPage($page, $this -> paginate)
+                -> get(['id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
+
+           // $reply_data =  array_merge($hot_replys->toArray(),$now_replys->toArray());
+
+          //  $replys_data = mult_unique($reply_data);
+
             // 如果热评信息超过4条，就随机取出4条
-            if($hot_replys -> count() > 4) $hot_replys = $hot_replys -> random(4);
+//            if($hot_replys -> count() > 4) $hot_replys = $hot_replys -> random(4);
 
             // 声明广告地址变量
             $advertisement = '';
@@ -512,7 +530,7 @@ class TweetController extends BaseController
             // 动态浏览次数 +1
             $tweetPlay = new TweetPlayController();
             $tweetPlay -> countIncrement($tweets_data -> id, $user);
-//            dd($tweets_data->toArray());
+
             // 返回数据
             return [
 
@@ -532,10 +550,10 @@ class TweetController extends BaseController
                 'trophy_count' => $trophy_users -> count(),
 
                 // 热门评论
-                'hot_replys'  =>  $this->tweetHotRepliesTransformer->transformCollection($hot_replys->all()),
+                'hot_replys'  =>$this->tweetHotRepliesTransformer->transformCollection($hot_replys->all()),  //
 
                 // 评论
-                'replys'  =>  $this->tweetHotRepliesTransformer->transformCollection($replys->all()),
+                'replys'  =>  $this->tweetHotRepliesTransformer->transformCollection($now_replys->all()),
 
                 // 本次获取评论的总数量
                 'count'      => $count,
@@ -693,7 +711,7 @@ class TweetController extends BaseController
             -> orderBy('like_count', 'DESC')
             -> able()
             -> take(100)
-            -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at']);
+            -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at','browse_times','video']);
 
         // 相关不足20个，则从普通取  TODO 上线前开启
         if($tweets -> count() < 20) {
@@ -706,7 +724,7 @@ class TweetController extends BaseController
                 -> orderBy('like_count', 'DESC')
                 -> able()
                 -> take(100)
-                -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at']);
+                -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at','browse_times','video']);
         }
 
         // 判断数量 随机取20个

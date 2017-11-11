@@ -253,4 +253,8 @@ class User extends Common implements AuthenticatableContract,
         return $this->belongsToMany('App\Models\Fragment','fragment_user_collect','user_id','fragment_id');
     }
 
+    public function belongsToAdministrator()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','user_id','id');
+    }
 }
