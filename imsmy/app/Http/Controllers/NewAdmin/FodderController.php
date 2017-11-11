@@ -15,11 +15,14 @@ use App\Models\Make\MakeChartletFile;
 use App\Models\Make\MakeTemplateFile;
 use App\Models\StoryboardTemporary;
 use App\Models\SubtitleTemporary;
+use CloudStorage;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Support\Facades\DB;
+
+
 
 class FodderController extends Controller
 {
@@ -235,7 +238,7 @@ class FodderController extends Controller
     }
 
     /**
-     * 发布片段——基本信息  未写接口文档
+     * 发布片段——基本信息
      */
     public function isserFragmentBase()
     {
@@ -255,7 +258,7 @@ class FodderController extends Controller
 
 //        dd($aa);
 //            dd(empty($olddata));
-            if(!empty($olddata))
+            if(empty($olddata))
             {
                 if($olddata->count())
                 {
@@ -279,9 +282,11 @@ class FodderController extends Controller
 
 
                     ];
+                    $data['keyword'] = [];
                     foreach( $olddata->keyWord as $k => $keyWord)
                     {
-                        $data['keyword'][$k] = $keyWord->keyword;
+//                        array_push($data['keyword'],['keyword'.$k=>$keyWord->keyword]);
+                        $data['keyword']['keyword'.$k] = $keyWord->keyword;
 //                        print($keyWord);
                     }
 //                    dd($olddata->keyWord());
@@ -300,8 +305,9 @@ class FodderController extends Controller
                     }
                     foreach( $olddata->Channel as $k => $channel)
                     {
-                        $data['channel'][$k] = $channel->name;
+                        $data['channel']['type'.$k] = $channel->name;
                     }
+//                    dd($olddata->channel);
 //            dd($data);
                 }
             }else{
@@ -321,17 +327,19 @@ class FodderController extends Controller
                         'address_county' => '',
                         'address_street' => '',
                     'vipfree' => '1',
-                    'keyword' => [],
-                    'channel' => [],
+                    'keyword' => '',
+                    'channel' => '',
 
                 ];
                 $aspectradio = AspectRadio::get();
                 foreach ($aspectradio as $k => $item)
                 {
-                    $data['aspect_radio'][$k] = $item->aspect_radio;
+                    $data['aspect_radio']['aspect_radio'.$k] = $item->aspect_radio;
                 }
             }
-            return response() -> json($data, 200);
+            $arr = [];
+            array_push($arr,$data);
+            return response() -> json(['data'=>$arr], 200);
         }catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'], 404);
         } catch (\Exception $e) {
@@ -353,9 +361,11 @@ class FodderController extends Controller
             $type = [];
             foreach($data as $k => $v)
             {
-                $type[$k] = $v->name;
+                $type['type'.$k] = $v->name;
             }
-            return response() -> json($type, 200);
+            $arr=[];
+            array_push($arr,$type);
+            return response() -> json(['data'=>$arr], 200);
         }catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'], 404);
         } catch (\Exception $e) {
@@ -366,7 +376,7 @@ class FodderController extends Controller
 
 
     /**
-     * 发布片段——分镜等资源  未写接口文档
+     * 发布片段——分镜等资源    数据格式要改变
      */
 
 
@@ -379,98 +389,157 @@ class FodderController extends Controller
             // 取出user_id;
             $admin_info = Administrator::with('hasOneUser')->where('id', $admin->id)->firstOrFail(['user_id']);
             $data = $request->all();
-            //  判断片段暂存表中是否有同名片段
-            $re = FragmentTemporary::where('name', $request->name)->first();
-            if ($re) {
-                //  如果有返回已有改名字的片段
-                return ['error' => '已经存在该描述'];
-            } else {
-                $data['name'] = $request->name;
-                $data['aspect_radio'] = $request->aspect_radio;
-                $data['duration'] = $request->duration;
-                $data['integral'] = $request->integral;
-                $data['address_country'] = $request->address_country;
-                $data['address_province'] = $request->address_province;
-                $data['address_city'] = $request->address_city;
-                $data['address_county'] = $request->address_county;
-                $data['address_street'] = $request->address_street;
-                $data['vipfree'] = $request->vipfree;
+            if(!empty($data)){
+                //  判断片段暂存表中是否有同名片段
+                $re = FragmentTemporary::where('name', $request->name)->first();
+                if ($re) {
+                    //  如果有返回已有改名字的片段
+                    return ['error' => '已经存在该描述'];
+                } else {
+                    $data['name'] = $request->name;
+                    $data['aspect_radio'] = $request->aspect_radio;
+                    $data['duration'] = $request->duration;
+                    $data['integral'] = $request->integral;
+                    $data['address_country'] = $request->address_country;
+                    $data['address_province'] = $request->address_province;
+                    $data['address_city'] = $request->address_city;
+                    $data['address_county'] = $request->address_county;
+                    $data['address_street'] = $request->address_street;
+                    $data['vipfree'] = $request->vipfree;
 
-                //  将数据存入片段暂存表中
-                DB::beginTransaction();
-                $newFragment = FragmentTemporary::create([
-                    'user_id' => $admin_info->user_id,
-                    'name' => $data['name'],
-                    'aspect_radio' => $data['aspect_radio'],
-                    'duration' => $data['duration'],
-                    'address_country' => $data['address_country'],
-                    'address_province' => $data['address_province'],
-                    'address_city' => $data['address_city'],
-                    'address_county' => $data['address_county'],
-                    'address_street' => $data['address_street'],
-                    'vipfree' => $data['vipfree'],
-                    'time_add' => time(),
-                    'time_update' => time()
+                    //  将数据存入片段暂存表中
+                    DB::beginTransaction();
+                    $newFragment = FragmentTemporary::create([
+                        'user_id' => $admin_info->user_id,
+                        'name' => $data['name'],
+                        'aspect_radio' => $data['aspect_radio'],
+                        'duration' => $data['duration'],
+                        'address_country' => $data['address_country'],
+                        'address_province' => $data['address_province'],
+                        'address_city' => $data['address_city'],
+                        'address_county' => $data['address_county'],
+                        'address_street' => $data['address_street'],
+                        'vipfree' => $data['vipfree'],
+                        'time_add' => time(),
+                        'time_update' => time()
 
-                ]);
-                //  取出刚刚插入到片段暂存表中的数据的id
-                $fragment_temporary_id1 = $newFragment->id;
-                print_r($fragment_temporary_id1);
-                //  存入片段表与关键词表的中间表中
-                $keywords = explode('|', $request->keyword);
-                foreach ($keywords as $k => $item) {
-                    $fragment_temporary_id = $fragment_temporary_id1;
-                    $keyword = Keywords::where('keyword', $item)->first();
-                    if ($keyword) {
-                        $keyword_id = $keyword->id;
+                    ]);
+                    //  取出刚刚插入到片段暂存表中的数据的id
+                    $fragment_temporary_id1 = $newFragment->id;
+                    print_r($fragment_temporary_id1);
+                    //  存入片段表与关键词表的中间表中
+                    $keywords = explode('|', $request->keyword);
+                    foreach ($keywords as $k => $item) {
+                        $fragment_temporary_id = $fragment_temporary_id1;
+                        $keyword = Keywords::where('keyword', $item)->first();
+                        if ($keyword) {
+                            $keyword_id = $keyword->id;
 
-                    } else {
-                        $newKeyword = Keywords::create([
-                            'keyword' => $item,
-                            'create_at' => time(),
-                            'update_at' => time()
-                        ]);
-                        $keyword_id = $newKeyword->id;
+                        } else {
+                            $newKeyword = Keywords::create([
+                                'keyword' => $item,
+                                'create_at' => time(),
+                                'update_at' => time()
+                            ]);
+                            $keyword_id = $newKeyword->id;
+
+                        }
+                        //                $temporaryKey = KeywordFragment::create([
+                        //                    'keyword_id' => $keyword_id,
+                        //                    'fragment_temporary_id' => $fragment_temporary_id,
+                        //                    'time_add' => time(),
+                        //                    'time_update' => time()
+                        //                ]);
+
+                        $keywordFragment = new KeywordFragment;
+                        $keywordFragment->keyword_id = $keyword_id;
+                        $keywordFragment->fragment_temporary_id = $fragment_temporary_id;
+                        $keywordFragment->time_add = time();
+                        $keywordFragment->time_update = time();
+                        $keywordFragment->save();
+
 
                     }
-                    //                $temporaryKey = KeywordFragment::create([
-                    //                    'keyword_id' => $keyword_id,
-                    //                    'fragment_temporary_id' => $fragment_temporary_id,
-                    //                    'time_add' => time(),
-                    //                    'time_update' => time()
-                    //                ]);
 
-                    $keywordFragment = new KeywordFragment;
-                    $keywordFragment->keyword_id = $keyword_id;
-                    $keywordFragment->fragment_temporary_id = $fragment_temporary_id;
-                    $keywordFragment->time_add = time();
-                    $keywordFragment->time_update = time();
-                    $keywordFragment->save();
+                    //  将频道信息存入频道片段中间表中
+                    $channels = explode('|', $request->channle);
+                    foreach ($channels as $k => $item) {
+                        $fragment_temporary_id = $fragment_temporary_id1;
+                        $channel = FragmentType::where('name', '=', $item)->first();
+                        $channel_id = $channel->id;
+                        $channelFragment = new FragmentTypeFragment;
+                        $channelFragment->fragmentType_id = $channel_id;
+                        $channelFragment->fragment_temporary_id = $fragment_temporary_id;
+                        $channelFragment->time_add = time();
+                        $channelFragment->time_update = time();
+                        $channelFragment->save();
+                    }
+
+                    //  判断有无之前存入的文件，如果有显示，如果没有则添加新的
 
 
+                    //判断在片段暂存表中有没有信息
+
+                    $olddata = FragmentTemporary::select(['cover', 'bgm'])->where('user_id', '=', $admin_info->user_id)->first();
+                    //            dd($olddata);
+                    if (!empty($olddata->cover)) {
+
+                        //  如果已有数据，则返回该数据
+
+                        //  取出分镜与相对应的特效
+
+                        //  判断每条分镜是否有特效   如果有特效，则取出，没有返回空值
+
+                        $storyboards = FragmentTemporary::with('hasManyStoryboardTemporary')->where('user_id', '=', $admin_info->user_id)->get();
+
+
+                        $resourceData = [
+                            'cover' => $olddata->cover,
+                            'bgm' => $olddata->bgm,
+                            'volume' => $olddata->volume,
+                        ];
+
+                        foreach ($storyboards as $k => $item) {
+                            $resourceData['storyboards'][$k]['name'] = $item->name;
+                            $resourceData['storyboards'][$k]['address'] = $item->address;
+                            $effect = StoryboardTemporary::where('id', '=', $item->id)->first();
+                            //                    dd($effect['name']);
+                            $name = $effect['name'];
+                            $address = $effect['address'];
+                            $isliveshot = $effect['isliveshot'];
+                            $resourceData['storyboards'][$k]['effects'] = [
+                                'name' => $name,
+                                'address' => $address,
+                                'isliveshot' => $isliveshot,
+                            ];
+
+                        }
+
+                        //                dd($resourceData);
+                    } else {
+                        //  如果没有数据则返回空数组
+                        $resourceData = [
+                            'cover' => '',
+                            'bgm' => '',
+                            'volume' => '',
+                            'storyboards' => '',
+
+                        ];
+//                        dd($resourceData);
+                    }
+
+                    //            dd(111);
+
+
+                    DB::commit();
+
+                    //            dd($request->all());
                 }
-
-                //  将频道信息存入频道片段中间表中
-                $channels = explode('|', $request->channle);
-                foreach ($channels as $k => $item) {
-                    $fragment_temporary_id = $fragment_temporary_id1;
-                    $channel = FragmentType::where('name', '=', $item)->first();
-                    $channel_id = $channel->id;
-                    $channelFragment = new FragmentTypeFragment;
-                    $channelFragment->fragmentType_id = $channel_id;
-                    $channelFragment->fragment_temporary_id = $fragment_temporary_id;
-                    $channelFragment->time_add = time();
-                    $channelFragment->time_update = time();
-                    $channelFragment->save();
-                }
-
-                //  判断有无之前存入的文件，如果有显示，如果没有则添加新的
-
-
+            }else{
                 //判断在片段暂存表中有没有信息
 
                 $olddata = FragmentTemporary::select(['cover', 'bgm'])->where('user_id', '=', $admin_info->user_id)->first();
-                //            dd($olddata);
+//                            dd($olddata);
                 if (!empty($olddata->cover)) {
 
                     //  如果已有数据，则返回该数据
@@ -509,22 +578,17 @@ class FodderController extends Controller
                         'cover' => '',
                         'bgm' => '',
                         'volume' => '',
-                        'storyboards' => [],
+                        'storyboards' => '',
 
                     ];
-                    dd($resourceData);
+//                    dd($resourceData);
                 }
 
-                //            dd(111);
-
-
-                DB::commit();
-
-                //            dd($request->all());
             }
 
 
-            return response() -> json($resourceData, 200);
+
+            return response() -> json(['data'=>$resourceData], 200);
         }catch (ModelNotFoundException $e) {
             DB::rollBack();
         return response()->json(['error' => 'not_found'], 404);
@@ -534,6 +598,59 @@ class FodderController extends Controller
         }
 
     }
+
+
+    /**
+     * 上传封面
+     */
+    public function issueFragmentAddcover(Request $request)
+    {
+        try{
+//            $name = $request->get('name');
+            $file = $request->file('file');
+//            if(is_null($name) || is_null($icon)){
+//                return;
+//            }
+
+            // 判断分类是否存在，如果存在，返回并将信息存至session中
+//            if(FragmentType::where('name',$name)->first()){
+//                return response()->json(['error'=>'已存在'],200);
+//            }
+
+//            DB::beginTransaction();
+//            $fragmenttype = FragmentType::create([
+//                'name'      => $name,
+//                'sort'      => ++Channel::orderBy('sort','DESC')->first()->sort,
+//                'icon'      => 'temp_key',
+//                'hash_icon' => 'temp_hash',
+//                'active'    => $active
+//            ]);
+
+            // 获取随机数
+            $rand = mt_rand(1000000,9999999);
+
+            $result = CloudStorage::putFile(
+                'admins/1/fragment/cover/'. getTime() . $rand . '.' . $file->getClientOriginalExtension(),
+                $file);
+
+            dd($result);
+//            if($result[1] !== null){
+//                DB::rollBack();
+//            } else {
+//                $fragmenttype->hash_icon = $result[0]['hash'];
+//                $fragmenttype->icon = $result[0]['key'];
+//                $fragmenttype->save();
+//                DB::commit();
+//            }
+
+            return response()->json(['data'=>'添加成功'],200);
+        }catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'not_found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode());
+        }
+    }
+
 
 
 

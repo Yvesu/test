@@ -97,4 +97,5 @@ class Administrator extends Model implements AuthenticatableContract,
         return $this->hasOne('App\Models\User','id','user_id');
     }
 
+
 }

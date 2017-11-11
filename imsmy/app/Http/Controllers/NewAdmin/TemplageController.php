@@ -21,6 +21,7 @@ class TemplageController extends Controller
         try{
             $name = $request->get('name');
             $icon = $request->file('type_icon');
+            $active = $request->get('active');
             if(is_null($name) || is_null($icon)){
                 return;
             }
@@ -36,14 +37,14 @@ class TemplageController extends Controller
                 'sort'      => ++Channel::orderBy('sort','DESC')->first()->sort,
                 'icon'      => 'temp_key',
                 'hash_icon' => 'temp_hash',
-                'active'    => 0
+                'active'    => $active
             ]);
 
             // 获取随机数
             $rand = mt_rand(1000000,9999999);
 
             $result = CloudStorage::putFile(
-                'channel/' . $fragmenttype->id . '/' . getTime() . $rand . '.' . $icon->getClientOriginalExtension(),
+                'fragmenttype/' . $fragmenttype->id . '/' . getTime() . $rand . '.' . $icon->getClientOriginalExtension(),
                 $icon);
 
             if($result[1] !== null){

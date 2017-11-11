@@ -247,14 +247,30 @@ class User extends Common implements AuthenticatableContract,
         return $query;
     }
 
-
+    /**
+     *  用户与片段
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function belongsToManyFragment()
     {
         return $this->belongsToMany('App\Models\Fragment','fragment_user_collect','user_id','fragment_id');
     }
 
-    public function belongsToAdministrator()
+    /**
+     * 用户与积分
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManyIntegral()
     {
-        return $this->belongsTo('App\Models\Admin\Administrator','user_id','id');
+        return $this->hasMany('App\Models\User\UserIntegral','id','user_id');
+    }
+
+    /**
+     * 用户与积分支出
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManyIntegralExtend()
+    {
+        return $this->hasMany('App\Models\User\UserIntegralExpend','user_id','id');
     }
 }

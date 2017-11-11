@@ -81,6 +81,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
 
     $api->group(['prefix' => 'admins'], function ($api) {
 
+
         // 这个中间件主要更改验证的表的设置为administrator表
         $api->group(['middleware' => ['jwt.api.auth']],function($api) {
 
@@ -100,9 +101,24 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
             $api->group(['middleware' => ['jwt.auth']],function($api) {
 
                 /**
+                 * 七牛云的路由
+                 */
+                $api->group(['prefix' => 'cloudStorage'],function($api){
+                    $api->post('token','CloudStorageController@token');
+
+                    $api->get('private/download/url','CloudStorageController@privateDownloadUrl');
+
+                });
+
+                /**
                  * 管理信息
                  */
                 $api->post('/manage', 'ManageController@manage');
+
+                /**
+                 * 将发布地址存入数据库
+                 */
+                $api->post('/saveaddress','SaveAddressController@saveAddress');
 
                 /**
                  * 内容 TODO 新版接口  视频部分
@@ -196,10 +212,40 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                      */
                     $api->post('/issue/fragment/addtype','FodderController@isserFragmentAddtype');
 
+                    /**
+                     * 发布片段-添加地址-国家
+                     */
+                    $api->post('/issue/fragment/addresscountry','AddAddressController@addresscountry');
+
+                    /**
+                     * 发布片段-添加地址-省份
+                     */
+                    $api->post('/issue/fragment/addressprovince','AddAddressController@addressprovince');
+
+                    /**
+                     * 发布片段-添加地址-城市（上级为省份）
+                     */
+                    $api->post('/issue/fragment/addresscity','AddAddressController@addresscity');
+
+                    /**
+                     * 发布片段-添加地址-城市（上级为国家）
+                     */
+                    $api->post('/issue/fragment/addressstate','AddAddressController@addressstate');
+
+                    /**
+                     * 发布片段-添加地址-县区
+                     */
+                    $api->post('/issue/fragment/addresscounty','AddAddressController@addresscounty');
+
                    /**
-                    * 发布片段-上传资源
+                    * 发布片段-上传资源页面
                     */
                    $api->post('/issue/fragment/resource','FodderController@isserFragmentResource');
+
+                    /**
+                     * 发布片段-上传封面
+                     */
+                    $api->post('/issue/fragment/addcover','FodderController@issueFragmentAddcover');
 
                    /**
                     * 模板
@@ -211,9 +257,100 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         */
                        $api->post('/add/type','TemplateController@addType');
 
+
+
                    });
 
 
+                });
+
+                /**
+                 * 移动端
+                 */
+                $api->group(['prefix' => 'mobile'],function($api){
+
+                    /**
+                     * 滤镜
+                     */
+
+                    $api->group(['prefix' => 'filter'],function($api){
+
+                        /**
+                         * 滤镜主页
+                         */
+                        $api->post('/index','FilterController@index');
+
+                        /**
+                         * 变更是否推荐
+                         */
+                        $api->post('/changerecommend','FilterController@changerecommend');
+
+                        /**
+                         * 变更是否是上热门
+                         */
+                        $api->post('/changeishot','FilterController@changishot');
+
+                        /**
+                         * 进行屏蔽
+                         */
+                        $api->post('doshield','FilterController@doshield');
+
+                        /**
+                         * 推荐位滤镜
+                         */
+                        $api->post('/recommend','FilterController@recommend');
+
+                        /**
+                         * 滤镜分类
+                         */
+                        $api->post('/type','FilterController@type');
+
+                        /**
+                         * 分类排序向上
+                         */
+                        $api->post('/up','FilterController@up');
+
+                        /**
+                         * 分类排序向下
+                         */
+                        $api->post('/down','FilterController@down');
+
+                        /**
+                         * 变更是否停用该分类
+                         */
+                        $api->post('/changestop','FilterController@changestop');
+
+                        /**
+                         * 创建新分类
+                         */
+                        $api->post('/mktype','FilterController@makenewtype');
+
+                        /**
+                         * 搜索热点  未写
+                         */
+                        $api->post('/hotsearch','FilterController@hotsearch');
+
+                        /**
+                         * 发布滤镜   未写
+                         */
+                        $api->post('/addfilter','FilterController@addfilter');
+
+                        /**
+                         * 屏蔽仓
+                         */
+                        $api->post('/shieldwarehouse','FilterController@shieldwarehouse');
+
+                        /**
+                         * 取消屏蔽
+                         */
+                        $api->post('/cancelshield','FilterController@cancelshield');
+
+                        /**
+                         * 删除滤镜
+                         */
+                        $api->post('/delete','FilterController@delete');
+
+                    });
                 });
 
             });

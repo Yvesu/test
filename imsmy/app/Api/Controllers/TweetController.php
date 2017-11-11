@@ -530,7 +530,7 @@ class TweetController extends BaseController
             // 动态浏览次数 +1
             $tweetPlay = new TweetPlayController();
             $tweetPlay -> countIncrement($tweets_data -> id, $user);
-//            dd($tweets_data->toArray());
+
             // 返回数据
             return [
 
