@@ -63,6 +63,7 @@ class NearbyUsersTransformer extends Transformer
             'avatar'       =>  CloudStorage::downloadUrl($user->avatar),
             'already_like' =>  $already_follow ?  ($already_fans ?  '2' : '1') : '0',
             'verify'       =>  $user->verify,
+            'verify_info'  =>  $user->verify_info,
             'signature'    =>  $user->signature,
             'tweets'       =>  $user -> hasManyTweet,
             'user'         =>  $this -> usersWithFansTransformer -> transform($user),

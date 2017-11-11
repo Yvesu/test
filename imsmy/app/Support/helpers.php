@@ -705,4 +705,23 @@ function array_unique_fb($array2D){
     return $temp2;
 }
 
+/**
+ * 多维数组去重
+ * @param $array
+ * @return array
+ */
+
+function mult_unique($array)
+{
+    $return = array();
+    foreach($array as $key=>$v)
+    {
+        if(!in_array($v, $return))
+        {
+            $return[$key]=$v;
+        }
+    }
+    return $return;
+}
+
 

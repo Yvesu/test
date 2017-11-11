@@ -30,6 +30,7 @@ class Fragment extends Model
         'lng',
         'integral',
         'cost',
+        'size',
         'count',
         'active',
         'time_add',
@@ -52,7 +53,15 @@ class Fragment extends Model
      */
     public function hasManySubtitleTemporary()
     {
-        return $this->hasMany('App\Models\SubtitleTemporary','fragment_id',id);
+        return $this->hasMany('App\Models\SubtitleTemporary','fragment_id','id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManySubtitle()
+    {
+        return $this->hasMany('App\Models\User\Subtitle');
     }
 
     /**
@@ -67,9 +76,25 @@ class Fragment extends Model
     /**
      * 关联用用户
      */
-    public function belongsToManyUser()
+   public function belongsToManyUser()
     {
         return $this->belongsToMany('App\Models\User','fragment_user_collect','fragment_id','user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+//    public function belongsToUser()
+//    {
+//        return $this->belongsTo('App\Models\User','user_id','id');
+//    }
+
+    /**
+     * 片段与分类
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function belongsToManyFragmentType()
+    {
+        return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_id','fragmentType_id');
+    }
 }

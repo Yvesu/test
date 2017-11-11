@@ -22,16 +22,14 @@ class ActivitySearchController extends BaseController
     //赛事搜索(有封页 创建用户)
     public function search(Request $request)
     {
-//        dd( in_array('啊实打实多',Redis::lrange('HOTSEARCH:LIST:NO_EXIST',0,-1))  );
-
         //接收用户搜索的内容
         $activity =  $request->get('activity');
 
         //判断用户输入的内容是否为空
         if (!$activity){
             return response()->json([
-                'code'=>'500',
-                'message'=>'输入的内容为空'
+                'code'=>'403',
+                'message'=>'输入不能为空'
             ]);
         }
 

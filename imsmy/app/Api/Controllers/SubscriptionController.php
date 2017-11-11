@@ -61,7 +61,7 @@ class SubscriptionController extends BaseController
             $user_self = Auth::guard('api')->user();
 
             // 如果非请求自己信息，返回错误。后期可能会允许看别人的粉丝数据，再打开就OK了
-            if($user_self->id != $id) return response()->json(['error' => 'bad_request'],403);
+           // if($user_self->id != $id) return response()->json(['error' => 'bad_request'],403);
 
             // 获取时间戳和条数
 //            $limit = $request->get('limit');
@@ -169,7 +169,7 @@ class SubscriptionController extends BaseController
      */
     public function follower($id, Request $request)
     {
-         return $this->index($id, $request, 'follower');
+        return $this->index($id, $request, 'follower');
 //         return response()->json($this->index($id, $request, 'follower'));
     }
 
@@ -325,18 +325,22 @@ class SubscriptionController extends BaseController
             }
 
             // 从缓存中获取集合
-            User::findOrfail($newSubscription['from']) -> increment('follow_count');
-            $newSubscription_to = User::findOrfail($newSubscription['to']);
+            User::find($id) -> increment('follow_count');
+            User::find($sub_id) -> increment('fans_count');
 
-            $newSubscription_to -> update([
-                'fans_count'        => $newSubscription_to -> fans_count ++,
-                'new_fans_count'    => $newSubscription_to -> new_fans_count ++
-            ]);
+//            User::findOrfail($newSubscription['from']) -> increment('follow_count');
+
+    //        $newSubscription_to = User::findOrfail($newSubscription['to']);
+
+  //          $newSubscription_to -> update([
+     //           'fans_count'        => $newSubscription_to -> fans_count ++,
+   //             'new_fans_count'    => $newSubscription_to -> new_fans_count ++
+   //         ]);
 
             // 统计对方是否也已关注自己
             $friend = Subscription::where('from',$newSubscription['to'])
-                                    -> where('to',$newSubscription['from'])
-                                    -> first();
+                -> where('to',$newSubscription['from'])
+                -> first();
 
             // 如果相互关注，则将双方信息写入XMPP
             if($friend){
@@ -370,17 +374,17 @@ class SubscriptionController extends BaseController
 
                 // 将相互关注的用户信息存入 friend 表中
                 Friend::create([
-                        'from'   => $sub_id,
-                        'to'     => $id,
-                        'created_at' => $time,
-                        'updated_at' => $time
+                    'from'   => $sub_id,
+                    'to'     => $id,
+                    'created_at' => $time,
+                    'updated_at' => $time
                 ]);
 
                 Friend::create([
-                        'from'   => $id,
-                        'to'     => $sub_id,
-                        'created_at' => $time,
-                        'updated_at' => $time
+                    'from'   => $id,
+                    'to'     => $sub_id,
+                    'created_at' => $time,
+                    'updated_at' => $time
                 ]);
             }
 
@@ -394,7 +398,7 @@ class SubscriptionController extends BaseController
                 ],201
             );
 
-        // 异常处理
+            // 异常处理
         } catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error' => 'user_not_found'],404);
@@ -432,11 +436,12 @@ class SubscriptionController extends BaseController
             DB::beginTransaction();
 
             //取消提醒
-            Notification::where('type_id',$subscription->id)->where('type',5)->delete();
+             Notification::where('type_id',$subscription->id)->where('type',5)->delete();
 
             // 从缓存中将被关注的用户的粉丝数量-1 关注者的关注总数-1
-            User::findOrFail($id) -> decrement('follow_count');
-            User::findOrFail($sub_id) -> decrement('fans_count');
+            User::find($id) -> decrement('follow_count');
+
+            User::find($sub_id) -> decrement('fans_count');
 
             // 如果为相互订阅，需同时删除在XMPP系统的在 tig_pairs 表中的信息
             if($result){
@@ -504,12 +509,15 @@ class SubscriptionController extends BaseController
             // 事务提交
             DB::commit();
 
-            return response('',204);
+            return [
+                'status' => 'success',
+                'status_code' => 204,
+            ];
 
         } catch (ModelNotFoundException $e) {
 
-            DB::callBack();
-            return response()->json(['error' => 'subscription_not_found'],404);
+            DB::rollBack();
+            return response()->json(['error' => 'subscription_is_found'],404);
 
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()],$e->getCode());

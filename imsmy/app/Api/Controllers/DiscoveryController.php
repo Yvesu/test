@@ -221,6 +221,7 @@ class DiscoveryController extends BaseController
             // 大家都在搜
 //            $hot = HotSearch::recommend()->take(6)->get();
 
+//            dd($activities->all());
             return response()->json([
 
                 // 推荐 图片
@@ -236,7 +237,8 @@ class DiscoveryController extends BaseController
                 'films'    => $films -> count() ?  $this-> discoverFilmTransformer -> transformCollection($films->all()) : [],
 
                 // 热门赛事
-                'activities'   => $activities->count() ? $this->hotActivityTransformer->transformCollection($activities->all()) : [],
+//                'activities'   => $activities->count() ? $this->hotActivityTransformer->transformCollection($activities->all()) : [],
+                'activities'   => $data,
 
                 // 下次请求的链接，如果本次获取条数不为0，将请求条件附带上
                 'link' => $count

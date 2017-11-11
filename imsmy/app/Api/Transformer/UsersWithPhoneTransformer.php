@@ -34,7 +34,7 @@ class UsersWithPhoneTransformer extends Transformer
             'verify'       =>  $user->hasOneUser->verify,
             'phone'        =>  $user -> username,
             'signature'    =>  $user->hasOneUser->signature,
-            'verify_info'  =>  $user->verify_info,
+            'verify_info'  =>   $user->hasOneUser->verify_info,
         ];
     }
 }
