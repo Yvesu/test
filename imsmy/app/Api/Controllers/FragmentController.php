@@ -997,26 +997,32 @@ class FragmentController extends BaseController
                 -> where('type_id',$frag_id)
                 -> where('status',1)
                 ->first();
-            dd($res);
+
             //已经购买过
             if ($res){
-                $fragment= Fragment::with(['belongsToUser'])->find($frag_id);
-
-                //修改下载量
-                DB::table('fragment')->increment('count');
-                DB::table('fragment')->increment('watch_count');
-
-               return response() -> json([                    
-                    'data' => $this->fragmentDetailTransformer->transform($fragment)
-                ], 200);
+                return $this->fragmentdetails($frag_id);
             }
 
             //接收用户是否确认扣除积分
             $commit = $request->get('commit');
 
+            //需要提交动作
+            if (empty($commit)){
+                return response()->json([
+                    'error'     => 'need commit',
+                    'integral'  => $integral,
+                ],403);
+            }
+
             //确认扣除积分
-            if ($commit === '1'){
+            if ($commit == '1'){
                 $user_info = User\UserIntegral::where('user_id','=',$user->id)->first();
+
+                //用户积分为0
+                if (!$user_info) {
+                    return response()->json(['message' => 'Integral is 0'], 403);
+                }
+
                 $user_integral = $user_info->integral_count;
                 $number = date('YmdHis').rand(100000,999999);
 
@@ -1030,26 +1036,19 @@ class FragmentController extends BaseController
 
                     if($integral_update){
 
-                        $fragment= Fragment::with(['belongsToUser'])->find($frag_id);
+                        //获取详细信息
+                        $fragment = Fragment::find($frag_id);
 
                         //写入消费表
-                        $integral_extend = new User\UserIntegralExpend();
-
-                        $integral_extend -> user_id = $user_info->user_id;
-
-                        $integral_extend -> pay_number = $number;
-
-                        $integral_extend -> pay_count  = $integral;
-
-                        $integral_extend -> type_id = $fragment->id;
-
-                        $integral_extend -> pay_reason = '片段:'.$fragment->name;
-
-                        $integral_extend -> status     = 1;
-
-                        $integral_extend -> create_at  = time();
-
-                        $result = $integral_extend -> save();
+                        $result = DB::table('user_integral_expend_log')->insert([
+                            'user_id'    => $user->id,
+                            'pay_number' => $number,
+                            'pay_count'  => $integral,
+                            'type_id'    => $fragment->id,
+                            'pay_reason' => '片段:'.$fragment->name,
+                            'status'     => 1,
+                            'create_at'  => time(),
+                        ]);
 
                         //返回数据
                         if ($result){
@@ -1061,14 +1060,8 @@ class FragmentController extends BaseController
                                 'way' => 2,
                             ]);
 
-                            DB::table('fragment')->increment('count');
-                            DB::table('fragment')->increment('watch_count');
-
                             DB::commit();
-
-                            return response() -> json([
-                                'data' =>$this->fragmentDetailTransformer->transform($fragment)
-                            ], 200);
+                            return $this->fragmentdetails($frag_id);
                         }else{
                             DB::rollBack();
                             return response() -> json(['message'=>'Try again later'], 500);
@@ -1090,7 +1083,7 @@ class FragmentController extends BaseController
                     ], 403);
                 }
 
-            }else if($commit === '2'){                      //取消购买
+            }else if($commit == '2'){                //取消购买
 		  return response() -> json(['message'=>'Successfully Canceled'], 204);               
             }else{
                    return response() -> json(['message'=>'Need to purchase'], 103);
