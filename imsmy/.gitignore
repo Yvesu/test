@@ -1,0 +1,25 @@
+# ---> Laravel
+
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+/.idea
+/.vagrant
+Homestead.json
+Homestead.yaml
+npm-debug.log
+.env
+.env.*.php
+.env.php
+
+/storage/administrator_settings
+
+.DS_Store
+/_ide_helper.php
+/_ide_helper_models.php
+
+Envoy.blade.php
+
+/storage/debugbar
