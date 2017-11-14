@@ -1,6 +1,6 @@
 <?php
 
-$api = app('Dingo\Api\Routing\Router');
+$api = app('Dingo\Api\Routing\Router'); 
 
 /**
  * TODO 前期前端用户中心测试，后期再修改，添加用户认证
