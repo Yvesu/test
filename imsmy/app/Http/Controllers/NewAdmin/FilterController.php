@@ -4,8 +4,12 @@ namespace App\Http\Controllers\NewAdmin;
 
 use App\Models\Admin\Administrator;
 use App\Models\DownloadCost;
+use App\Models\Keywords;
+use App\Models\Make\FilterFolder;
+use App\Models\Make\FilterKeyword;
 use App\Models\Make\MakeFilterFile;
 use App\Models\Make\MakeFilterFolder;
+use App\Models\Make\TextureMixType;
 use Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -747,7 +751,7 @@ class FilterController extends Controller
                 $data -> active = 1;
             }
             $data -> operator_id = $admin->id;
-            $data -> time_add = time();
+            $data -> time_update = time();
             $data -> save();
             DB::commit();
             return response()->json(['message'=>'修改成功'],200);
@@ -985,10 +989,10 @@ class FilterController extends Controller
             }
             $data -> active = 1;
             $data -> operator_id = $admin->id;
-            $data -> time_add = time();
+            $data -> time_update = time();
             $data -> save();
             DB::commit();
-            return response()->json(['message'=>'修改成功'],200);
+            return response()->json(['message'=>'取消成功'],200);
 
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -1031,4 +1035,153 @@ class FilterController extends Controller
     }
 
 
+    public function hotsearch(Request $request)
+    {
+        try{
+
+        }catch (ModelNotFoundException $e){}
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\JsonResponse|\Symfony\Component\HttpFoundation\Response
+     * 显示发布页面
+     */
+    public function addfilter(Request $request)
+    {
+        try{
+
+            $cost = DownloadCost::get();
+            foreach ($cost as $item => $value)
+            {
+                $costType['type'.$item] = $value->details;
+            }
+            $textureMixType = TextureMixType::get();
+            foreach($textureMixType as $item => $value)
+            {
+                $texturetype['type'.$item]['id'] = $value->id;
+                $texturetype['type'.$item]['name'] = $value->name;
+            }
+            $data = [];
+            array_push($data,['costType'=>$costType,'texturetype'=>$texturetype]);
+            return response()->json(['data'=>$data],200);
+        }catch (ModelNotFoundException $e){
+            return response(['error'=>'not_found'],404);
+        }
+    }
+
+
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     * 滤镜添加分类
+     */
+    public function addFilterType()
+    {
+        try{
+            $type = MakeFilterFolder::where('active','=',1)->get();
+            $data = [];
+            foreach ($type as $item => $value)
+            {
+                $temporydata['type'.$item] = [
+                    'id' => $value->id,
+                    'name' => $value->name,
+                ];
+
+                array_push($data,$temporydata['type'.$item]);
+            }
+            return response()->json(['data'=>$data],200);
+        }catch (ModelNotFoundException $e){
+            return response()->json(['error'=>not_found],404);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 执行发布滤镜
+     */
+    public function doAddFilter(Request $request)
+    {
+        try{
+            $admin = Auth::guard('api')->user();
+            $id = $admin->id;
+//            dd($admin);
+            $user_id = Administrator::find($id)->hasOneUser->id;
+//            dd($user_id);
+            $type = $request->get('type');
+            $name = $request->get('name');
+            $integral = $request->get('integral');
+            $cover = $request->get('cover');
+            $content = $request->get('content');
+            $texture = $request->get('texture');
+            $textureMixType = $request->get('textMixType');
+            $keyword = $request->get('keyword');
+            if(empty($type) || empty($name) || empty($integral) || empty($cover) || empty($content) || empty($texture) || empty($textureMixType) || empty($keyword))
+            {
+                return response()->json(['error'=>'不能有选项为空']);
+            }
+
+            DB::beginTransaction();
+            $filter = new MakeFilterFile;
+            $filter->user_id = $user_id;
+            $filter->name = $name;
+            $filter->integral = $integral;
+            $filter->cover = $cover;
+            $filter->content = $content;
+            $filter->texturl = $texture;
+            $filter->texture_mix_type_id = $textureMixType;
+            $filter->time_add = time();
+            $filter->time_update = time();
+            $filter->operator_id = $id;
+            $filter->vipfree = $vipfree;
+            $filter->save();
+            foreach($type as $k => $v){
+                $filter_id = $filter->id;
+                $folder_id = MakeFilterFolder::where('name','=',$v->name)->first()->id;
+                if($folder_id)
+                {
+                    $filter_floder =new FilterFolder;
+                    $filter_floder->filter_id = $filter_id;
+                    $filter_floder->folder_id = $folder_id;
+                    $filter_floder->time_add = time();
+                    $filter_floder->time_update = time();
+                    $filter_floder->save();
+                }
+            }
+
+            foreach($keyword as $k => $v)
+            {
+
+                $filter_id = $filter->id;
+                $keyword = Keywords::where('keyword', $v)->first();
+                if ($keyword) {
+                    $keyword_id = $keyword->id;
+
+                } else {
+                    $newKeyword = Keywords::create([
+                        'keyword' => $item,
+                        'create_at' => time(),
+                        'update_at' => time()
+                    ]);
+                    $keyword_id = $newKeyword->id;
+
+                }
+
+                $filterKeyword = new FilterKeyword;
+                $filterKeyword->keyword_id = $keyword_id;
+                $filterKeyword->filter_id = $filter_id;
+                $filterKeyword->time_add = time();
+                $filterKeyword->time_update = time();
+                $filterKeyword->save();
+
+            }
+
+            DB::commit();
+            return response()->json(['message'=>'发布成功'],200);
+
+        }catch (ModelNotFoundException $e){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
 }

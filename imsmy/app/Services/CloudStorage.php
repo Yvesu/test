@@ -10,6 +10,7 @@ namespace App\Services;
 
 
 
+use App\Models\Cloud\QiniuUrl;
 use Qiniu\Auth;
 use Qiniu\Processing\PersistentFop;
 use Qiniu\Storage\BucketManager;
@@ -35,13 +36,14 @@ class CloudStorage
     /**
      *  存放于七牛空间的名称
      */
-    const BUCKET = 'goobird-dev';
+//    const BUCKET = 'goobird-dev';
+    private $bucket;
 
     /**
      *  默认域名
      */
-    const BASEURL = 'http://7xtg0b.com1.z0.glb.clouddn.com';
-
+//    const BASEURL = 'http://7xtg0b.com1.z0.glb.clouddn.com';
+    private $baseurl;
     const PIPELINE = 'goobird-dev';
     /**
      * 七牛认证类
@@ -98,9 +100,10 @@ class CloudStorage
      * @param null $policy
      * @return string
      */
-    public function getToken($policy = null)
+    public function getToken($policy = null,$type,$location)
     {
-        return $this->auth->uploadToken(self::BUCKET,null,3600,$policy);
+        $this->bucket = QiniuUrl::where('type','=',$type)->where('location','=',$location)->first()->zone_name;
+        return $this->auth->uploadToken($this->bucket,null,3600,$policy);
     }
 
     /**
@@ -111,7 +114,7 @@ class CloudStorage
      */
     public function status($key)
     {
-        list($ret, $error) = $this->bucketManager->stat(self::BUCKET, $key);
+        list($ret, $error) = $this->bucketManager->stat($this->bucket, $key);
         if ($error !== null) {
             throw new \Exception($error->message(),$error->code());
         } else {
@@ -130,7 +133,13 @@ class CloudStorage
         if (is_array($key)) {
             return '';
         }
-        return  $this->bucketManager->delete(self::BUCKET,$key);
+        return  $this->bucketManager->delete($this->bucket,$key);
+    }
+
+    public function webDeleteVideo($key)
+    {
+
+        return  $this->bucketManager->buildBatchDelete('hivideo-video',$key);
     }
 
     /**
@@ -142,7 +151,7 @@ class CloudStorage
      */
     public function put($key, $data)
     {
-        $token = $this->auth->uploadToken(self::BUCKET);
+        $token = $this->auth->uploadToken($this->bucket);
         $uploadManager = new UploadManager();
         return $uploadManager->put($token,$key,$data);
     }
@@ -156,7 +165,7 @@ class CloudStorage
      */
     public function putFile($key, $filePath)
     {
-        $token = $this->auth->uploadToken(self::BUCKET);
+        $token = $this->auth->uploadToken($this->bucket);
         $uploadManager = new UploadManager();
         return $uploadManager->putFile($token,$key,$filePath);
     }
@@ -189,7 +198,7 @@ class CloudStorage
      */
     public function deleteDirectory($prefix)
     {
-        list($items, $marker, $error) = $this->bucketManager->listFiles(self::BUCKET,$prefix);
+        list($items, $marker, $error) = $this->bucketManager->listFiles($this->bucket,$prefix);
         if($error !== null){
             throw new \Exception($error->message(),$error->code());
         }
@@ -198,7 +207,7 @@ class CloudStorage
 
     public function rename($from_key,$to_key)
     {
-        list($ret, $error) = $this->bucketManager->move(self::BUCKET,$from_key,self::BUCKET,$to_key);
+        list($ret, $error) = $this->bucketManager->move($this->bucket,$from_key,$this->bucket,$to_key);
         if ($error !== null) {
             throw new \Exception($error->message(),$error->code());
         } else {
@@ -219,7 +228,7 @@ class CloudStorage
 
     public function batchStat($keys)
     {
-        $ops = BucketManager::buildBatchStat(self::BUCKET,$keys);
+        $ops = BucketManager::buildBatchStat($this->bucket,$keys);
         list($ret, $error) = $this->bucketManager->batch($ops);
         if($error !== null){
             throw new \Exception($error->message(),$error->code());
@@ -232,7 +241,7 @@ class CloudStorage
         if (empty($key_pairs)) {
             return true;
         }
-        $ops = BucketManager::buildBatchRename(self::BUCKET,$key_pairs);
+        $ops = BucketManager::buildBatchRename($this->bucket,$key_pairs);
         list($ret, $error) = $this->bucketManager->batch($ops);
         if($error !== null){
             throw new \Exception($error->message(),$error->code());
@@ -245,7 +254,7 @@ class CloudStorage
         if (empty($keys)) {
             return true;
         }
-        $ops = BucketManager::buildBatchDelete(self::BUCKET,$keys);
+        $ops = BucketManager::buildBatchDelete($this->bucket,$keys);
         list($ret, $error) = $this->bucketManager->batch($ops);
         if($error !== null){
             throw new \Exception($error->message(),$error->code());
@@ -255,7 +264,7 @@ class CloudStorage
 
     public function persistentFop($key,$fops,$notifyUrl)
     {
-        $pfop = new PersistentFop($this->auth,self::BUCKET,self::PIPELINE,$notifyUrl);
+        $pfop = new PersistentFop($this->auth,$this->bucket,self::PIPELINE,$notifyUrl);
         list($id,$error) = $pfop->execute($key,$fops);
         if($error !== null) {
             throw new \Exception($error->message(),$error->code());

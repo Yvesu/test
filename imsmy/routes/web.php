@@ -247,6 +247,16 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                      */
                     $api->post('/issue/fragment/addcover','FodderController@issueFragmentAddcover');
 
+                    /**
+                     * 发布片段-添加字幕
+                     */
+                    $api->post('/issue/fragment/addsubtitle','FodderController@issueFragmentAddSubtitle');
+
+                    /**
+                     * 删除分镜
+                     */
+                    $api->post('/issue/fragment/deleteStoryboard','FodderController@issueFragmentDeleteStoryboard');
+
                    /**
                     * 模板
                     */
@@ -331,9 +341,19 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         $api->post('/hotsearch','FilterController@hotsearch');
 
                         /**
-                         * 发布滤镜   未写
+                         * 发布滤镜页面
                          */
                         $api->post('/addfilter','FilterController@addfilter');
+
+                        /**
+                         * 执行发布滤镜
+                         */
+                        $api->post('/doaddfilter','FilterController@doAddFilter');
+
+                        /**
+                         * 滤镜添加分类
+                         */
+                        $api->post('/addfiltertype','FilterController@addFilterType');
 
                         /**
                          * 屏蔽仓
