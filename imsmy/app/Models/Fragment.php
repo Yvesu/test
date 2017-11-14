@@ -40,12 +40,12 @@ class Fragment extends Model
     public $timestamps = false;
 
     /**
-     * 与分镜暂存表StoryboardTemporary 一对多关系
+     * 与分镜Storyboard 一对多关系
      *
      */
-    public function hasManyStoryboardTemporary()
+    public function hasManyStoryboard()
     {
-        return $this->hasMany('App\Models\StoryboardTemporary','fragment_id','id');
+        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
     }
 
     /**
@@ -54,6 +54,14 @@ class Fragment extends Model
     public function hasManySubtitleTemporary()
     {
         return $this->hasMany('App\Models\SubtitleTemporary','fragment_id','id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManySubtitle()
+    {
+        return $this->hasMany('App\Models\User\Subtitle');
     }
 
     /**
@@ -88,23 +96,5 @@ class Fragment extends Model
     public function belongsToManyFragmentType()
     {
         return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_id','fragmentType_id');
-    }
-
-    /**
-     * 片段与分镜的一对多
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function hasManyStoryboard()
-    {
-        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
-    }
-
-    /**
-     * 片段与字幕  一对多
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function hasManySubtitle()
-    {
-        return $this->hasMany('App\Models\Subtitle','fragment_id','id');
     }
 }

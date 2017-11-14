@@ -203,9 +203,30 @@ class MakeFilterFile extends Common
         return $this->hasOne('App\Models\Admin\Administrator','id','operator_id');
     }
 
-
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与类别的关系 多对多
+     */
     public function belongsToManyFolder()
     {
         return $this->belongsToMany('App\Models\Make\MakeFilterFolder','filter_folder','filter_id','folder_id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与滤镜混合纹理类型表关系    反向1对多
+     */
+    public function belongsToTextureMixType()
+    {
+        return $this->belongsTo('App\Models\Make\TextureMixType','texture_mix_type_id','id');
+    }
+
+
+    public function belongsToManyKeyword()
+    {
+        return $this->belongsToMany('App\Models\Keywords','filter_keyword','filter_id','keyword_id');
+    }
+
+
+
 }
