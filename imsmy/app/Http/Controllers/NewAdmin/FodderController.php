@@ -42,7 +42,7 @@ class FodderController extends Controller
         //  片段文件总大小  暂无先设置为0
         $fragmentSumSize = 0;
         //  总大小
-        $sum = $templateSumSize+$chartletSumSize+$effectSumSize+$fragmentSumSize;
+        $sum = $templateSumSize+$chartletSumSize+$effectSumSize+$fragmentSumSize; 
 //        dd($sum);
         /**
          * 总览

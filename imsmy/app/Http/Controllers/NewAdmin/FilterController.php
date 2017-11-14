@@ -34,7 +34,7 @@ class FilterController extends Controller
             $operator_id = $request->get('operator_id','');
             //  费用
             $integral = $request->get('integral','');
-            //  下载量 0 为0  1 为 100  2 为 500 3 为1000   4 为5000  5 为1W  6 为5 W
+            //  下载量 0 为0  1 为 100  2 为 500 3 为1000   4 为5000  5 为1W  6 为5 W 
             $count = $request->get('count',0);
             //  页码
             $page = $request->get('page',1);

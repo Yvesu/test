@@ -60,7 +60,7 @@ use Illuminate\Support\Collection;
 use App\Services\TweetService;
 
 /**
- * 动态相关接口
+ * 动态相关接口 
  *
  * @Resource("Tweets")
  */
