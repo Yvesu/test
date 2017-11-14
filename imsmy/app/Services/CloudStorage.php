@@ -8,8 +8,7 @@
 
 namespace App\Services;
 
-
-
+use App\Models\Cloud\QiniuUrl;
 use Qiniu\Auth;
 use Qiniu\Processing\PersistentFop;
 use Qiniu\Storage\BucketManager;
@@ -35,6 +34,7 @@ class CloudStorage
     /**
      *  存放于七牛空间的名称
      */
+
     private $bucket;
     /**
      *  默认域名
@@ -42,6 +42,7 @@ class CloudStorage
     private $baseurl;
 
     private $pipline;
+
     /**
      * 七牛认证类
      * @var Auth
@@ -90,6 +91,7 @@ class CloudStorage
 
     public function getDomain()
     {
+
         return $this->baseurl . '/';
     }
     /**
@@ -97,6 +99,7 @@ class CloudStorage
      * @param null $policy
      * @return string
      */
+
     public function getToken($policy = null)
     {
         return $this->auth->uploadToken($this->bucket,null,3600,$policy);
@@ -132,6 +135,13 @@ class CloudStorage
         return  $this->bucketManager->delete($this->bucket,$key);
     }
 
+    public function webDeleteVideo($key)
+    {
+
+        return  $this->bucketManager->buildBatchDelete('hivideo-video',$key);
+    }
+
+
     /**
      * 上传
      * @param $key
@@ -165,6 +175,7 @@ class CloudStorage
         if (is_array($key)) {
             return array_map([$this,'downloadUrl'],$key);
         }
+
         return $key === null || empty($key) ? null : $this->baseurl . '/' . $key;
     }
 

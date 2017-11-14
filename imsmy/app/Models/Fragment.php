@@ -40,12 +40,12 @@ class Fragment extends Model
     public $timestamps = false;
 
     /**
-     * 与分镜暂存表StoryboardTemporary 一对多关系
+     * 与分镜Storyboard 一对多关系
      *
      */
-    public function hasManyStoryboardTemporary()
+    public function hasManyStoryboard()
     {
-        return $this->hasMany('App\Models\StoryboardTemporary','fragment_id','id');
+        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
     }
 
     /**

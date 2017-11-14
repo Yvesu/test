@@ -1019,6 +1019,11 @@ $api->version(['v1'],function($api){
             $api -> get('fragdetail/{id}','FragmentController@fragdetail')
                  -> where('id','[0-9]+');
 
+
+            //片段详情
+            $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
+                ->where('id','[0-9]+');
+
             //片段分类内热门与最新
             $api->get('fraglists/{id}','FragmentController@fraglists')
                 ->where('id','[0-9]+');
@@ -1039,7 +1044,6 @@ $api->version(['v1'],function($api){
                 $api -> post('useOrFilm/{fram_id}','FragmentController@useOrFilm')
                     ->where('fram_id','[0-9]+');
             });
-
 
         });
 
