@@ -36,15 +36,15 @@ class CloudStorage
     /**
      *  存放于七牛空间的名称
      */
-//    const BUCKET = 'goobird-dev';
-    private $bucket;
 
+    private $bucket;
     /**
      *  默认域名
      */
-//    const BASEURL = 'http://7xtg0b.com1.z0.glb.clouddn.com';
     private $baseurl;
-    const PIPELINE = 'goobird-dev';
+
+    private $pipline;
+
     /**
      * 七牛认证类
      * @var Auth
@@ -93,7 +93,7 @@ class CloudStorage
 
     public function getDomain()
     {
-        return self::BASEURL . '/';
+        return $this->baseurl . '/';
     }
     /**
      * 生成upload Token
@@ -134,11 +134,11 @@ class CloudStorage
             return '';
         }
         return  $this->bucketManager->delete($this->bucket,$key);
+
     }
 
     public function webDeleteVideo($key)
     {
-
         return  $this->bucketManager->buildBatchDelete('hivideo-video',$key);
     }
 
@@ -175,7 +175,7 @@ class CloudStorage
         if (is_array($key)) {
             return array_map([$this,'downloadUrl'],$key);
         }
-        return $key === null || empty($key) ? null : self::BASEURL . '/' . $key;
+        return $key === null || empty($key) ? null : $this->baseurl . '/' . $key;
     }
 
     /**
@@ -186,7 +186,7 @@ class CloudStorage
      */
     public function privateDownloadUrl($key,$expires = 3600)
     {
-        $url = self::BASEURL .'/'. $key;
+        $url =$this->baseurl .'/'. $key;
         return $this->auth->privateDownloadUrl($url,$expires);
     }
 
@@ -264,7 +264,7 @@ class CloudStorage
 
     public function persistentFop($key,$fops,$notifyUrl)
     {
-        $pfop = new PersistentFop($this->auth,$this->bucket,self::PIPELINE,$notifyUrl);
+        $pfop = new PersistentFop($this->auth,$this->bucket,$this->pipline,$notifyUrl);
         list($id,$error) = $pfop->execute($key,$fops);
         if($error !== null) {
             throw new \Exception($error->message(),$error->code());
