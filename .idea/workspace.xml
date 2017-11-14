@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e21d04d3-e39e-4906-8345-37a08042f388" name="默认" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/imsmy/app/Models/User_BACKUP_12980.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/imsmy/app/Models/User_BASE_12980.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/imsmy/app/Models/User_LOCAL_12980.php" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/imsmy/app/Models/User_REMOTE_12980.php" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentDetailTransformer.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentDetailTransformer.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" afterPath="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Models/User.php" afterPath="$PROJECT_DIR$/imsmy/app/Models/User.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/routes/api.php" afterPath="$PROJECT_DIR$/imsmy/routes/api.php" />
-    </list>
+    <list default="true" id="e21d04d3-e39e-4906-8345-37a08042f388" name="默认" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -57,7 +44,7 @@
                 <element signature="e#24817#24917#0#PHP" expanded="false" />
                 <element signature="e#24922#26552#0#PHP" expanded="false" />
                 <element signature="e#26558#26686#0#PHP" expanded="false" />
-                <marker date="1510654865366" expanded="false" signature="26764:37190" ph="..." />
+                <marker date="1510655367155" expanded="false" signature="26764:37190" ph="..." />
               </folding>
             </state>
           </provider>
@@ -270,12 +257,12 @@
       <option name="presentableId" value="Default" />
       <updated>1510647526253</updated>
       <workItem from="1510647527495" duration="1083000" />
-      <workItem from="1510648718620" duration="6348000" />
+      <workItem from="1510648718620" duration="6765000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7431000" />
+    <option name="totallyTimeSpent" value="7848000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -343,7 +330,7 @@
             <element signature="e#24817#24917#0#PHP" expanded="false" />
             <element signature="e#24922#26552#0#PHP" expanded="false" />
             <element signature="e#26558#26686#0#PHP" expanded="false" />
-            <marker date="1510654865366" expanded="false" signature="26764:37190" ph="..." />
+            <marker date="1510655367155" expanded="false" signature="26764:37190" ph="..." />
           </folding>
         </state>
       </provider>
@@ -460,7 +447,7 @@
             <element signature="e#24817#24917#0#PHP" expanded="false" />
             <element signature="e#24922#26552#0#PHP" expanded="false" />
             <element signature="e#26558#26686#0#PHP" expanded="false" />
-            <marker date="1510654865366" expanded="false" signature="26764:37190" ph="..." />
+            <marker date="1510655367155" expanded="false" signature="26764:37190" ph="..." />
           </folding>
         </state>
       </provider>
