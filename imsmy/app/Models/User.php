@@ -251,9 +251,9 @@ class User extends Common implements AuthenticatableContract,
      *  用户与片段
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function belongsToManyFragment()
+    public function hasManyFragment()
     {
-        return $this->belongsToMany('App\Models\Fragment','fragment_user_collect','user_id','fragment_id');
+        return $this->hasMany('App\Models\Fragment','user_id','fragment_id');
     }
 
     /**

@@ -45,12 +45,11 @@ class FragCollectTransformer extends Transformer
                 'down_count'    => $v['count'],
                 'watch_count'   => $v['watch_count'],
                 'create_time'   => $v['time_add'],
-                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_many_user'][0]),
+                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_user']),
                 'type'          => $this -> fragmentTypeTransformer->transformCollection($v['belongs_to_many_fragment_type']),
             ];
         }
-
-       return $a;
+         return $a;
     }
 
 
@@ -97,13 +96,34 @@ class FragCollectTransformer extends Transformer
                 'down_count'    => $v['count'],
                 'watch_count'   => $v['watch_count'],
                 'create_time'   => $v['time_add'],
-                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_many_user'][0]),
+                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_user']),
                 'type'          => $this -> fragmentTypeTransformer -> transformCollection($v['belongs_to_many_fragment_type']),
                 'storyboard'    => $this -> storyboardTransform -> transformCollection( $v['has_many_storyboard']),
                 'subtitle'      => $this -> subtitleTransformer -> transformCollection( $v['has_many_subtitle'])
             ];
         }
 
+        return $a;
+    }
+
+    public function collecttransform($data)
+    {
+        $a = [];
+        foreach ($data as $v){
+            $a[] = [
+                'fragment_id'   => $v['id'],
+                'user_id'       => $v['user_id'],
+                'name'          => $v['name'],
+                'duration'      => $v['duration'],
+                'cover'         => $v['cover'],
+                'url'           => $v['net_address'],
+                'down_count'    => $v['count'],
+                'watch_count'   => $v['watch_count'],
+                'create_time'   => $v['time_add'],
+                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_user']),
+                'type'          => $this -> fragmentTypeTransformer->transformCollection($v['belongs_to_many_fragment_type']),
+            ];
+        }
         return $a;
     }
 }

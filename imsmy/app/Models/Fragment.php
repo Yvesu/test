@@ -63,23 +63,14 @@ class Fragment extends Model
     {
         return $this->belongsToMany('App\Models\Keywords','keyword_fragment','fragment_id','keyword_id');
     }
-
-
-    /**
-     * 关联用用户
-     */
-   public function belongsToManyUser()
-    {
-        return $this->belongsToMany('App\Models\User','fragment_user_collect','fragment_id','user_id');
-    }
-
+    
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-//    public function belongsToUser()
-//    {
-//        return $this->belongsTo('App\Models\User','user_id','id');
-//    }
+    public function belongsToUser()
+    {
+        return $this->belongsTo('App\Models\User','user_id','id');
+    }
 
     /**
      * 片段与分类

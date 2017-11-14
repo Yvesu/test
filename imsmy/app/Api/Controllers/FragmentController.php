@@ -80,9 +80,7 @@ class FragmentController extends BaseController
             //搜索官方推荐
             $official_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('recommend','=','1')
                 ->where('active','!=','2')
                 ->where('test_results',1)
@@ -92,9 +90,7 @@ class FragmentController extends BaseController
             //随机取出数据
             $rand_fragment = Fragment::with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('active','!=','2')
                 ->where('test_results',1)
                 -> forPage($page,$this->paginate)
@@ -103,9 +99,7 @@ class FragmentController extends BaseController
             //按街道进行搜索
             $address_street_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('address_street','=',$address_street)
                 ->where('active','!=','2')
                 ->where('test_results',1)
@@ -125,9 +119,7 @@ class FragmentController extends BaseController
                 //按区搜索
                 $address_county_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                     $q->select('name');
-                },'belongsToManyUser'=>function($q){
-                    $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                }])
+                },'belongsToUser'])
                     ->where('address_county','=',$address_county)
                     ->where('active','!=','2')
                     ->where('test_results',1)
@@ -145,9 +137,7 @@ class FragmentController extends BaseController
                     //按城市搜索
                     $address_city_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                         $q->select('name');
-                    },'belongsToManyUser'=>function($q){
-                        $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                    }])
+                    },'belongsToUser'])
                         ->where('address_city','=',$address_city)
                         ->where('active','!=','2')
                         ->where('test_results',1)
@@ -166,9 +156,7 @@ class FragmentController extends BaseController
                         //按省份搜索
                     $address_province_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                         $q->select('name');
-                    },'belongsToManyUser'=>function($q){
-                        $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                    }])
+                    },'belongsToUser'])
                         ->where('address_province','=',$address_province)
                         ->where('active','!=','2')
                         ->where('test_results',1)
@@ -187,9 +175,7 @@ class FragmentController extends BaseController
                         //按国家搜索
                     $address_country_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                         $q->select('name');
-                    },'belongsToManyUser'=>function($q){
-                        $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                    }])
+                    },'belongsToUser'])
                         ->where('address_country','=',$address_country)
                         ->where('active','!=','2')
                         ->where('test_results',1)
@@ -260,7 +246,6 @@ class FragmentController extends BaseController
      * @param $classify
      * @return array
      */
-
     public function classifytransform($classify)
     {
         return [
@@ -322,9 +307,7 @@ class FragmentController extends BaseController
         //按街道进行搜索
         $address_street_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
             $q->select('name');
-        },'belongsToManyUser'=>function($q){
-            $q->select('nickname','avatar','verify','verify_info','cover','signature');
-        }])
+        },'belongsToUser'])
             ->where('address_street','=',$address_street)
             ->where('active','!=','2')
             ->where('test_results',1)
@@ -334,9 +317,7 @@ class FragmentController extends BaseController
         //按区搜索
         $address_county_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
             $q->select('name');
-        },'belongsToManyUser'=>function($q){
-            $q->select('nickname','avatar','verify','verify_info','cover','signature');
-        }])
+        },'belongsToUser'])
             ->where('address_county','=',$address_county)
             ->where('active','!=','2')
             ->where('test_results',1)
@@ -351,9 +332,7 @@ class FragmentController extends BaseController
             //按城市搜索
             $address_city_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('address_city','=',$address_city)
                 ->where('active','!=','2')
                 ->where('test_results',1)
@@ -366,9 +345,7 @@ class FragmentController extends BaseController
                 //按省份搜索
                 $address_province_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                     $q->select('name');
-                },'belongsToManyUser'=>function($q){
-                    $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                }])
+                },'belongsToUser'])
                     ->where('address_province','=',$address_province)
                     ->where('active','!=','2')
                     ->where('test_results',1)
@@ -381,9 +358,7 @@ class FragmentController extends BaseController
                     //按国家搜索
                     $address_country_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                         $q->select('name');
-                    },'belongsToManyUser'=>function($q){
-                        $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                    }])
+                    },'belongsToUser'])
                         ->where('address_country','=',$address_country)
                         ->where('active','!=','2')
                         ->where('test_results',1)
@@ -430,22 +405,31 @@ class FragmentController extends BaseController
                return response() -> json(['error'=>'not_login'], 403);
             }
 
-            $user = User::with(['belongsToManyFragment'=>function($q){
-                $q->with(['belongsToManyFragmentType'=>function($q){
-                    $q->select('name');
-                },'belongsToManyUser'=>function($q){
-                    $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                }])->where('way',2)->where('test_results',1);
-            }])->find($users->id)->belongsToManyFragment;
+            $ids = DB::table('fragment_user_collect')
+                ->where('user_id','=',$users->id)
+                ->where('way','=','1')
+                ->get();
 
-            if ($user->toArray()){
-                return response() -> json([
-                    'data'=>$this->fragCollectTransformer->transform($user->toArray())
-                  ], 200);
-            }else{
-                return response() -> json(['error'=>'not_found'], 404);
+            $id = [];
+            foreach ($ids as $k=>$v){
+                $id [] = $v->fragment_id;
             }
 
+            $collect = [];
+            foreach ($id as $v){
+                $collect[] = Fragment::with(['belongsToManyFragmentType','belongsToUser'])
+                    ->where('test_results','=',1)
+                    ->find($v)
+                    ->toArray();
+            }
+
+            if ($collect){
+                return response() -> json([
+                    'data'=>$this->fragCollectTransformer->collecttransform($collect)
+                  ], 200);
+            }else{
+                return [];
+            }
         }catch(\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
@@ -465,24 +449,30 @@ class FragmentController extends BaseController
 
             //如果用户未登录
           if (empty( $users)){
-               // return response() -> json(['error'=>'not_login'], 403);
+                return response() -> json(['error'=>'not_login'], 403);
             }
 
-           $user = User::with(['belongsToManyFragment'=>function($q){
-                $q->with(['hasManyStoryboard'=>function($a){
-                    $a->orderBy('sort','asc');
-                },'belongsToManyFragmentType'=>function($q){
-                    $q->select('name');
-                },'belongsToManyUser'=>function($q){
-                    $q->select('nickname','avatar','verify','verify_info','cover','signature');
-                },'hasManySubtitle'=>function($q){
-                    $q->orderBy('start_time','asc');
-                }])->where('way',2)->where('test_results',1);
-            }])->find(1000240)->belongsToManyFragment;
+          $ids = DB::table('fragment_user_collect')
+                ->where('user_id','=',$users->id)
+                ->where('way','=','2')
+                ->get();
 
-            if ($user->toArray()){
+          $id = [];
+            foreach ($ids as $k=>$v){
+                $id [] = $v->fragment_id;
+            }
+
+            $collect = [];
+            foreach ($id as $v){
+                $collect[] = Fragment::with(['belongsToManyFragmentType','belongsToUser','hasManyStoryboard','hasManySubtitle'])
+                    ->where('test_results','=',1)
+                    ->find($v)
+                    ->toArray();
+            }
+
+            if ($collect){
                 return response() -> json([
-                            'data'=>$this->fragCollectTransformer->downtransform($user->toArray())
+                            'data'=>$this->fragCollectTransformer->downtransform($collect)
                         ], 200);
             }else{
 		        return response() -> json(['error'=>'not_found'], 404);
@@ -578,9 +568,7 @@ class FragmentController extends BaseController
             //搜索官方推荐
             $first_fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('recommend','=','1')
                 ->where('test_results',1)
                 ->where('active','!=',2)
@@ -591,9 +579,7 @@ class FragmentController extends BaseController
                //排行
                $second__fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                    $q->select('name');
-               },'belongsToManyUser'=>function($q){
-                   $q->select('nickname','avatar','verify','verify_info','cover','signature');
-               }])
+               },'belongsToUser'])
                    -> where('active','!=',2)
                    -> where('test_results',1)
                    -> orderBy('watch_count', 'DESC')
@@ -608,9 +594,7 @@ class FragmentController extends BaseController
                //最新
                $second__fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                    $q->select('name');
-               },'belongsToManyUser'=>function($q){
-                   $q->select('nickname','avatar','verify','verify_info','cover','signature');
-               }])
+               },'belongsToUser'])
                    -> where('active','!=',2)
                    -> where('test_results',1)
                    -> orderBy('time_add', 'DESC')
@@ -647,9 +631,7 @@ class FragmentController extends BaseController
             //搜索官方推荐
             $first_fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 ->where('recommend','=','1')
                 -> where('test_results',1)
                 ->where('active','!=',2)
@@ -659,9 +641,7 @@ class FragmentController extends BaseController
             //最新
             $second__fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 -> where('active','!=',2)
                 -> where('test_results',1)
                 -> orderBy('time_add', 'DESC')
@@ -674,9 +654,7 @@ class FragmentController extends BaseController
             //片段数量
             $fragments_count = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
-            },'belongsToManyUser'=>function($q){
-                $q->select('nickname','avatar','verify','verify_info','cover','signature');
-            }])
+            },'belongsToUser'])
                 -> where('active','!=',2)
                 -> where('test_results',1)
                 ->count();
@@ -749,16 +727,16 @@ class FragmentController extends BaseController
             $user = Auth::guard('api')->user();
 
             if (empty($user)){
-          //      return response() -> json(['error'=>'no login'], 403);
+//                return response() -> json(['error'=>'no login'], 403);
             }
 
-        $fragment = Fragment::with(['belongsToManyUser','belongsToManyFragmentType'=>function($q){
+        $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
                 $q->select('name');
             }])->find($id);
 
             DB::table('fragment')->where('id','=',$id)->increment('watch_count');
 
-            return $this->fragmentDetailTransformer->transform($fragment);
+            return $this->fragmentDetailTransformer->fragtransform($fragment);
 
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
@@ -773,28 +751,46 @@ class FragmentController extends BaseController
     public function  fragmentdetails($fragmentId)
     {
         try{
-            //获取片段数据
-            $fragment = Fragment::with(['belongsToManyUser','belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            },'hasManyStoryboard'=>function($a){
-                $a->orderBy('sort','asc');
-            },'hasManySubtitle'=>function($q){
-                $q->orderBy('start_time','asc');
-            }])->where('test_results','=',1)
-                ->find($fragmentId);
+            // 判断用户是否为登录状态
+            $users = Auth::guard('api')->user();
 
-            if (empty($fragment)){
-                return response()->json(['error'=>'not found'],404);
+            //如果用户未登录
+            if (empty( $users)){
+                return response() -> json(['error'=>'not_login'], 403);
             }
 
-            //下载 + 1
-            DB::table('fragment')->where('id','=',$fragmentId)->increment('count');
+            //判断下载记录表中数据
+            $is_exist = DB::table('fragment_user_collect')
+                ->where('user_id','=',$users->id)
+                ->where('fragment_id','=',$fragmentId)
+                ->first();
 
-            // 观看 + 1
-            DB::table('fragment')->where('id','=',$fragmentId)->increment('watch_count');
+            //如果已经下载过
+            if ($is_exist){
 
-            //响应
-            return $this->fragmentDetailTransformer->usetransform($fragment);
+                //获取片段数据
+                $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
+                    $q->select('name');
+                },'hasManyStoryboard'=>function($a){
+                    $a->orderBy('sort','asc');
+                },'hasManySubtitle'=>function($q){
+                    $q->orderBy('start_time','asc');
+                }])->where('test_results','=',1)
+                    ->find($fragmentId);
+
+                if (empty($fragment)){
+                    return response()->json(['error'=>'not found'],404);
+                }
+
+                //下载 + 1
+                DB::table('fragment')->where('id','=',$fragmentId)->increment('count');
+
+                // 观看 + 1
+                DB::table('fragment')->where('id','=',$fragmentId)->increment('watch_count');
+
+                //响应
+                return $this->fragmentDetailTransformer->usetransform($fragment);
+            }
 
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
@@ -807,7 +803,7 @@ class FragmentController extends BaseController
      * @param Request $request
      * @return array|\Illuminate\Http\JsonResponse
      */
-    public function useOrFilm($frag_id,Request $request)
+   /* public function useOrFilm($frag_id,Request $request)
     {
         try{
         //判断用户是否为登录状态
@@ -1101,6 +1097,6 @@ class FragmentController extends BaseController
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
-    }
+    }*/
 
 }

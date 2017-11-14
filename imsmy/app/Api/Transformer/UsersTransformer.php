@@ -11,8 +11,8 @@ class UsersTransformer extends Transformer
         return [
             'id'           =>  $user->id,
             'nickname'     =>  $user->nickname,
-            'avatar'       =>  CloudStorage::downloadUrl($user->avatar),
-            'cover'        =>  CloudStorage::downloadUrl($user->cover),
+            'avatar'       =>  $user->avatar,
+            'cover'        =>  $user->cover,
             'verify'       =>  $user->verify,
 //            'hash_avatar'  =>  $user->hash_avatar,
             'signature'    =>  $user->signature,
@@ -27,7 +27,6 @@ class UsersTransformer extends Transformer
             'avatar'       =>  $user['avatar'],
             'cover'        =>  $user['cover'],
             'verify'       =>  $user['verify'],
-//            'hash_avatar'  =>  $user->hash_avatar,
             'signature'    =>  $user['signature'],
             'verify_info'  =>  $user['verify_info'],
         ];

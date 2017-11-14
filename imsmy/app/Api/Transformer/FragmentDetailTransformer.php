@@ -106,10 +106,43 @@ class FragmentDetailTransformer extends Transformer
             'watch_count'   => $data->watch_count,
             'praise'        => $data->praise,
             'vip_isfree'    => (boolean)$data->vipfree,
-            'user'          => $this->usersTransformer->transform( $data->belongsToManyUser[0]),
+            'user'          => $this->usersTransformer->transform( $data->belongsToUser),
             'type'          => $this->fragmentTypeTransformer->transformCollection($data->belongsToManyFragmentType->toArray()),
             'storyboard'    => $this -> storyboardTransform ->transformCollection($data->hasManyStoryboard->toArray()),
             'subtitle'      => $this -> subtitleTransformer ->transformCollection($data->hasManySubtitle->toArray()),
+        ];
+    }
+
+    /**
+     * 预览使用
+     * @param $data
+     * @return array
+     */
+    public function fragtransform($data)
+    {
+        return [
+            'id'            => $data->id,
+            'user_id'       => $data->user_id,
+            'aspect_radio'  => $data->aspect_radio,
+            'duration'      => $data->duration,
+            'net_address'   => $data->net_address,
+            'cover'         => $data->cover,
+            'name'          => $data->name,
+            'bgm'           => $data->bgm,
+            'country'       => $data->address_country,
+            'province'      => $data->address_province,
+            'city'          => $data->address_city,
+            'county'        => $data->address_county,
+            'street'        => $data->address_street,
+            'intergral'     => $data->intergral,
+            'cost'          => $data->cost,
+            'count'         => $data->count,
+            'watch_count'   => $data->watch_count,
+            'praise'        => $data->praise,
+            'vip_isfree'    => (boolean)$data->vipfree,
+            'user'          => $this->usersTransformer->transform( $data->belongsToUser),
+            'type'          =>  $this->fragmentTypeTransformer->transformCollection($data->belongsToManyFragmentType->toArray()),
+            //'subtitle'      =>  $this->subtransform($data->hasManySubtitle->toArray()),
         ];
     }
 }
