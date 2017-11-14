@@ -2110,10 +2110,6 @@ class TweetController extends BaseController
                -> forPage($page, $this->paginate)
                -> orderBy('id','desc')
                -> get();
-//        dd($name_tweets);
-
-
-
 
             if($name_tweets->count() < $this -> paginate) {
 
