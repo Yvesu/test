@@ -651,7 +651,27 @@ class FodderController extends Controller
         }
     }
 
+    public function issueFragmentAddSubtitle(Request $request)
+    {
+        try{
+            $cover = $request->get('cover');
+            $bgm = $request->get('bgm');
+            $volume = $request->get('volume');
+        }catch (ModelNotFoundException $e){
+
+        }
+    }
 
 
+    public function issueFragmentDeleteStoryboard(Request $request)
+    {
+        try{
+            $key = $request->get('key');
+            CloudStorage::webDeleteVideo($key);
+            return response()->json(['message'=>'删除成功'],200);
+        }catch (ModelNotFoundException $e){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
 
 }

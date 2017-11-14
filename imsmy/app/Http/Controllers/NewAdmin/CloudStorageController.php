@@ -23,6 +23,13 @@ class CloudStorageController extends Controller
      */
     public function token(Request $request)
     {
+        $type = $request->get('type');
+        $location = $request->get('location');
+        if(empty($type) || empty($location))
+        {
+            return response()->json(['error'=>'数据不和法']);
+        }
+
         $policy = null;
         $parameters = $request->only(['url','body']);
 
@@ -33,7 +40,7 @@ class CloudStorageController extends Controller
             $policy['callbackBody'] = $request->get('body');
         }
         return response()->json([
-            'token' => CloudStorage::getToken($policy)
+            'token' => CloudStorage::getToken($policy,$type,$location)
         ]);
     }
 
