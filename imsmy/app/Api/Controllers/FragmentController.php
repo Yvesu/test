@@ -900,7 +900,10 @@ class FragmentController extends BaseController
 
                 //需要提交动作
                 if (empty($commit)){
-                    return response()->json(['error'=>'need commit'],403);
+                    return response()->json([
+                        'error'     => 'need commit',
+                        'integral'  => $integral,
+                    ],403);
                 }
 
                 //确认扣除积分
@@ -928,37 +931,22 @@ class FragmentController extends BaseController
 
                         if($integral_update){
 
-                     /*       DB::table('user_integral_expend_log')->insert([
+                            //获取详细信息
+                            $fragment = Fragment::find($frag_id);
+
+                            //写入消费表
+                            $result = DB::table('user_integral_expend_log')->insert([
                                      'user_id'    => $user->id,
                                      'pay_number' => $number,
                                      'pay_count'  => $integral,
-                                     'pay_cost'   =>
-                                ]);*/
-
-
-
-                            //写入消费表
-                         /*   $integral_extend = new User\UserIntegralExpend();
-
-                            $integral_extend -> user_id = $user_info->user_id;
-
-                            $integral_extend -> pay_number = $number;
-
-                            $integral_extend -> pay_count  = $integral;
-
-                            $integral_extend -> type_id = $fragment->id;
-
-                            $integral_extend -> pay_reason = '片段:'.$fragment->name;
-
-                            $integral_extend -> status     = 1;
-
-                            $integral_extend -> create_at  = time();
-
-                            $result = $integral_extend -> save();*/
+                                     'type_id'    => $fragment->id,
+                                     'pay_reason' => '片段:'.$fragment->name,
+                                     'status'     => 1,
+                                     'create_at'  => time(),
+                                ]);
 
                             //返回数据
                             if ($result){
-
                                 DB::commit();
 
                                 //写入下载表
@@ -969,7 +957,7 @@ class FragmentController extends BaseController
                                     'way' => 2,
                                 ]);
 
-                                return $this->fragmentdetails(1);
+                                return $this->fragmentdetails($frag_id);
                             }else{
                                 DB::rollBack();
                                return response() -> json(['error'=>'Try again later'], 500);
@@ -984,29 +972,32 @@ class FragmentController extends BaseController
                         //用户所剩的积分数
                         $user_info = User\UserIntegral::where('user_id','=',$user->id)->first();
                         $user_integral = $user_info->integral_count;
-			
-		return response() -> json([
-			 'user_integral' => $user_integral,
-			'message'=>'Sorry Underbalance',
-			], 403);
+
+                        //用户积分为0
+                        if (!$user_integral) {
+                            return response()->json([
+                                'message'=>'Sorry Underbalance',
+                                'user_integral' => $user_integral,
+                            ], 403);
+                        }
                     }
 
-                }else if($commit === '2'){                      //取消购买
-                  return response() -> json(['message'=>'Successfully Canceled'], 204);  
+                }else if($commit == '2'){                     //取消购买
+                   return ['message'=>'Successfully Canceled'];
                 }else{
-                   return response() -> json(['message'=>'Need to purchase'], 103);
+                   return response() -> json(['message'=>'Need commit'], 103);
                 }
             }
 
 
-        }elseif ($integral && !$cost && $vip_isfree){     //会员收费
+        }elseif ($integral && !$cost && $vip_isfree){     //会员是否收费   1
 
             //从消费表查看是否购买过
             $res = User\UserIntegralExpend::where('user_id',$user->id)
                 -> where('type_id',$frag_id)
                 -> where('status',1)
                 ->first();
-
+            dd($res);
             //已经购买过
             if ($res){
                 $fragment= Fragment::with(['belongsToUser'])->find($frag_id);
@@ -1080,7 +1071,7 @@ class FragmentController extends BaseController
                             ], 200);
                         }else{
                             DB::rollBack();
-			return response() -> json(['message'=>'Try again later'], 500);
+                            return response() -> json(['message'=>'Try again later'], 500);
                         }
 
                     }else{
