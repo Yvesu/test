@@ -13,7 +13,7 @@ class CloudStorageController extends Controller
      * 获取token值
      * @Get("/token")
      * @Versions({"v1"})
-     * @Parameters({
+     * @Parameters({ 
      *     @Parameter("url", description="如需回调，此处填写回调函数"),
      *     @Parameter("body", description="如需回调，此处填写对应的body返回值"),
      * })
