@@ -47,6 +47,8 @@ class Tweet extends Common
         'browse_times',
         'tweet_grade_total',
         'tweet_grade_times',
+        'category',
+        'category_id',
     ];
 
     /**

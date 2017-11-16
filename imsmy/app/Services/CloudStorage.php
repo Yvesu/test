@@ -172,11 +172,7 @@ class CloudStorage
 
     public function downloadUrl($key)
     {
-        if (is_array($key)) {
-            return array_map([$this,'downloadUrl'],$key);
-        }
-
-        return $key === null || empty($key) ? null : $this->baseurl . '/' . $key;
+        return $key;
     }
 
     /**

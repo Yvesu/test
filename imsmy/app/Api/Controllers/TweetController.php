@@ -793,6 +793,9 @@ class TweetController extends BaseController
                 'type'          =>  (int)$request->get('type') ?? 0,
                 'visible'       =>  (int)$request->get('visible') ?? 0,
                 'visible_range' =>  $request->get('visible_range'),
+                'fragment_id'       =>  $request->get('category_id') ? $request->get('fragment_id') : '',
+                'filter_id'       =>  $request->get('category_id') ? $request->get('filter_id') : '',
+                'template_id'       =>  $request->get('category_id') ? $request->get('template_id') : '',
             ];
 
             // 内容 过滤内容

@@ -42,7 +42,7 @@ class MakeFilterController extends BaseController
 
                 // 获取用户信息
                 if(!$user = Auth::guard('api') -> user())
-                    return response()->json(['error'=>'bad_request'],403);
+                 //   return response()->json(['error'=>'bad_request'],403);
 
                 // 获取数据
                 $whereHas = [['hasManyUserFile',[['user_id',$user->id]]]];
@@ -64,7 +64,7 @@ class MakeFilterController extends BaseController
 
             } else {
 
-                $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
+                $with = [['belongsToUser',['nickname']],['belongsToManyFolder',['name']]];
 
                 $audio = MakeFilterFile::ofType($type)
                     -> ofSearch($search)
@@ -72,7 +72,7 @@ class MakeFilterController extends BaseController
             }
 
             foreach($audio as $value){
-                $value -> cover = CloudStorage::downloadUrl($value -> cover);
+                $value -> cover = $value -> cover;
             }
 
             // 调用内部函数，返回数据

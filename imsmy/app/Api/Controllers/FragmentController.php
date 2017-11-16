@@ -7,6 +7,7 @@ use App\Api\Transformer\FragmentDetailTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Models\Fragment;
+use App\Models\Tweet;
 use App\Models\User;
 use App\Models\FragmentType;
 use Illuminate\Http\Request;
@@ -751,23 +752,6 @@ class FragmentController extends BaseController
     public function  fragmentdetails($fragmentId)
     {
         try{
-            // 判断用户是否为登录状态
-            $users = Auth::guard('api')->user();
-
-            //如果用户未登录
-            if (empty( $users)){
-                return response() -> json(['error'=>'not_login'], 403);
-            }
-
-            //判断下载记录表中数据
-            $is_exist = DB::table('fragment_user_collect')
-                ->where('user_id','=',$users->id)
-                ->where('fragment_id','=',$fragmentId)
-                ->first();
-
-            //如果已经下载过
-            if ($is_exist){
-
                 //获取片段数据
                 $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
                     $q->select('name');
@@ -790,7 +774,6 @@ class FragmentController extends BaseController
 
                 //响应
                 return $this->fragmentDetailTransformer->usetransform($fragment);
-            }
 
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
@@ -803,7 +786,7 @@ class FragmentController extends BaseController
      * @param Request $request
      * @return array|\Illuminate\Http\JsonResponse
      */
-   /* public function useOrFilm($frag_id,Request $request)
+    public function useOrFilm($frag_id,Request $request)
     {
         try{
         //判断用户是否为登录状态
@@ -832,6 +815,7 @@ class FragmentController extends BaseController
 
             //判断下载记录表中数据
             $is_exist = DB::table('fragment_user_collect')
+                ->where('way','=',2)
                 ->where('user_id','=',$user->id)
                 ->where('fragment_id','=',$frag_id)
                 ->first();
@@ -851,9 +835,7 @@ class FragmentController extends BaseController
             ]);
 
             // 获取片段数据
-              $fragment = $this->fragmentdetails($frag_id);
-
-            return $this->fragmentDetailTransformer->usetransform($fragment);
+            return  $this->fragmentdetails($frag_id);
 
         }elseif ($integral && !$cost && !$vip_isfree){   //需要积分  会员不收费
 //            判断用户是否是vip
@@ -866,17 +848,12 @@ class FragmentController extends BaseController
                     ->where('fragment_id','=',$frag_id)
                     ->first();
 
-                   if(!$is_exist) {
+                   if($is_exist) {
                        //获取片段数据
                        return  $this->fragmentdetails($frag_id);
                    }
 
-                // 获取片段数据
-                $fragment = $this->fragmentdetails($frag_id);
-
-                return response() -> json([
-                    'data' => $this->fragmentDetailTransformer->transform($fragment)
-                ], 200);
+                       return  $this->fragmentdetails($frag_id);
 
             }else{
 
@@ -984,8 +961,6 @@ class FragmentController extends BaseController
                    return response() -> json(['message'=>'Need commit'], 103);
                 }
             }
-
-
         }elseif ($integral && !$cost && $vip_isfree){     //会员是否收费   1
 
             //从消费表查看是否购买过
@@ -993,26 +968,33 @@ class FragmentController extends BaseController
                 -> where('type_id',$frag_id)
                 -> where('status',1)
                 ->first();
-            dd($res);
+
             //已经购买过
             if ($res){
-                $fragment= Fragment::with(['belongsToUser'])->find($frag_id);
-
-                //修改下载量
-                DB::table('fragment')->increment('count');
-                DB::table('fragment')->increment('watch_count');
-
-               return response() -> json([                    
-                    'data' => $this->fragmentDetailTransformer->transform($fragment)
-                ], 200);
+                return $this->fragmentdetails($frag_id);
             }
 
             //接收用户是否确认扣除积分
             $commit = $request->get('commit');
 
+            //需要提交动作
+            if (empty($commit)){
+                return response()->json([
+                    'error'     => 'need commit',
+                    'integral'  => $integral,
+                ],403);
+            }
+
             //确认扣除积分
-            if ($commit === '1'){
+            if ($commit == '1'){
+                //从积分表获取用户积分
                 $user_info = User\UserIntegral::where('user_id','=',$user->id)->first();
+
+                //用户积分为0
+                if (!$user_info) {
+                    return response()->json(['message' => 'Integral is 0'], 403);
+                }
+
                 $user_integral = $user_info->integral_count;
                 $number = date('YmdHis').rand(100000,999999);
 
@@ -1026,54 +1008,41 @@ class FragmentController extends BaseController
 
                     if($integral_update){
 
-                        $fragment= Fragment::with(['belongsToUser'])->find($frag_id);
+                            //获取详细信息
+                            $fragment = Fragment::find($frag_id);
 
-                        //写入消费表
-                        $integral_extend = new User\UserIntegralExpend();
-
-                        $integral_extend -> user_id = $user_info->user_id;
-
-                        $integral_extend -> pay_number = $number;
-
-                        $integral_extend -> pay_count  = $integral;
-
-                        $integral_extend -> type_id = $fragment->id;
-
-                        $integral_extend -> pay_reason = '片段:'.$fragment->name;
-
-                        $integral_extend -> status     = 1;
-
-                        $integral_extend -> create_at  = time();
-
-                        $result = $integral_extend -> save();
-
-                        //返回数据
-                        if ($result){
-                            //写入下载表
-                            DB::table('fragment_user_collect')->insert([
-                                'user_id' => $user->id,
-                                'fragment_id' => $frag_id,
-                                'create_at' =>time(),
-                                'way' => 2,
+                            //写入消费表
+                            $result = DB::table('user_integral_expend_log')->insert([
+                                'user_id'    => $user->id,
+                                'pay_number' => $number,
+                                'pay_count'  => $integral,
+                                'type_id'    => $fragment->id,
+                                'pay_reason' => '片段:'.$fragment->name,
+                                'status'     => 1,
+                                'create_at'  => time(),
                             ]);
 
-                            DB::table('fragment')->increment('count');
-                            DB::table('fragment')->increment('watch_count');
+                            //返回数据
+                            if ($result){
+                                DB::commit();
 
-                            DB::commit();
+                                //写入下载表
+                                DB::table('fragment_user_collect')->insert([
+                                    'user_id' => $user->id,
+                                    'fragment_id' => $frag_id,
+                                    'create_at' =>time(),
+                                    'way' => 2,
+                                ]);
 
-                            return response() -> json([
-                                'data' =>$this->fragmentDetailTransformer->transform($fragment)
-                            ], 200);
+                                return $this->fragmentdetails($frag_id);
+                            }else{
+                                DB::rollBack();
+                                return response() -> json(['error'=>'Try again later'], 500);
+                            }
                         }else{
                             DB::rollBack();
                             return response() -> json(['message'=>'Try again later'], 500);
                         }
-
-                    }else{
-                        DB::rollBack();
-                        return response() -> json(['message'=>'Try again later'], 500);
-                    }
 
                 }else{
                     //用户所剩的积分数
@@ -1086,17 +1055,62 @@ class FragmentController extends BaseController
                     ], 403);
                 }
 
-            }else if($commit === '2'){                      //取消购买
-		  return response() -> json(['message'=>'Successfully Canceled'], 204);               
+            }else if($commit == '2'){                     //取消购买
+		            return ['message'=>'Successfully Canceled'];
             }else{
                    return response() -> json(['message'=>'Need to purchase'], 103);
             }
         }
-        //TODO    会员不免费
+        //TODO    会员不免费需要金币
 
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
-    }*/
+    }
+
+    public function watch($id,Request $request)
+    {
+      //  try {
+            //接受页数
+            $page = (int)$request->get('page',1);
+
+
+
+
+            //获取数据
+            $tweets = Tweet::where('active','=',1)
+                    ->where('fragment_id','=',$id)
+                    ->with([
+                        'hasOneContent' => function ($query) {
+                            $query->select(['tweet_id','content']);
+                    },
+                        'belongsToUser'
+                    ])
+                    ->forPage($page, $this -> paginate)
+                    ->orderBy('browse_times','desc')
+                    ->get();
+
+
+        dd($tweets->toArray());
+
+        $tweets = Tweet::where('active','=',1)
+            ->with([
+                'hasOneContent' => function ($query) {
+                    $query->select(['tweet_id','content']);
+                },
+                'belongsToUser' => function ($query) {
+                    $query->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+                } ])
+            ->where('fragment_id','=',$id)
+            ->orderBy('browse_times','desc')
+            -> forPage($page,$this->paginate)
+            -> get(['id','type','user_id','location','user_top','photo','screen_shot','video','created_at']);
+
+
+
+    /*    } catch (\Exception $e) {
+            return response()->json(['error' => 'not_found'], 404);
+        }*/
+    }
 
 }

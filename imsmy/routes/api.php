@@ -998,7 +998,6 @@ $api->version(['v1'],function($api){
         /**
          *   片段  fragment
          */
-
         $api->group(['prefix' => 'fragment'],function($api){
 
             // 片段首页
@@ -1018,7 +1017,6 @@ $api->version(['v1'],function($api){
             //片段预览
             $api -> get('fragdetail/{id}','FragmentController@fragdetail')
                  -> where('id','[0-9]+');
-
 
             //片段详情
             $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
@@ -1041,11 +1039,18 @@ $api->version(['v1'],function($api){
                 $api -> post('/download','FragmentController@download');
 
                 //使用且开拍
-                $api -> post('useOrFilm/{fram_id}','FragmentController@useOrFilm')
-                    ->where('fram_id','[0-9]+');
+                $api -> post('useOrFilm/{frag_id}','FragmentController@useOrFilm')
+                    ->where('frag_id','[0-9]+');
             });
 
+            //观摩
+            $api->get('watch/{id}','FragmentController@watch')
+                ->where('id','[0-9]+');
+
         });
+
+
+
 
         //获取某个人的用户信息  通过姓名
         $api->post('/person','UserController@person' );

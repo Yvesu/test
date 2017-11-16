@@ -40,15 +40,6 @@ class Fragment extends Model
     public $timestamps = false;
 
     /**
-     * 与分镜Storyboard 一对多关系
-     *
-     */
-    public function hasManyStoryboard()
-    {
-        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
-    }
-
-    /**
      * 与字幕暂存表SubtitleTemporary 一对多关系
      */
     public function hasManySubtitleTemporary()

@@ -34,15 +34,6 @@ class MakeFilterFile extends Common
     public $timestamps = false;
 
     /**
-     * 多对一关系,所属目录
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function belongsToFolder()
-    {
-        return $this -> belongsTo('App\Models\Make\MakeFilterFolder','folder_id','id');
-    }
-
-    /**
      * 上传者
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
