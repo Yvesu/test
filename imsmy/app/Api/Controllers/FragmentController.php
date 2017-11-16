@@ -1074,6 +1074,12 @@ class FragmentController extends BaseController
         }
     }
 
+    /**
+     * 观摩
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function watch($id,Request $request)
     {
         try {
@@ -1210,6 +1216,13 @@ class FragmentController extends BaseController
         }catch (\Exception $e) {
             return response()->json(['error' => 'not_found'], 404);
         }
+    }
+
+    public function tweetdetails($id)
+    {
+       // $tweet = Tweet::with([''])->find($id);
+
+     //   dd($tweet);
     }
 
 }

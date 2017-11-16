@@ -49,6 +49,9 @@ class Tweet extends Common
         'tweet_grade_times',
         'category',
         'category_id',
+        'fragment_id',
+        'filter_id',
+        'template_id',
     ];
 
     /**

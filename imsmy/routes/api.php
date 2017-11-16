@@ -1042,15 +1042,14 @@ $api->version(['v1'],function($api){
                 $api -> post('useOrFilm/{frag_id}','FragmentController@useOrFilm')
                     ->where('frag_id','[0-9]+');
             });
-
             //观摩
             $api->get('watch/{id}','FragmentController@watch')
                 ->where('id','[0-9]+');
 
+            //片段动态详情
+            $api -> post('/tweet/details/{id}','FragmentController@tweetdetails')
+                ->where('id','[1-9]+');
         });
-
-
-
 
         //获取某个人的用户信息  通过姓名
         $api->post('/person','UserController@person' );
@@ -1060,5 +1059,9 @@ $api->version(['v1'],function($api){
 
         //置顶
         $api->get('/topper','TopperController@index');
+
+        //修改用户手机类型
+        $api->post('/edit/phoneinfo','AuthController@phoneinfo');
+
     });
 });

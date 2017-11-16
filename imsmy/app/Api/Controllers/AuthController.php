@@ -1074,4 +1074,46 @@ class AuthController extends BaseController
             return response()->json(['error' => $e->getMessage()],$e->getCode());
         }
     }
+
+    /**
+     * 修改phone_id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function phoneinfo(Request $request)
+    {
+        try{
+            // 获取用户名及phone_id
+            $username = (int)$request->get('username');
+
+            // 通过用户名获取用户信息，如果没有则返回错误信息
+            $auth = User::whereHas('hasOneLocalAuth',function ($q) use ($username) {
+                $q->where('username',$username);
+            })->first();
+
+            $phone_id = $request->get('phone_id');
+
+            if($phone_id){
+
+                // 将json格式的 phone_id 解析成变量
+                $phone_data = json_decode($phone_id,true);
+
+                // 匹配手机型号及序列号是否与数据库所存一致,不一致则返回错误，需要验证短信验证码才能进行登录
+                if($auth->phone_model != $phone_data['model'] || $auth->phone_serial != $phone_data['serial']){
+
+                    // 将用户新的手机信息写入集合
+                    $auth->phone_model = $phone_data['model'];
+                    $auth->phone_serial = $phone_data['serial'];
+                    $auth->phone_sdk_int = $phone_data['sdk_int'];
+                    $res = $auth->save();
+                }
+                if ($res){
+                    return response()->json(['message'=>'Success'],200);
+                }
+            }
+
+        } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()],$e->getCode());
+        }
+    }
 }

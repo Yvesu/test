@@ -70,6 +70,7 @@ class User extends Common implements AuthenticatableContract,
         'browse_times',
         'last_ip',
         'last_token',
+        'is_vip',
     ];
 
     /**

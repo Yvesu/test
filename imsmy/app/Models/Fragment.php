@@ -26,15 +26,18 @@ class Fragment extends Model
         'address_city',
         'address_county',
         'address_street',
-        'lat',
-        'lng',
         'integral',
         'cost',
         'size',
         'count',
         'active',
         'time_add',
-        'time_update'
+        'time_update',
+        'recommend',
+        'vipfree',
+        'watch_count',
+        'praise',
+        'test_results',
     ];
 
     public $timestamps = false;
