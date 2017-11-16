@@ -242,10 +242,6 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                     */
                    $api->post('/issue/fragment/resource','FodderController@isserFragmentResource');
 
-                    /**
-                     * 发布片段-上传封面
-                     */
-                    $api->post('/issue/fragment/addcover','FodderController@issueFragmentAddcover');
 
                     /**
                      * 发布片段-添加字幕
@@ -253,9 +249,19 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                     $api->post('/issue/fragment/addsubtitle','FodderController@issueFragmentAddSubtitle');
 
                     /**
+                     * 发布片段-发布
+                     */
+                    $api->post('/issue/fragment/issue','FodderController@issue');
+
+                    /**
                      * 删除分镜
                      */
                     $api->post('/issue/fragment/deleteStoryboard','FodderController@issueFragmentDeleteStoryboard');
+
+                    /**
+                     * 执行发布
+                     */
+                    $api->post('/issue/fragment/doissue','FodderController@doissue');
 
 
                    /**

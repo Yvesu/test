@@ -18,7 +18,10 @@ class StoryboardTemporary extends Model
         'time_update',
         'address',
         'fragment_id',
-        'effects_id'
+        'effects_id',
+        'address2',
+        'size',
+        'sort'
     ];
 
     /**

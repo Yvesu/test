@@ -42,32 +42,7 @@ class FilterController extends Controller
             $count = $request->get('count',0);
             //  页码
             $page = $request->get('page',1);
-//        switch ($count){
-//            case 0:
-//                $count = 0;
-//                break;
-//            case 1:
-//                $count = 100;
-//                break;
-//            case 2:
-//                $count = 500;
-//                break;
-//            case 3:
-//                $count = 1000;
-//                break;
-//            case 4:
-//                $count = 5000;
-//                break;
-//            case 5:
-//                $count = 10000;
-//                break;
-//            case 6:
-//                $count = 50000;
-//                break;
-//            default:
-//                $count = 0;
-//                break;
-//        }
+
             //  时间  0 全部  1一天内    2 一周内    3 一月内
             $time = $request->get('time',0);
             switch ($time){
@@ -100,6 +75,7 @@ class FilterController extends Controller
 //
 //            $admin[$k] = Administrator::where('user_id',$user[$k]->id)->first();
 //        }
+
             $data = [];
             //  取出操作员 并和其余数据存入到数组中
             foreach($maindata as $item => $value)
@@ -122,11 +98,14 @@ class FilterController extends Controller
                     'count' => $value->count,
                     'intrgral' => $value->integral,
                     'active' => $value->active,
+                    'recommend' => $value->recommend,
+                    'ishot' => $value->ishot,
 
                 ];
-                if($value->recomment == 0)
+//                dd($value);
+                if($tempdata['recommend'] == 0)
                 {
-                    if($value->ishot == 0){
+                    if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
                             'recomment' => '推荐',
                             'ishot' => '热门',
@@ -141,7 +120,7 @@ class FilterController extends Controller
                     }
 
                 }else{
-                    if($value->ishot == 0){
+                    if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
                             'recomment' => '取消推荐',
                             'ishot' => '热门',
@@ -155,42 +134,45 @@ class FilterController extends Controller
                         ];
                     }
                 }
-                $data['data'.$item] = $tempdata;
-
+                array_push($data,$tempdata);
             }
 
 
             //  分类数据
             $type = MakeFilterFolder::where('active','=','1')->get();
+            $type1 = [];
             foreach ($type as $k => $v)
             {
-                $folder1['folder'.$k]['name'] = $v->name;
-                $folder1['folder'.$k]['id'] = $v->id;
+                $folder1['name'] = $v->name;
+                $folder1['id'] = $v->id;
+                array_push($type1,$folder1);
             }
 
             //  操作员
             $administrator = Administrator::get();
+            $operator1 = [];
             foreach ($administrator as $k => $v)
             {
-                $operator['operator'.$k]['id'] = $v -> id;
-                $operator['operator'.$k]['name'] = $v -> name;
+                $operator['id'] = $v -> id;
+                $operator['name'] = $v -> name;
+                array_push($operator1,$operator);
             }
 
             //  时间
             $time = [
-                'time1' => [
+                [
                     'label' => 0,
                     'des' => '不限时间',
                 ],
-                'time2' => [
+                [
                     'label' => 1,
                     'des' => '一天内',
                 ],
-                'time3' => [
+                [
                     'label' => 2,
                     'des' => '一周内',
                 ],
-                'time4' => [
+                [
                     'label' => 3,
                     'des' => '一月内',
                 ]
@@ -198,40 +180,28 @@ class FilterController extends Controller
 
             //  费用
             $cost = DownloadCost::get();
-//        dd($cost);
+            $num1 = [];
             foreach ($cost as $k => $v)
             {
-                $num['integral'.$k] = $cost[$k]->details;
+                $num['integral'] = $cost[$k]->details;
+                array_push($num1,$num);
             }
 
             //  下载量
             $count = [
-                'count1' => 0,
-                'count2' => 100,
-                'count3' => 500,
-                'count4' => 1000,
-                'count5' => 5000,
-                'count6' => 10000,
-                'count7' => 500000,
+                ['count' => 0],
+                ['count' => 100],
+                ['count' => 500],
+                ['count' => 1000],
+                ['count' => 5000],
+                ['count' => 10000],
+                ['count' => 500000],
             ];
 
             $sum = MakeFilterFile::get()->count();
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-
-            $arr = [
-                'data' => $data,
-                'type'=> $folder1,
-                'operator' => $operator,
-                'time' => $time,
-                'integral' => $num,
-                'count' => $count,
-                'sum' => $sum,
-                'todaynew' => $todaynew,
-            ];
-            $arr1 = [];
-            array_push($arr1,$arr);
-            return response()->json(['data'=>$arr1],200);
+            return response()->json(['data'=>$data,'type'=> $type1,'operator' => $operator1,'time' => $time,'integral' => $num1  ,'count' => $count,'sum' => $sum,'todaynew' => $todaynew,],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }
@@ -403,9 +373,9 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
             }
             //  取出发布人（管理员、用户）
 //        foreach($maindata as $k => $v)
@@ -435,10 +405,11 @@ class FilterController extends Controller
                     'count' => $value->count,
                     'intrgral' => $value->integral,
                     'active' => $value->active,
+                    'ishot' => $value->ishot,
 
                 ];
 
-                    if($value->ishot == 0){
+                    if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
                             'recomment' => '取消推荐',
                             'ishot' => '热门',
@@ -452,42 +423,46 @@ class FilterController extends Controller
                         ];
                     }
 
-                $data['data'.$item] = $tempdata;
+                array_push($data,$tempdata);
 
             }
 
 
             //  分类数据
             $type = MakeFilterFolder::where('active','=','1')->get();
+            $type1 = [];
             foreach ($type as $k => $v)
             {
-                $folder1['folder'.$k]['name'] = $v->name;
-                $folder1['folder'.$k]['id'] = $v->id;
+                $folder1['name'] = $v->name;
+                $folder1['id'] = $v->id;
+                array_push($type1,$folder1);
             }
 
             //  操作员
             $administrator = Administrator::get();
+            $operator1 = [];
             foreach ($administrator as $k => $v)
             {
-                $operator['operator'.$k]['id'] = $v -> id;
-                $operator['operator'.$k]['name'] = $v -> name;
+                $operator['id'] = $v -> id;
+                $operator['name'] = $v -> name;
+                array_push($operator1,$operator);
             }
 
             //  时间
             $time = [
-                'time1' => [
+                [
                     'label' => 0,
                     'des' => '不限时间',
                 ],
-                'time2' => [
+                [
                     'label' => 1,
                     'des' => '一天内',
                 ],
-                'time3' => [
+                [
                     'label' => 2,
                     'des' => '一周内',
                 ],
-                'time4' => [
+                [
                     'label' => 3,
                     'des' => '一月内',
                 ]
@@ -495,40 +470,29 @@ class FilterController extends Controller
 
             //  费用
             $cost = DownloadCost::get();
-//        dd($cost);
+            $num1 = [];
             foreach ($cost as $k => $v)
             {
-                $num['integral'.$k] = $cost[$k]->details;
+                $num['integral'] = $cost[$k]->details;
+                array_push($num1,$num);
             }
 
             //  下载量
             $count = [
-                'count1' => 0,
-                'count2' => 100,
-                'count3' => 500,
-                'count4' => 1000,
-                'count5' => 5000,
-                'count6' => 10000,
-                'count7' => 500000,
+                ['count' => 0],
+                ['count' => 100],
+                ['count' => 500],
+                ['count' => 1000],
+                ['count' => 5000],
+                ['count' => 10000],
+                ['count' => 500000],
             ];
 
             $sum = MakeFilterFile::get()->count();
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
-            $arr = [
-                'data' => $data,
-                'type'=> $folder1,
-                'operator' => $operator,
-                'time' => $time,
-                'integral' => $num,
-                'count' => $count,
-                'sum' => $sum,
-                'todaynew' => $todaynew,
-            ];
-            $arr1 = [];
-            array_push($arr1,$arr);
-            return response()->json(['data'=>$arr1],200);
+            return response()->json(['data'=>$data,'type'=> $type1,'operator' => $operator1,'time' => $time,'integral' => $num1  ,'count' => $count,'sum' => $sum,'todaynew' => $todaynew,],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }
@@ -553,11 +517,13 @@ class FilterController extends Controller
             $page = $request->get('page',1);
             $maindata = MakeFilterFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
 //            dd($maxsort);
+            $data = [];
             foreach($maindata as $item => $value)
             {
 
-                $num = MakeFilterFile::where('folder_id','=',$value->id)->get()->count();
-                $downloadnum = MakeFilterFile::where('folder_id','=',$value->id)->sum('count');
+//
+                $num = MakeFilterFolder::find($value->id)->belongsToManyFilter->count();
+                $downloadnum = MakeFilterFolder::find($value->id)->belongsToManyFilter->sum('count');
                 $operator = Administrator::where('id','=',$value->operator_id)->first()->name;
                 $creater = Administrator::where('id','=',$value->create_id)->first()->name;
                 $tempdata = [
@@ -615,15 +581,12 @@ class FilterController extends Controller
                     ];
                 }
 
-                $data['data'.$item] = $tempdata;
+//                $data['data'.$item] = $tempdata;
+                array_push($data,$tempdata);
             }
-            $arr1 = [
-                'data' => $data,
-                'sum' => $sum,
-            ];
-            $arr = [];
-            array_push($arr,$arr1);
-            return response()->json(['data'=>$arr],200);
+
+
+            return response()->json(['data'=>$data,'sum'=>$sum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -886,42 +849,47 @@ class FilterController extends Controller
 
                 ];
 
-                $data['data'.$item] = $tempdata;
+//                $data['data'.$item] = $tempdata;
+                array_push($data,$tempdata);
 
             }
 
 
             //  分类数据
             $type = MakeFilterFolder::where('active','=','1')->get();
+            $folder = [];
             foreach ($type as $k => $v)
             {
-                $folder1['folder'.$k]['name'] = $v->name;
-                $folder1['folder'.$k]['id'] = $v->id;
+                $folder1['folder']['name'] = $v->name;
+                $folder1['folder']['id'] = $v->id;
+                array_push($folder,$folder1);
             }
 
             //  操作员
             $administrator = Administrator::get();
+            $operator1 = [];
             foreach ($administrator as $k => $v)
             {
-                $operator['operator'.$k]['id'] = $v -> id;
-                $operator['operator'.$k]['name'] = $v -> name;
+                $operator['operator']['id'] = $v -> id;
+                $operator['operator']['name'] = $v -> name;
+                array_push($operator1,$operator);
             }
 
             //  时间
             $time = [
-                'time1' => [
+                [
                     'label' => 0,
                     'des' => '不限时间',
                 ],
-                'time2' => [
+                [
                     'label' => 1,
                     'des' => '一天内',
                 ],
-                'time3' => [
+                [
                     'label' => 2,
                     'des' => '一周内',
                 ],
-                'time4' => [
+                [
                     'label' => 3,
                     'des' => '一月内',
                 ]
@@ -930,39 +898,29 @@ class FilterController extends Controller
             //  费用
             $cost = DownloadCost::get();
     //        dd($cost);
+            $num1 = [];
             foreach ($cost as $k => $v)
             {
-                $num['integral'.$k] = $cost[$k]->details;
+                $num['integral'] = $cost[$k]->details;
+                array_push($num1,$num);
             }
 
             //  下载量
             $count = [
-                'count1' => 0,
-                'count2' => 100,
-                'count3' => 500,
-                'count4' => 1000,
-                'count5' => 5000,
-                'count6' => 10000,
-                'count7' => 500000,
+                ['count' => 0],
+                ['count' => 100],
+                ['count' => 500],
+                ['count' => 1000],
+                ['count' => 5000],
+                ['count' => 10000],
+                ['count' => 500000],
             ];
 
             $sum = MakeFilterFile::get()->count();
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
-            $arr = [
-                'data' => $data,
-                'type'=> $folder1,
-                'operator' => $operator,
-                'time' => $time,
-                'integral' => $num,
-                'count' => $count,
-                'sum' => $sum,
-                'todaynew' => $todaynew,
-            ];
-            $arr1 = [];
-            array_push($arr1,$arr);
-            return response()->json(['data'=>$arr1],200);
+            return response()->json(['data'=>$data,'type'=>$folder,'operator'=>$operator1,'time'=>$time,'integral'=>$num1,'count'=>$count,'sum'=>$sum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }
