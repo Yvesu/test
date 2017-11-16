@@ -19,8 +19,16 @@ class Subtitle extends Model
         'time_add',
         'time_update',
         'font_id',
-        'fragment_id'
+        'fragment_id',
+        'englishcontent',
+        'slowInAndOut',
+        'font_size',
     ];
 
     public $timestamps = false;
+
+    public function belongsToFont()
+    {
+        return $this->belongsTo('App\Models\Make\MakeFontFile','font_id','id');
+    }
 }

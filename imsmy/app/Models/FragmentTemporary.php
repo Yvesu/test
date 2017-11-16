@@ -33,7 +33,11 @@ class FragmentTemporary extends Model
         'time_add',
         'time_update',
         'vipfree',
-        'recommend'
+        'recommend',
+        'watch_count',
+        'praise',
+        'size',
+        'test_results',
     ];
 
     /**
@@ -50,7 +54,7 @@ class FragmentTemporary extends Model
      */
     public function hasManySubtitleTemporary()
     {
-        return $this->hasMany('App\Models\SubtitleTemporary','fragment_id',id);
+        return $this->hasMany('App\Models\SubtitleTemporary','fragment_id','id');
     }
 
     /**

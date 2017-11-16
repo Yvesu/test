@@ -26,15 +26,19 @@ class Fragment extends Model
         'address_city',
         'address_county',
         'address_street',
-        'lat',
-        'lng',
         'integral',
         'cost',
         'size',
         'count',
         'active',
         'time_add',
-        'time_update'
+        'time_update',
+        'recommend',
+        'vipfree',
+        'watch_count',
+        'praise',
+        'size',
+        'test_results',
     ];
 
     public $timestamps = false;
@@ -81,14 +85,7 @@ class Fragment extends Model
         return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_id','fragmentType_id');
     }
 
-    /**
-     * 片段与分镜的一对多
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function hasManyStoryboard()
-    {
-        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
-    }
+
 
     /**
      * 片段与字幕  一对多

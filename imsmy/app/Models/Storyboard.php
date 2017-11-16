@@ -17,8 +17,22 @@ class Storyboard extends Model
         'time_add',
         'time_update',
         'address',
-        'fragment_id'
+        'fragment_id',
+        'sort',
+        'address2',
+        'size',
+        'efficts_id'
     ];
 
     public $timestamps = false;
+
+    /**
+     * 发现一对多关系  与特效表相连
+     */
+    public function belongsToMakeEffectsFile()
+    {
+        return $this->belongsTo('App\Models\Make\MakeEffectsFile','effects_id','id');
+    }
+
+
 }

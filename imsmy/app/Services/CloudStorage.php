@@ -100,8 +100,9 @@ class CloudStorage
      * @return string
      */
 
-    public function getToken($policy = null)
+    public function getToken($policy = null,$type,$location)
     {
+        $this->bucket = QiniuUrl::where('type','=',$type)->where('location','=',$location)->first()->zone_name;
         return $this->auth->uploadToken($this->bucket,null,3600,$policy);
     }
 
@@ -138,7 +139,7 @@ class CloudStorage
     public function webDeleteVideo($key)
     {
 
-        return  $this->bucketManager->buildBatchDelete('hivideo-video',$key);
+        return  $this->bucketManager->buildBatchDelete('etcs-video',$key);
     }
 
 
@@ -271,5 +272,15 @@ class CloudStorage
             throw new \Exception($error->message(),$error->code());
         }
         return $id;
+    }
+
+    public function copyfile($key,$srcbucket,$destbucket)
+    {
+        $ops = BucketManager::buildBatchCopy($srcbucket,$key,$destbucket,true);
+        list($ret,$err) = $this->bucketManager->batch($ops);
+        if($error !== null){
+            throw new \Exception($err->message(),$err->code());
+        }
+        return $ret;
     }
 }
