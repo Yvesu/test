@@ -2,12 +2,14 @@
 
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\ChannelTweetsTransformer;
 use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\FragmentDetailTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Models\Fragment;
 use App\Models\Tweet;
+use App\Models\TweetHot;
 use App\Models\User;
 use App\Models\FragmentType;
 use Illuminate\Http\Request;
@@ -40,17 +42,21 @@ class FragmentController extends BaseController
 
     protected  $fragmentDetailTransformer;
 
+    private $channelTweetsTransformer;
+
     public function __construct(
         UsersTransformer $usersTransformer,
         FragCollectTransformer $fragCollectTransformer,
         UserIntegralTransformer $userIntegralTransformer,
-        FragmentDetailTransformer $fragmentDetailTransformer
+        FragmentDetailTransformer $fragmentDetailTransformer,
+        ChannelTweetsTransformer $channelTweetsTransformer
     )
     {
         $this->usersTransformer = $usersTransformer;
         $this->fragCollectTransformer = $fragCollectTransformer;
         $this->userIntegralTransform = $userIntegralTransformer;
         $this->fragmentDetailTransformer = $fragmentDetailTransformer;
+        $this ->channelTweetsTransformer = $channelTweetsTransformer;
     }
 
     /**
@@ -1070,47 +1076,140 @@ class FragmentController extends BaseController
 
     public function watch($id,Request $request)
     {
-      //  try {
+        try {
             //接受页数
-            $page = (int)$request->get('page',1);
+            $page = (int)$request->get('page', 1);
 
+                if (1 == $page) {
+                    //获取官推片段动态
+                    $top_tweets = TweetHot::top()->pluck('tweet_id');
 
+                    // 如果置顶动态id多于2条，随机取2条置顶的动态
+                    if ($top_tweets->count() > 2) {
+                        $top_tweets = $top_tweets->random(2);
+                    }
 
+                    //获取推荐动态
+                    $recommend_tweets = TweetHot::recommend()->whereNotIn('tweet_id', $top_tweets->all())->pluck('tweet_id');
 
-            //获取数据
-            $tweets = Tweet::where('active','=',1)
-                    ->where('fragment_id','=',$id)
-                    ->with([
-                        'hasOneContent' => function ($query) {
-                            $query->select(['tweet_id','content']);
-                    },
-                        'belongsToUser'
-                    ])
-                    ->forPage($page, $this -> paginate)
-                    ->orderBy('browse_times','desc')
-                    ->get();
+                    // 如果推荐动态id多于4条，随机取4条动态
+                    if ($recommend_tweets->count() > 4) {
+                        $recommend_tweets = $recommend_tweets->random(4);
+                    }
 
+                    // 合并置顶和推荐的数组
+                    $special_ids = array_merge($top_tweets->all(), $recommend_tweets->all());
 
-        dd($tweets->toArray());
+                    // 初始化
+                    $special_data = [];
+                    //判断
+                    if (isset($special_ids[0])) {
+                        // 获取相关热门动态的数据
+                        foreach ($special_ids as $v) {
+                            $special_tweets = Tweet::whereType(0)
+                                ->where('visible','=',0)
+                                ->where('id', $v)
+                                ->where('fragment_id', $id)
+                                ->active()
+                                ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
 
-        $tweets = Tweet::where('active','=',1)
-            ->with([
-                'hasOneContent' => function ($query) {
-                    $query->select(['tweet_id','content']);
-                },
-                'belongsToUser' => function ($query) {
-                    $query->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
-                } ])
-            ->where('fragment_id','=',$id)
-            ->orderBy('browse_times','desc')
-            -> forPage($page,$this->paginate)
-            -> get(['id','type','user_id','location','user_top','photo','screen_shot','video','created_at']);
+                            // 过滤
+                            $special_data[] = $this->channelTweetsTransformer->transformCollection($special_tweets->all())[0];
+                        }
+                    }
 
+                    //获取数据
+                    $second_tweets = Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible','=',0)
+                        ->with([
+                            'hasOneContent' => function ($query) {
+                                $query->select(['tweet_id', 'content']);
+                            },
+                            'belongsToUser' => function ($q) {
+                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                            }])
+                        ->forPage($page, $this->paginate)
+                        ->whereNotIn('id', $special_ids)
+                        ->orderBy('browse_times', 'desc')
+                        ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
 
+                    $second_tweets = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
 
-    /*    } catch (\Exception $e) {
+                    $data = array_merge($special_data, $second_tweets);
+
+                    $count =  Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible','=',0)
+                        ->count();
+
+                    if ($request->get('type')==2){
+                        return response()->json([
+                            'count' => $count,
+                            'page_count' => ceil(count($data) / $this->paginate),
+                            'data' => $data,
+                        ]);
+                    }
+
+                    return response()->json([
+                        'page_count' => ceil(count($data) / $this->paginate),
+                        'data' => $data,
+                    ]);
+
+                }else{
+                    if ($request->get('type')==1){
+                        //如果不是第一页
+                        $second_tweets = Tweet::where('active', '=', 1)
+                            ->where('fragment_id', '=', $id)
+                            ->where('visible','=',0)
+                            ->with([
+                                'hasOneContent' => function ($query) {
+                                    $query->select(['tweet_id', 'content']);
+                                },
+                                'belongsToUser' => function ($q) {
+                                    $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                                }])
+                            ->forPage($page, $this->paginate)
+                            ->orderBy('browse_times', 'desc')
+                            ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+                        $data = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
+
+                        return response()->json([
+                            'page_count' => ceil(count($data) / $this->paginate),
+                            'data' => $data,
+                        ]);
+                    }else{
+                        //如果不是第一页
+                        $second_tweets = Tweet::where('active', '=', 1)
+                            ->where('fragment_id', '=', $id)
+                            ->where('visible','=',0)
+                            ->with([
+                                'hasOneContent' => function ($query) {
+                                    $query->select(['tweet_id', 'content']);
+                                },
+                                'belongsToUser' => function ($q) {
+                                    $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                                }])
+                            ->forPage($page, $this->paginate)
+                            ->orderBy('tweet_grade_total', 'desc')
+                            ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+                        $data = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
+
+                        $count =  Tweet::where('active', '=', 1)
+                            ->where('fragment_id', '=', $id)
+                            ->where('visible','=',0)
+                            ->count();
+
+                        return response()->json([
+                            'count' => $count,
+                            'page_count' => ceil(count($data) / $this->paginate),
+                            'data' => $data,
+                        ]);
+                    }
+                }
+        }catch (\Exception $e) {
             return response()->json(['error' => 'not_found'], 404);
-        }*/
+        }
     }
 
 }

@@ -746,5 +746,14 @@ class Tweet extends Common
         }
     }
 
+    /**
+     * 动态与片段一对一
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function hasOneFragment()
+    {
+        return $this -> hasOne('App\Models\Fragment','id','fragment_id');
+    }
+
 
 }
