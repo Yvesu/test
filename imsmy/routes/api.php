@@ -1026,7 +1026,7 @@ $api->version(['v1'],function($api){
             $api->get('fraglists/{id}','FragmentController@fraglists')
                 ->where('id','[0-9]+');
 
-            $api->group(['middleware' => 'jwt.auth'],function ($api) {
+      //      $api->group(['middleware' => 'jwt.auth'],function ($api) {
 
                 //片段详情
                 $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
@@ -1041,7 +1041,7 @@ $api->version(['v1'],function($api){
                 //使用且开拍
                 $api -> post('useOrFilm/{frag_id}','FragmentController@useOrFilm')
                     ->where('frag_id','[0-9]+');
-            });
+       //     });
             //观摩
             $api->get('watch/{id}','FragmentController@watch')
                 ->where('id','[0-9]+');

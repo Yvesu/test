@@ -75,7 +75,14 @@ class Fragment extends Model
         return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_id','fragmentType_id');
     }
 
-
+    /**
+     * 片段与分镜的一对多
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManyStoryboard()
+    {
+        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
+    }
 
     /**
      * 片段与字幕  一对多

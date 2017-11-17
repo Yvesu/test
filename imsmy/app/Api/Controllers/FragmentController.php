@@ -759,9 +759,7 @@ class FragmentController extends BaseController
     {
         try{
                 //获取片段数据
-                $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
-                    $q->select('name');
-                },'hasManyStoryboard'=>function($a){
+                $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType','hasManyStoryboard'=>function($a){
                     $a->orderBy('sort','asc');
                 },'hasManySubtitle'=>function($q){
                     $q->orderBy('start_time','asc');
@@ -1083,6 +1081,7 @@ class FragmentController extends BaseController
     public function watch($id,Request $request)
     {
         try {
+
             //接受页数
             $page = (int)$request->get('page', 1);
 
@@ -1218,11 +1217,15 @@ class FragmentController extends BaseController
         }
     }
 
+    /*
     public function tweetdetails($id)
     {
-       // $tweet = Tweet::with([''])->find($id);
+        // $tweet = Tweet::with([''])->find($id);
 
-     //   dd($tweet);
-    }
-
+        //   dd($tweet);
+        for ($i = 1; $i <= 10000; $i++) {
+            $a = rand(1, 9);
+            DB::table('tweet')->where('id', '=',$i)->update(['screen_shot' => "img.cdn.hivideo.com/" . $a . ".jpeg"]);
+        }
+    }*/
 }
