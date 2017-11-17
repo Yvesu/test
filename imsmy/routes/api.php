@@ -54,6 +54,8 @@ $api->version(['v1'],function($api){
             // 验证用户名是否已存在
             $api->get('check','AuthController@check');
 
+            $api->get('/sendcode','AuthController@sendCode');
+
             // 注册信息
             $api->post('register','AuthController@register');
 
@@ -1062,6 +1064,7 @@ $api->version(['v1'],function($api){
 
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
+
 
     });
 });

@@ -7,6 +7,7 @@ use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\FragmentDetailTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
+use App\Library\aliyun\SmsDemo;
 use App\Models\Fragment;
 use App\Models\Tweet;
 use App\Models\TweetHot;
@@ -1217,15 +1218,9 @@ class FragmentController extends BaseController
         }
     }
 
-    /*
+
     public function tweetdetails($id)
     {
-        // $tweet = Tweet::with([''])->find($id);
 
-        //   dd($tweet);
-        for ($i = 1; $i <= 10000; $i++) {
-            $a = rand(1, 9);
-            DB::table('tweet')->where('id', '=',$i)->update(['screen_shot' => "img.cdn.hivideo.com/" . $a . ".jpeg"]);
-        }
-    }*/
+    }
 }
