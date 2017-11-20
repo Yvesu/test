@@ -283,7 +283,7 @@ class FragmentController extends BaseController
         return [
             'id' =>$fragment['id'],
             'title'=>$fragment['name'],
-            'duration'=>$fragment['duration'],
+            'duration'=>changeTimeType($fragment['duration']),
             'cover'=>$fragment['cover']
 //            'label'=> $fragment    //标签
         ];
@@ -901,7 +901,7 @@ class FragmentController extends BaseController
                 $third_tweets = $this->channelTweetsTransformer->transformCollection($third_tweets->all());
 
                 //如果用户未登录
-                if (!$user->id){
+                if (!$user){
 
                     $datas = array_merge($special_data,$third_tweets);
                     $data = mult_unique($datas);
@@ -927,7 +927,7 @@ class FragmentController extends BaseController
                 }
 
                 //如果为登录状态
-                if ($user->id) {
+                if ($user) {
                     //设置为好友可见
                     $tweets = Tweet::where('fragment_id', '=', $id)
                         ->where('active', '=', 1)
@@ -1048,7 +1048,7 @@ class FragmentController extends BaseController
                         }
                     }
 
-                    if(!$user->id){
+                    if(!$user){
                         return response()->json([
                             'page_count' => ceil(count($five_tweet) / $this->paginate),
                             'data' => $five_tweet,
@@ -1081,7 +1081,7 @@ class FragmentController extends BaseController
                     $six_tweet = $this->channelTweetsTransformer->transformCollection($six_tweets->all());
 
                     //如果为登录状态
-                    if ($user->id) {
+                    if ($user) {
                         //设置为好友可见
                         $tweets = Tweet::where('fragment_id', '=', $id)
                             ->where('active', '=', 1)
@@ -1123,7 +1123,7 @@ class FragmentController extends BaseController
                         }
                     }
 
-                    if(!$user->id){
+                    if(!$user){
                         return response()->json([
                             'page_count' => ceil(count($six_tweet) / $this->paginate),
                             'data' => $six_tweet,
@@ -1154,6 +1154,81 @@ class FragmentController extends BaseController
             }
         }catch (\Exception $e) {
             return response()->json(['error' => 'not_found'], 404);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        try{
+            //接收页数
+            $page = $request->get('page',1);
+
+            //接收关键词
+            $keyword = $request->get('keyword');
+
+            //判断用户是否登录
+            $user = Auth::guard('api')->user();
+
+            //官方置顶
+            $top_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })->where('ishot','=',1)->where('ishottime','>',time())
+                        ->where('active','=',1)->pluck('id');
+
+            if($top_fragment_id->count()>2){
+                $top_fragment_id = $top_fragment_id->random(2);
+            }
+
+            //官方推荐
+            $recommend_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })
+                ->where('recommend','=',1)
+                ->whereNotIn('id',$top_fragment_id)
+                ->where('active','=',1)->pluck('id');
+
+            if ($recommend_fragment_id->count()>4){
+                $recommend_fragment_id = $recommend_fragment_id->random(4);
+            }
+
+            $first_fragment_id = array_merge($top_fragment_id->toArray(),$recommend_fragment_id->toArray());
+
+            //官方推荐和置顶
+            $first_fragment_info = Fragment::with([
+                'belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
+                },'belongsToManyFragmentType'
+            ])
+                ->whereIn('id',$first_fragment_id)
+                ->get();
+
+            $second_fragment_info =  Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })
+                ->with([
+                    'belongsToUser'=>function($q){
+                        $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
+                    },'belongsToManyFragmentType'
+                ])
+                ->forPage($page,$this->paginate)
+                ->where('active','=',1)
+                ->whereNotIn('id',$first_fragment_id)
+                ->get();
+
+            if($page == 1){
+                $data = array_merge($first_fragment_info->toArray(),$second_fragment_info->toArray());
+
+                return response()->json([
+                    'data'  => $this->fragCollectTransformer->searchtransform($data),
+                ],200);
+            }
+
+            return response()->json([
+                'data'=>  $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
+            ]);
+
+        }catch(\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
     }
 

@@ -23,4 +23,22 @@ class Keywords extends Model
 
     public $timestamps = false;
 
+    /**
+     * 与片段多对多关系
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function belongstofragment()
+    {
+        return $this->belongsToMany('App\Models\Fragment','keyword_fragment','keyword_id','fragment_id');
+    }
+
+    /**
+     * 关键词与用户多对多
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function belongtoManyUser()
+    {
+        return $this->belongsToMany('App\Models\User','user_keywords','keyword_id','user_id');
+    }
+
 }

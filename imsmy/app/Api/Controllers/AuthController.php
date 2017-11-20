@@ -316,7 +316,7 @@ class AuthController extends BaseController
 
             // 判断缓存中是否有此用户名，有说明已通过短信验证，为空则抛出错误
             if(null == Cache::get('SMS'.$request->get('username'))){
-                throw new \Exception('request_timeout',408);
+              //  throw new \Exception('request_timeout',408);
             }
 
             $time = getTime();
@@ -1139,8 +1139,8 @@ class AuthController extends BaseController
         );
 
         if($response->Message == 'OK'){
-            return response()->json(['message'=>'Send a success','code'=>$code ],200);
-        }else{
+ 		return response()->json(['message'=>'Send success','code'=>$code ],200);
+         }else{
             return response()->json(['Send failure']);
         }
     }

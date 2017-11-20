@@ -393,13 +393,11 @@ class TweetController extends BaseController
                 'hasOneContent',
                 'belongsToManyTopic',
                 'hasManyAt',
-                'hasOneFragment'=>function($q){
-                $q->select('id','name');
-            },'belongsToUser'=>function($q){
+                'belongsToUser'=>function($q){
                     $q -> select('id', 'advertisement','nickname','avatar','hash_avatar','verify');
                 }])
                 -> able()
-                -> find($id);
+                -> findOrFail($id);
 
             // 判断用户是否为登录状态
             $user = Auth::guard('api')->user();
@@ -540,7 +538,7 @@ class TweetController extends BaseController
                 'advertisement' => $advertisement,
 
                 // 该动态详情与发表用户详情
-                'tweets_data' => $this -> tweetsDetailsTransformer->ptransform($tweets_data),
+                'tweets_data' => $this -> tweetsDetailsTransformer->transform($tweets_data),
 
                 // 推荐动态信息
                 'recommend_tweets' => $this -> related($id),

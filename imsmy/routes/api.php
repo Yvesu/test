@@ -985,10 +985,6 @@ $api->version(['v1'],function($api){
             $api -> get('/details/{id}','FragmentController@details')
                  -> where('id','[0-9]+');
 
-            //片段详情
-            $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
-                ->where('id','[0-9]+');
-
             //热门与最新
             $api->get('fraglists/{id}','FragmentController@fraglists')
                 ->where('id','[0-9]+');
@@ -1011,7 +1007,7 @@ $api->version(['v1'],function($api){
                 ->where('id','[0-9]+');
 
             //搜索
-            $api->get('/search','FragmentController@search');
+            $api->post('/search','FragmentController@search');
         });
 
         //获取某个人的用户信息  通过姓名
