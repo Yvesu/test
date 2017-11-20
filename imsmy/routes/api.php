@@ -961,31 +961,6 @@ $api->version(['v1'],function($api){
         //赛事搜索
         $api->post('/activity/search','ActivitySearchController@search');
 
-
-
-        /**
-         *   片段  fragment
-         */
-
-        $api->group(['prefix' => 'fragment'],function($api){
-
-            // 片段首页
-            $api -> post('/','FragmentController@index');
-
-            // 附近的片段
-            $api -> post('/nearby','FragmentController@nearby');
-
-            // 收藏表
-            $api -> post('/collect','FragmentController@collect');
-
-            // 大家都在搜
-           // $api -> post('/search','DiscoveryController@search');
-
-            // 精选媒体
-          //  $api -> post('/featured','DiscoveryController@featured');
-
-        });
-
         //获取某个人的用户信息  通过姓名
         $api->post('/person','UserController@person' );
 
@@ -994,8 +969,6 @@ $api->version(['v1'],function($api){
 
         //赛事搜索
         $api->post('/activity/search','ActivitySearchController@search');
-
-
 
         /**
          *   片段  fragment
@@ -1012,45 +985,33 @@ $api->version(['v1'],function($api){
             $api -> get('/details/{id}','FragmentController@details')
                  -> where('id','[0-9]+');
 
-            //最新片段
-            $api -> get('/newlist/{id}','FragmentController@newlist')
-                -> where('id','[0-9]+');
+            //片段详情
+            $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
+                ->where('id','[0-9]+');
 
-            //片段预览
-            $api -> get('fragdetail/{id}','FragmentController@fragdetail')
-                 -> where('id','[0-9]+');
+            //热门与最新
+            $api->get('fraglists/{id}','FragmentController@fraglists')
+                ->where('id','[0-9]+');
+
+            $api->group(['middleware' => 'jwt.auth'],function ($api) {
+                // 收藏
+                $api -> post('/collect','FragmentController@collect');
+            });
 
             //片段详情
             $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
                 ->where('id','[0-9]+');
 
-            //片段分类内热门与最新
-            $api->get('fraglists/{id}','FragmentController@fraglists')
-                ->where('id','[0-9]+');
+            //使用且开拍
+            $api -> post('useOrFilm/{frag_id}','FragmentController@useOrFilm')
+                ->where('frag_id','[0-9]+');
 
-      //      $api->group(['middleware' => 'jwt.auth'],function ($api) {
-
-                //片段详情
-                $api->get('fragmentdetails/{id}','FragmentController@fragmentdetails')
-                    ->where('id','[0-9]+');
-
-                // 收藏
-                $api -> post('/collect','FragmentController@collect');
-
-                // 下载
-                $api -> post('/download','FragmentController@download');
-
-                //使用且开拍
-                $api -> post('useOrFilm/{frag_id}','FragmentController@useOrFilm')
-                    ->where('frag_id','[0-9]+');
-       //     });
             //观摩
             $api->get('watch/{id}','FragmentController@watch')
                 ->where('id','[0-9]+');
 
-            //片段动态详情
-            $api -> post('/tweet/details/{id}','FragmentController@tweetdetails')
-                ->where('id','[1-9]+');
+            //搜索
+            $api->get('/search','FragmentController@search');
         });
 
         //获取某个人的用户信息  通过姓名
@@ -1064,7 +1025,6 @@ $api->version(['v1'],function($api){
 
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
-
 
     });
 });

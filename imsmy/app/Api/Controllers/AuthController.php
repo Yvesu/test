@@ -1122,10 +1122,10 @@ class AuthController extends BaseController
     {
         $username = $request ->get('username');
         //生成验证码
-        $code = mt_rand(100000,999999);
+        $code = mt_rand(1000,9999);
 
         //将验证码放入缓存
-      //  Cache::put($username,$code,'5');
+        Cache::put('SMS'.$request->get('username'),$code,'5');
 
         //将验证码发送给用户
         $response = SmsDemo::sendSms(
@@ -1139,7 +1139,7 @@ class AuthController extends BaseController
         );
 
         if($response->Message == 'OK'){
-            return response()->json(['Send a success'],200);
+            return response()->json(['message'=>'Send a success','code'=>$code ],200);
         }else{
             return response()->json(['Send failure']);
         }
