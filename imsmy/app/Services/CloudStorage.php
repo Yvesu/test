@@ -173,7 +173,10 @@ class CloudStorage
 
     public function downloadUrl($key)
     {
-        return $key;
+        $http = \Config::get('constants.HTTP');
+
+        $url = $http.$key;
+        return $url;
     }
 
     /**
@@ -279,4 +282,33 @@ class CloudStorage
         }
         return $ret;
     }
+
+    /**
+     * @param $a
+     * @return string
+     */
+    public function privateUrl($a)
+    {
+        $http = \Config::get('constants.HTTP');
+        $ak = \Config::get('constants.AK');
+        $sk = \Config::get('constants.SK');
+        $qi =  new \Qiniu\Auth($ak , $sk);
+
+        $url = $http.$a;
+
+        $urls = $qi->privateDownloadUrl($url);
+
+        return $urls;
+    }
+
+    public function publicImage($a)
+    {
+        $http = \Config::get('constants.HTTP');
+
+        $url = $http.$a;
+
+        return $url;
+    }
+
+
 }

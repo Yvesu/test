@@ -9,6 +9,7 @@ use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Library\aliyun\SmsDemo;
 use App\Library\pinyin\CUtf8_PY;
+use App\Models\Config;
 use App\Models\Fragment;
 use App\Models\Friend;
 use App\Models\Keywords;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Facades\CloudStorage;
+
 
 /**
  * 片段相关接口
@@ -79,6 +81,7 @@ class FragmentController extends BaseController
 
             //判断用户是否登录
             $user = Auth::guard('api')->user();
+            $user = User::find(1000240);
 
             //街道
             $address_street = $request->get('address_street');
@@ -138,6 +141,30 @@ class FragmentController extends BaseController
                 -> forPage($page,$this->paginate)
                 ->get();
 
+
+            $user_fragment = [];
+            //搜索用户喜好
+            if($user){
+                $user_keywords_ids = UserKeywords::where('user_id','=',$user->id)->pluck('id');
+
+                //按喜好查询
+                if($user_keywords_ids->all()){
+
+                    $user_fragment = Fragment::WhereHas('keyWord',function ($q) use ($user_keywords_ids){
+                        $q->whereIn('keyword_id',$user_keywords_ids);
+                    })
+                        ->with(['belongsToManyFragmentType'=>function($q){
+                            $q->select('name');
+                        },'belongsToUser'])
+                        ->where('active','!=','2')
+                        ->where('test_results',1)
+                        ->whereNotIn('id',$first_fragment_id)
+                        ->orderBy('watch_count','DESC')
+                        -> forPage($page,$this->paginate)
+                        ->get();
+                }
+            }
+
             //按街道进行搜索
             $address_street_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
                 $q->select('name');
@@ -153,9 +180,9 @@ class FragmentController extends BaseController
             $fragment_data = [];
             if (count($address_street_fragments)){
                 if (count($official_fragments)){
-                    $fragment_data = array_merge($official_fragments->toArray(),$address_street_fragments->toArray(),$rand_fragment->toArray());
+                    $fragment_data = array_merge($official_fragments->toArray(),$address_street_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                 }else{
-                    $fragment_data = array_merge($address_street_fragments->toArray(),$rand_fragment->toArray());
+                    $fragment_data = array_merge($address_street_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                 }
             }else{
                 //按区搜索
@@ -170,9 +197,9 @@ class FragmentController extends BaseController
                     ->get();
                 //官方 + 区
                 if (count($official_fragments)){
-                    $fragment_data = array_merge($official_fragments->toArray(),$address_county_fragments->toArray(),$rand_fragment->toArray());
+                    $fragment_data = array_merge($official_fragments->toArray(),$address_county_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                 }else{
-                    $fragment_data = array_merge($address_county_fragments->toArray(),$rand_fragment->toArray());
+                    $fragment_data = array_merge($address_county_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                 }
 
                 if (!count($address_county_fragments)){
@@ -189,9 +216,9 @@ class FragmentController extends BaseController
 
                     //官方 + 城市
                     if (count($official_fragments)){
-                        $fragment_data = array_merge($official_fragments->toArray(),$address_city_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($official_fragments->toArray(),$address_city_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }else{
-                        $fragment_data = array_merge($address_city_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($address_city_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }
 
                     if (!count($address_city_fragments)){
@@ -208,9 +235,9 @@ class FragmentController extends BaseController
 
                     //官方 + 省份
                     if (count($official_fragments)){
-                        $fragment_data = array_merge($official_fragments->toArray(),$address_province_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($official_fragments->toArray(),$address_province_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }else{
-                        $fragment_data = array_merge($address_province_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($address_province_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }
 
                     if (!count($address_province_fragments)){
@@ -227,16 +254,16 @@ class FragmentController extends BaseController
 
                     //官方 + 国家
                     if (count($official_fragments)){
-                        $fragment_data = array_merge($official_fragments->toArray(),$address_country_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($official_fragments->toArray(),$address_country_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }else{
-                        $fragment_data = array_merge($address_country_fragments->toArray(),$rand_fragment->toArray());
+                        $fragment_data = array_merge($address_country_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                     }
 
                     if(!count($address_country_fragments)){
                          if (count($official_fragments)){
-                             $fragment_data = array_merge($official_fragments->toArray(),$rand_fragment->toArray());
+                             $fragment_data = array_merge($official_fragments->toArray(),$user_fragment->toArray(),$rand_fragment->toArray());
                          }else{
-                             $fragment_data = $rand_fragment->toArray();
+                             $fragment_data = array_merge($user_fragment->toArray(),$rand_fragment->toArray());
                          }
                       }
                     }
@@ -259,7 +286,7 @@ class FragmentController extends BaseController
                    $classifys[] = $v;
                }
             }
-
+//            dd($data);
             if($page == 1){
                 if ($count){
                     return response() -> json([
@@ -275,7 +302,7 @@ class FragmentController extends BaseController
 
             //当不是第一页的时候
             return response() -> json([
-                'fragment_data' =>  $this->fragCollectTransformer->transform($rand_fragment),
+                'fragment_data' =>  $this->fragCollectTransformer->transform(array_merge($user_fragment->toArray(),$rand_fragment->toArray())),
             ], 200);
 
         }catch (\Exception $e) {
@@ -621,7 +648,7 @@ class FragmentController extends BaseController
     public function fragmentdetails($fragmentId)
     {
         //获取片段数据
-        $fragment = Fragment::find($fragmentId)->zip_address;
+        $fragment = Fragment::find($fragmentId);
 
         //下载 + 1
         DB::table('fragment')->where('id','=',$fragmentId)->increment('count');
@@ -630,7 +657,10 @@ class FragmentController extends BaseController
         DB::table('fragment')->where('id','=',$fragmentId)->increment('watch_count');
 
         //响应
-        return response()->json(['url'=>$fragment],200);
+        return response()->json([
+            'url'   => CloudStorage::privateUrl($fragment->zip_address),
+            'size'  => $fragment->size,
+        ],200);
     }
 
     /**
@@ -1500,4 +1530,5 @@ class FragmentController extends BaseController
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
     }
+
 }

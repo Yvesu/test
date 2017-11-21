@@ -1008,6 +1008,7 @@ $api->version(['v1'],function($api){
 
             //搜索
             $api->post('/search','FragmentController@search');
+
         });
 
         //获取某个人的用户信息  通过姓名
@@ -1021,6 +1022,7 @@ $api->version(['v1'],function($api){
 
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
+
 
     });
 });

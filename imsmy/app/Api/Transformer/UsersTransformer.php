@@ -11,7 +11,7 @@ class UsersTransformer extends Transformer
         return [
             'id'           =>  $user->id,
             'nickname'     =>  $user->nickname,
-            'avatar'       =>  $user->avatar,
+            'avatar'       =>   CloudStorage::publicImage($user->avatar),
             'cover'        =>  $user->cover,
             'verify'       =>  $user->verify,
 //            'hash_avatar'  =>  $user->hash_avatar,
@@ -23,8 +23,9 @@ class UsersTransformer extends Transformer
     public function fragtransform($user)
     {
         return [
+            'id'           =>  $user['id'],
             'nickname'     =>  $user['nickname'],
-            'avatar'       =>  $user['avatar'],
+            'avatar'       =>  CloudStorage::publicImage($user['avatar']),
             'cover'        =>  $user['cover'],
             'verify'       =>  $user['verify'],
             'signature'    =>  $user['signature'],
