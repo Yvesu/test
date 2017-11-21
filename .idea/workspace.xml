@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e21d04d3-e39e-4906-8345-37a08042f388" name="默认" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/xxoo.iml" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" afterPath="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Models/Keywords.php" afterPath="$PROJECT_DIR$/imsmy/app/Models/Keywords.php" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,11 +15,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="api.php" pinned="false" current-in-tab="true">
+      <file leaf-file-name="api.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imsmy/routes/api.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1467">
-              <caret line="1011" column="11" lean-forward="true" selection-start-line="1011" selection-start-column="11" selection-end-line="1011" selection-end-column="11" />
+            <state relative-caret-position="343">
+              <caret line="1011" column="11" lean-forward="false" selection-start-line="1011" selection-start-column="11" selection-end-line="1011" selection-end-column="11" />
               <folding>
                 <element signature="e#32293#32334#0#PHP" expanded="false" />
               </folding>
@@ -28,10 +27,30 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="Keywords.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Keywords.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-134">
+              <caret line="14" column="14" lean-forward="false" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Fragment.php" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Fragment.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="800">
+              <caret line="95" column="5" lean-forward="true" selection-start-line="95" selection-start-column="5" selection-end-line="95" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="FragmentController.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="520">
+            <state relative-caret-position="6125">
               <caret line="1385" column="0" lean-forward="false" selection-start-line="1385" selection-start-column="0" selection-end-line="1385" selection-end-column="0" />
               <folding>
                 <element signature="e#39#88#0#PHP" expanded="true" />
@@ -71,7 +90,7 @@
       <file leaf-file-name="FragCollectTransformer.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="667">
+            <state relative-caret-position="3800">
               <caret line="157" column="18" lean-forward="false" selection-start-line="157" selection-start-column="18" selection-end-line="157" selection-end-column="18" />
               <folding />
             </state>
@@ -91,7 +110,7 @@
       <file leaf-file-name="FragmentDetailTransformer.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentDetailTransformer.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2967">
+            <state relative-caret-position="3050">
               <caret line="128" column="71" lean-forward="false" selection-start-line="128" selection-start-column="71" selection-end-line="128" selection-end-column="71" />
               <folding />
             </state>
@@ -111,7 +130,7 @@
       <file leaf-file-name="CloudStorage.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="397">
+            <state relative-caret-position="1975">
               <caret line="173" column="37" lean-forward="false" selection-start-line="173" selection-start-column="37" selection-end-line="173" selection-end-column="37" />
               <folding>
                 <element signature="e#844#945#0#PHP" expanded="false" />
@@ -140,9 +159,25 @@
         <entry file="file://$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/Auth.php">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1425">
-              <caret line="58" column="63" lean-forward="false" selection-start-line="58" selection-start-column="63" selection-end-line="58" selection-end-column="63" />
+              <caret line="58" column="62" lean-forward="false" selection-start-line="58" selection-start-column="62" selection-end-line="58" selection-end-column="62" />
               <folding>
                 <element signature="e#24#34#0#PHP" expanded="true" />
+                <marker date="1511261165805" expanded="true" signature="68:4129" ph="{...}" />
+                <marker date="1511261165805" expanded="true" signature="1616:1656" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="1664:1704" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="2008:2626" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="2102:2145" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="2339:2380" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="2488:2538" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="2636:2740" ph="上传策略，参数规格详见 ..." />
+                <marker date="1511261165805" expanded="true" signature="2784:3250" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3305:3330" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3412:3900" ph="{...}" />
+                <marker date="1511261165805" expanded="true" signature="3456:3493" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3546:3869" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3626:3717" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3806:3859" ph="..." />
+                <marker date="1511261165805" expanded="true" signature="3976:4127" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -216,7 +251,6 @@
         <option value="$PROJECT_DIR$/imsmy/app/Models/Make/MakeFilterFile.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeFilterController.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Models/Tweet.php" />
-        <option value="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Library/aliyun/SmsDemo.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/AuthController.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetsDetailsTransformer.php" />
@@ -224,7 +258,6 @@
         <option value="$PROJECT_DIR$/imsmy/composer.json" />
         <option value="$PROJECT_DIR$/imsmy/app/Models/User.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Models/UserKeywords.php" />
-        <option value="$PROJECT_DIR$/imsmy/app/Models/Keywords.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Support/helpers.php" />
         <option value="$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/Auth.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php" />
@@ -233,6 +266,8 @@
         <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" />
         <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" />
         <option value="$PROJECT_DIR$/imsmy/routes/api.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Keywords.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" />
       </list>
     </option>
   </component>
@@ -246,7 +281,7 @@
     <handled-path value="$PROJECT_DIR$/imsmy/node_modules" />
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-8" />
     <option name="y" value="-8" />
     <option name="width" value="1133" />
@@ -267,6 +302,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -299,6 +335,13 @@
               <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
               <item name="Api" type="2a2b976b:PhpTreeStructureProvider$1" />
               <item name="Transformer" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="Models" type="2a2b976b:PhpTreeStructureProvider$1" />
             </path>
             <path>
               <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
@@ -351,7 +394,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -403,14 +445,16 @@
       <workItem from="1511236155586" duration="15144000" />
       <workItem from="1511256412556" duration="2071000" />
       <workItem from="1511258569262" duration="1796000" />
+      <workItem from="1511261842671" duration="360000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="160539000" />
+    <option name="totallyTimeSpent" value="160899000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="7" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2015625" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -646,20 +690,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Keywords.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="492">
-          <caret line="34" column="7" lean-forward="true" selection-start-line="34" selection-start-column="7" selection-end-line="34" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Fragment.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="625">
-          <caret line="55" column="27" lean-forward="false" selection-start-line="55" selection-start-column="20" selection-end-line="55" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/app/Support/helpers.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="603">
@@ -679,16 +709,31 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="305">
           <caret line="40" column="33" lean-forward="true" selection-start-line="40" selection-start-column="33" selection-end-line="40" selection-end-column="33" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/Auth.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1425">
-          <caret line="58" column="63" lean-forward="false" selection-start-line="58" selection-start-column="63" selection-end-line="58" selection-end-column="63" />
+          <caret line="58" column="62" lean-forward="false" selection-start-line="58" selection-start-column="62" selection-end-line="58" selection-end-column="62" />
           <folding>
             <element signature="e#24#34#0#PHP" expanded="true" />
+            <marker date="1511261165805" expanded="true" signature="68:4129" ph="{...}" />
+            <marker date="1511261165805" expanded="true" signature="1616:1656" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="1664:1704" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="2008:2626" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="2102:2145" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="2339:2380" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="2488:2538" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="2636:2740" ph="上传策略，参数规格详见 ..." />
+            <marker date="1511261165805" expanded="true" signature="2784:3250" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3305:3330" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3412:3900" ph="{...}" />
+            <marker date="1511261165805" expanded="true" signature="3456:3493" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3546:3869" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3626:3717" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3806:3859" ph="..." />
+            <marker date="1511261165805" expanded="true" signature="3976:4127" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -703,7 +748,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="397">
+        <state relative-caret-position="1975">
           <caret line="173" column="37" lean-forward="false" selection-start-line="173" selection-start-column="37" selection-end-line="173" selection-end-column="37" />
           <folding>
             <element signature="e#844#945#0#PHP" expanded="false" />
@@ -729,7 +774,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentDetailTransformer.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2967">
+        <state relative-caret-position="3050">
           <caret line="128" column="71" lean-forward="false" selection-start-line="128" selection-start-column="71" selection-end-line="128" selection-end-column="71" />
           <folding />
         </state>
@@ -753,7 +798,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="667">
+        <state relative-caret-position="3800">
           <caret line="157" column="18" lean-forward="false" selection-start-line="157" selection-start-column="18" selection-end-line="157" selection-end-column="18" />
           <folding />
         </state>
@@ -761,7 +806,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="520">
+        <state relative-caret-position="6125">
           <caret line="1385" column="0" lean-forward="false" selection-start-line="1385" selection-start-column="0" selection-end-line="1385" selection-end-column="0" />
           <folding>
             <element signature="e#39#88#0#PHP" expanded="true" />
@@ -799,11 +844,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/imsmy/routes/api.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1467">
-          <caret line="1011" column="11" lean-forward="true" selection-start-line="1011" selection-start-column="11" selection-end-line="1011" selection-end-column="11" />
+        <state relative-caret-position="343">
+          <caret line="1011" column="11" lean-forward="false" selection-start-line="1011" selection-start-column="11" selection-end-line="1011" selection-end-column="11" />
           <folding>
             <element signature="e#32293#32334#0#PHP" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Keywords.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-134">
+          <caret line="14" column="14" lean-forward="false" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Fragment.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="800">
+          <caret line="95" column="5" lean-forward="true" selection-start-line="95" selection-start-column="5" selection-end-line="95" selection-end-column="5" />
+          <folding />
         </state>
       </provider>
     </entry>

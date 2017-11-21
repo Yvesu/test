@@ -18,8 +18,6 @@ class Fragment extends Model
         'net_address',
         'cover',
         'name',
-        'bgm',
-        'volume',
         'official',
         'address_country',
         'address_province',
@@ -38,6 +36,10 @@ class Fragment extends Model
         'watch_count',
         'praise',
         'test_results',
+        'operator_id',
+        'ishot',
+        'zip_address',
+        'ishottime',
     ];
 
     public $timestamps = false;

@@ -13,6 +13,12 @@ class Keywords extends Model
 
     protected $fillable = [
         'keyword',
+        'keyword_pinyin',
+        'count_sum_pv',
+        'count_day_pv',
+        'count_week_pv',
+        'count_prev_week_pv',
+        'count_prev_week_ip',
         'count_sum',
         'count_day',
         'count_week',
