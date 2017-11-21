@@ -276,7 +276,7 @@ class CloudStorage
     public function copyfile($key,$srcbucket,$destbucket)
     {
         $ops = BucketManager::buildBatchCopy($srcbucket,$key,$destbucket,true);
-        list($ret,$err) = $this->bucketManager->batch($ops);
+        list($ret,$error) = $this->bucketManager->batch($ops);
         if($error !== null){
             throw new \Exception($err->message(),$err->code());
         }

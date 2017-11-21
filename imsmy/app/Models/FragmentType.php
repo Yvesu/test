@@ -15,11 +15,7 @@ class FragmentType extends Model
         'name',
         'ename',
         'icon',
-        'hash_icon',
         'active',
-        'forwarding_time',
-        'comment_time',
-        'work_count',
         'sort',
         'time_add',
         'time_update'

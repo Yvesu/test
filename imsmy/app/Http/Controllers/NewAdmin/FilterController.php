@@ -610,7 +610,7 @@ class FilterController extends Controller
             {
                 return response()->json(['message'=>'无数据'],200);
             }
-            $active = $datadown->active;
+            $active = $dataup->active;
             if($active != 1){
                 return response()->json(['message'=>'数据不合法'],200);
             }

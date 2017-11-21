@@ -18,8 +18,6 @@ class FragmentTemporary extends Model
         'net_address',
         'cover',
         'name',
-        'bgm',
-        'volume',
         'official',
         'address_country',
         'address_province',
@@ -34,10 +32,9 @@ class FragmentTemporary extends Model
         'time_update',
         'vipfree',
         'recommend',
-        'watch_count',
-        'praise',
         'size',
-        'test_results',
+        'zip_address'
+
     ];
 
     /**
