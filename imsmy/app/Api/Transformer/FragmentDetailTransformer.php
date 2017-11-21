@@ -57,7 +57,7 @@ class FragmentDetailTransformer extends Transformer
             'id'            => $data->id,
             'user_id'       => $data->user_id,
             'aspect_radio'  => $data->aspect_radio,
-            'duration'      => $data->duration,
+            'duration'      => changeTimeType($data->duration),
             'net_address'   => $data->net_address,
             'cover'         => $data->cover,
             'name'          => $data->name,

@@ -7,7 +7,9 @@ use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\FragmentDetailTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
+use App\Library\aliyun\SmsDemo;
 use App\Models\Fragment;
+use App\Models\Friend;
 use App\Models\Tweet;
 use App\Models\TweetHot;
 use App\Models\User;
@@ -281,7 +283,7 @@ class FragmentController extends BaseController
         return [
             'id' =>$fragment['id'],
             'title'=>$fragment['name'],
-            'duration'=>$fragment['duration'],
+            'duration'=>changeTimeType($fragment['duration']),
             'cover'=>$fragment['cover']
 //            'label'=> $fragment    //标签
         ];
@@ -407,11 +409,6 @@ class FragmentController extends BaseController
             // 判断用户是否为登录状态
             $users = Auth::guard('api')->user();
 
-            //如果用户未登录
-            if (empty( $users)){
-               return response() -> json(['error'=>'not_login'], 403);
-            }
-
             $ids = DB::table('fragment_user_collect')
                 ->where('user_id','=',$users->id)
                 ->where('way','=','1')
@@ -438,54 +435,6 @@ class FragmentController extends BaseController
                 return [];
             }
         }catch(\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
-        }
-
-    }
-
-    /**
-     * 下载
-     * @param Request $request
-     * @return array|\Illuminate\Http\JsonResponse
-     */
-    public  function download(Request $request)
-    {
-        try{
-            // 判断用户是否为登录状态
-            $users = Auth::guard('api')->user();
-
-            //如果用户未登录
-          if (empty( $users)){
-                return response() -> json(['error'=>'not_login'], 403);
-            }
-
-          $ids = DB::table('fragment_user_collect')
-                ->where('user_id','=',$users->id)
-                ->where('way','=','2')
-                ->get();
-
-          $id = [];
-            foreach ($ids as $k=>$v){
-                $id [] = $v->fragment_id;
-            }
-
-            $collect = [];
-            foreach ($id as $v){
-                $collect[] = Fragment::with(['belongsToManyFragmentType','belongsToUser','hasManyStoryboard','hasManySubtitle'])
-                    ->where('test_results','=',1)
-                    ->find($v)
-                    ->toArray();
-            }
-
-            if ($collect){
-                return response() -> json([
-                            'data'=>$this->fragCollectTransformer->downtransform($collect)
-                        ], 200);
-            }else{
-		        return response() -> json(['error'=>'not_found'], 404);
-            }
-
-        }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
 
@@ -558,6 +507,7 @@ class FragmentController extends BaseController
     }
 
     /**
+     * 最新和热门
      * @param $id
      * @param Request $request
      * @return array|\Illuminate\Http\JsonResponse|mixed
@@ -623,167 +573,23 @@ class FragmentController extends BaseController
     }
 
     /**
-     * 最新片段
-     * @param Request $request
-     * @param $id
-     * @return array|\Illuminate\Http\JsonResponse
-     */
-    public function newlist(Request $request,$id)
-    {
-        try{
-            // 获取要查询的关键词 及 所取页数
-            if(!is_numeric($page = $request -> get('page',1)))
-                return response()->json(['error'=>'bad_request'],403);
-
-            //搜索官方推荐
-            $first_fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            },'belongsToUser'])
-                ->where('recommend','=','1')
-                -> where('test_results',1)
-                ->where('active','!=',2)
-                ->take(3)
-                ->get();
-
-            //最新
-            $second__fragments = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            },'belongsToUser'])
-                -> where('active','!=',2)
-                -> where('test_results',1)
-                -> orderBy('time_add', 'DESC')
-                -> forPage($page,$this->paginate)
-                -> get();
-
-            //拼接
-            $data = array_merge($first_fragments->toArray(),$second__fragments->toArray());
-
-            //片段数量
-            $fragments_count = FragmentType::find($id)->belongsToManyFragment()->with(['belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            },'belongsToUser'])
-                -> where('active','!=',2)
-                -> where('test_results',1)
-                ->count();
-
-            //观看次数
-            $watch_counts = FragmentType::find($id)->belongsToManyFragment()
-                -> where('active','!=',2)
-                -> where('test_results',1)
-                -> get(['watch_count','count','praise']);
-
-            $aa = [];   //观看
-            $bb = [];   //下载
-            $cc = [];   //赞
-            foreach ($watch_counts as $v){
-                $aa [] = $v->watch_count;
-                $bb [] = $v->count;
-                $cc [] = $v->praise;
-            }
-
-            //观看次数
-            $watch_count = 0;
-            foreach ($aa as $v){
-                $watch_count += $v;
-            }
-
-            //下载次数
-            $down_count = 0;
-            foreach ($bb as $v){
-                $down_count += $v;
-            }
-
-            //赞次数
-            $praise_count = 0;
-            foreach ($cc as $v){
-                $praise_count += $v;
-            }
-
-            //响应
-            if(!count($data)){
-                return response() -> json(['error'=>'not_found'], 404);
-            }
-
-            $data = mult_unique($data);
-
-            //响应
-            return response() -> json([
-                'fragments_count'=>$fragments_count,
-                'watch_count' => $watch_count,
-                'down_count' =>$down_count,
-                'praise_count' =>$praise_count,
-                'data'=> $this->fragCollectTransformer->transform($data)
-            ], 200);
-
-        }catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
-        }
-
-    }
-
-    /**
-     * 片段预览
-     * @param $id
-     * @return array|\Illuminate\Http\JsonResponse
-     */
-    public function fragdetail($id)
-    {
-        try{
-
-            // 判断用户是否为登录状态
-            $user = Auth::guard('api')->user();
-
-            if (empty($user)){
-//                return response() -> json(['error'=>'no login'], 403);
-            }
-
-        $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            }])->find($id);
-
-            DB::table('fragment')->where('id','=',$id)->increment('watch_count');
-
-            return $this->fragmentDetailTransformer->fragtransform($fragment);
-
-        }catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
-        }
-    }
-
-    /**
      * 片段详情
      * @param $fragmentId
      * @return array|\Illuminate\Http\JsonResponse
      */
-    public function  fragmentdetails($fragmentId)
+    public function fragmentdetails($fragmentId)
     {
-        try{
-                //获取片段数据
-                $fragment = Fragment::with(['belongsToUser','belongsToManyFragmentType'=>function($q){
-                    $q->select('name');
-                },'hasManyStoryboard'=>function($a){
-                    $a->orderBy('sort','asc');
-                },'hasManySubtitle'=>function($q){
-                    $q->orderBy('start_time','asc');
-                }])->where('test_results','=',1)
-                    ->find($fragmentId);
+        //获取片段数据
+        $fragment = Fragment::find($fragmentId)->zip_address;
 
-                if (empty($fragment)){
-                    return response()->json(['error'=>'not found'],404);
-                }
+        //下载 + 1
+        DB::table('fragment')->where('id','=',$fragmentId)->increment('count');
 
-                //下载 + 1
-                DB::table('fragment')->where('id','=',$fragmentId)->increment('count');
+        // 观看 + 1
+        DB::table('fragment')->where('id','=',$fragmentId)->increment('watch_count');
 
-                // 观看 + 1
-                DB::table('fragment')->where('id','=',$fragmentId)->increment('watch_count');
-
-                //响应
-                return $this->fragmentDetailTransformer->usetransform($fragment);
-
-        }catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
-        }
+        //响应
+        return response()->json(['url'=>$fragment],200);
     }
 
     /**
@@ -799,6 +605,10 @@ class FragmentController extends BaseController
         $user = Auth::guard('api')->user();
             $id = 1000240;
             $user = User::find($id);
+
+        if (!$user->id){
+            return resoponse()->json(['error'=>'Please log in']);
+        }
         //判断片段是否收费
         $fragment_info = Fragment::find($frag_id);
 
@@ -818,58 +628,25 @@ class FragmentController extends BaseController
 
         //免费片段
         if (!$integral && !$cost && !$vip_isfree){
-
-            //判断下载记录表中数据
-            $is_exist = DB::table('fragment_user_collect')
-                ->where('way','=',2)
-                ->where('user_id','=',$user->id)
-                ->where('fragment_id','=',$frag_id)
-                ->first();
-
-            //如果已经下载过
-            if ($is_exist){
-                //获取片段数据
-              return  $this->fragmentdetails($frag_id);
-            }
-
-            //写入下载表
-            DB::table('fragment_user_collect')->insert([
-                'user_id' => $user->id,
-                'fragment_id' => $frag_id,
-                'create_at' => time(),
-                'way' => 2,
-            ]);
-
             // 获取片段数据
             return  $this->fragmentdetails($frag_id);
-
         }elseif ($integral && !$cost && !$vip_isfree){   //需要积分  会员不收费
 //            判断用户是否是vip
-
             if ($user->is_vip){
-
-                //是否下载过
-                $is_exist = DB::table('fragment_user_collect')
-                    ->where('user_id','=',$user->id)
-                    ->where('fragment_id','=',$frag_id)
-                    ->first();
-
-                   if($is_exist) {
-                       //获取片段数据
-                       return  $this->fragmentdetails($frag_id);
-                   }
-
-                       return  $this->fragmentdetails($frag_id);
-
+                return  $this->fragmentdetails($frag_id);
             }else{
 
                 //接收用户是否确认扣除积分
                 $commit = $request->get('commit');
 
-                //是否下载过
-                $is_exist = DB::table('fragment_user_collect')
+                $fragment = Fragment::find($frag_id);
+
+                //是否购买过
+                $is_exist = DB::table('user_integral_expend_log')
                     ->where('user_id','=',$user->id)
-                    ->where('fragment_id','=',$frag_id)
+                    ->where('pay_count','=',$integral)
+                    ->where('type_id','=',$frag_id)
+                    ->where('pay_reason','=','片段:'.$fragment->name)
                     ->first();
 
                 //已经购买过
@@ -888,31 +665,23 @@ class FragmentController extends BaseController
                 //确认扣除积分
                 if ($commit == '1'){
                     $user_info = User\UserIntegral::where('user_id','=',$user->id)->first();
-
                     //用户积分为0
                     if (!$user_info) {
                         return response()->json(['message' => 'Integral is 0'], 403);
                     }
-
                     //用户积分
                     $user_integral = $user_info->integral_count;
-
                     //生成订单号
                     $number = date('YmdHis').rand(100000,999999);
-
                     //如果用户积分足够
                     if($user_integral >= $integral){
 //                       开启事务
                         DB::beginTransaction();
-
                         //扣除积分
                         $integral_update = User\UserIntegral::where('user_id','=',$user->id)->update(['integral_count'=>$user_integral - $integral]);
-
                         if($integral_update){
-
                             //获取详细信息
                             $fragment = Fragment::find($frag_id);
-
                             //写入消费表
                             $result = DB::table('user_integral_expend_log')->insert([
                                      'user_id'    => $user->id,
@@ -923,19 +692,9 @@ class FragmentController extends BaseController
                                      'status'     => 1,
                                      'create_at'  => time(),
                                 ]);
-
                             //返回数据
                             if ($result){
                                 DB::commit();
-
-                                //写入下载表
-                                DB::table('fragment_user_collect')->insert([
-                                    'user_id' => $user->id,
-                                    'fragment_id' => $frag_id,
-                                    'create_at' =>time(),
-                                    'way' => 2,
-                                ]);
-
                                 return $this->fragmentdetails($frag_id);
                             }else{
                                 DB::rollBack();
@@ -969,14 +728,18 @@ class FragmentController extends BaseController
             }
         }elseif ($integral && !$cost && $vip_isfree){     //会员是否收费   1
 
-            //从消费表查看是否购买过
-            $res = User\UserIntegralExpend::where('user_id',$user->id)
-                -> where('type_id',$frag_id)
-                -> where('status',1)
+            $fragment = Fragment::find($frag_id);
+
+            //是否购买过
+            $is_exist = DB::table('user_integral_expend_log')
+                ->where('user_id','=',$user->id)
+                ->where('pay_count','=',$integral)
+                ->where('type_id','=',$frag_id)
+                ->where('pay_reason','=','片段:'.$fragment->name)
                 ->first();
 
             //已经购买过
-            if ($res){
+            if ($is_exist) {
                 return $this->fragmentdetails($frag_id);
             }
 
@@ -1032,14 +795,6 @@ class FragmentController extends BaseController
                             if ($result){
                                 DB::commit();
 
-                                //写入下载表
-                                DB::table('fragment_user_collect')->insert([
-                                    'user_id' => $user->id,
-                                    'fragment_id' => $frag_id,
-                                    'create_at' =>time(),
-                                    'way' => 2,
-                                ]);
-
                                 return $this->fragmentdetails($frag_id);
                             }else{
                                 DB::rollBack();
@@ -1083,73 +838,80 @@ class FragmentController extends BaseController
     public function watch($id,Request $request)
     {
         try {
+            $user = Auth::guard('api')->user();
+
             //接受页数
             $page = (int)$request->get('page', 1);
 
-                if (1 == $page) {
-                    //获取官推片段动态
-                    $top_tweets = TweetHot::top()->pluck('tweet_id');
+            if($page==1) {
 
-                    // 如果置顶动态id多于2条，随机取2条置顶的动态
-                    if ($top_tweets->count() > 2) {
-                        $top_tweets = $top_tweets->random(2);
+                //获取官推片段动态
+                $top_tweets = TweetHot::top()->pluck('tweet_id');
+
+                // 如果置顶动态id多于2条，随机取2条置顶的动态
+                if ($top_tweets->count() > 2) {
+                    $top_tweets = $top_tweets->random(2);
+                }
+
+                //获取推荐动态
+                $recommend_tweets = TweetHot::recommend()->whereNotIn('tweet_id', $top_tweets->all())->pluck('tweet_id');
+
+                // 如果推荐动态id多于4条，随机取4条动态
+                if ($recommend_tweets->count() > 4) {
+                    $recommend_tweets = $recommend_tweets->random(4);
+                }
+
+                // 合并置顶和推荐的数组
+                $special_ids = array_merge($top_tweets->all(), $recommend_tweets->all());
+
+                // 初始化
+                $special_data = [];
+                //判断
+                if (isset($special_ids[0])) {
+                    // 获取相关热门动态的数据
+                    foreach ($special_ids as $v) {
+                        $special_tweets = Tweet::whereType(0)
+                            ->where('visible', '=', 0)
+                            ->where('id', $v)
+                            ->where('fragment_id', $id)
+//                            ->where('')
+                            ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+
+                        // 官方推荐动态
+                        $special_data[] = $this->channelTweetsTransformer->transformCollection($special_tweets->all())[0];
                     }
+                }
 
-                    //获取推荐动态
-                    $recommend_tweets = TweetHot::recommend()->whereNotIn('tweet_id', $top_tweets->all())->pluck('tweet_id');
+                //公开状态的
+                $third_tweets = Tweet::where('active', '=', 1)
+                    ->where('fragment_id', '=', $id)
+                    ->where('visible', '=', 0)
+                    ->with([
+                        'hasOneContent' => function ($query) {
+                            $query->select(['tweet_id', 'content']);
+                        },
+                        'belongsToUser' => function ($q) {
+                            $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                        }])
+                    ->forPage($page, $this->paginate)
+                    ->whereNotIn('id', $special_ids)
+                    ->orderBy('browse_times', 'desc')
+                    ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
 
-                    // 如果推荐动态id多于4条，随机取4条动态
-                    if ($recommend_tweets->count() > 4) {
-                        $recommend_tweets = $recommend_tweets->random(4);
-                    }
+                $third_tweets = $this->channelTweetsTransformer->transformCollection($third_tweets->all());
 
-                    // 合并置顶和推荐的数组
-                    $special_ids = array_merge($top_tweets->all(), $recommend_tweets->all());
+                //如果用户未登录
+                if (!$user){
 
-                    // 初始化
-                    $special_data = [];
-                    //判断
-                    if (isset($special_ids[0])) {
-                        // 获取相关热门动态的数据
-                        foreach ($special_ids as $v) {
-                            $special_tweets = Tweet::whereType(0)
-                                ->where('visible','=',0)
-                                ->where('id', $v)
-                                ->where('fragment_id', $id)
-                                ->active()
-                                ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+                    $datas = array_merge($special_data,$third_tweets);
+                    $data = mult_unique($datas);
 
-                            // 过滤
-                            $special_data[] = $this->channelTweetsTransformer->transformCollection($special_tweets->all())[0];
-                        }
-                    }
-
-                    //获取数据
-                    $second_tweets = Tweet::where('active', '=', 1)
+                    $count = Tweet::where('active', '=', 1)
                         ->where('fragment_id', '=', $id)
-                        ->where('visible','=',0)
-                        ->with([
-                            'hasOneContent' => function ($query) {
-                                $query->select(['tweet_id', 'content']);
-                            },
-                            'belongsToUser' => function ($q) {
-                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
-                            }])
-                        ->forPage($page, $this->paginate)
-                        ->whereNotIn('id', $special_ids)
-                        ->orderBy('browse_times', 'desc')
-                        ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
-
-                    $second_tweets = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
-
-                    $data = array_merge($special_data, $second_tweets);
-
-                    $count =  Tweet::where('active', '=', 1)
-                        ->where('fragment_id', '=', $id)
-                        ->where('visible','=',0)
+                        ->where('visible', '=', 0)
                         ->count();
 
-                    if ($request->get('type')==2){
+                    if ($request->get('type') == 2) {
                         return response()->json([
                             'count' => $count,
                             'page_count' => ceil(count($data) / $this->paginate),
@@ -1162,67 +924,312 @@ class FragmentController extends BaseController
                         'data' => $data,
                     ]);
 
-                }else{
-                    if ($request->get('type')==1){
-                        //如果不是第一页
-                        $second_tweets = Tweet::where('active', '=', 1)
-                            ->where('fragment_id', '=', $id)
-                            ->where('visible','=',0)
-                            ->with([
-                                'hasOneContent' => function ($query) {
-                                    $query->select(['tweet_id', 'content']);
-                                },
-                                'belongsToUser' => function ($q) {
-                                    $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
-                                }])
-                            ->forPage($page, $this->paginate)
-                            ->orderBy('browse_times', 'desc')
-                            ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
-                        $data = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
+                }
 
-                        return response()->json([
-                            'page_count' => ceil(count($data) / $this->paginate),
-                            'data' => $data,
-                        ]);
-                    }else{
-                        //如果不是第一页
-                        $second_tweets = Tweet::where('active', '=', 1)
-                            ->where('fragment_id', '=', $id)
-                            ->where('visible','=',0)
-                            ->with([
-                                'hasOneContent' => function ($query) {
-                                    $query->select(['tweet_id', 'content']);
-                                },
-                                'belongsToUser' => function ($q) {
-                                    $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
-                                }])
-                            ->forPage($page, $this->paginate)
-                            ->orderBy('tweet_grade_total', 'desc')
-                            ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
-                        $data = $this->channelTweetsTransformer->transformCollection($second_tweets->all());
+                //如果为登录状态
+                if ($user) {
+                    //设置为好友可见
+                    $tweets = Tweet::where('fragment_id', '=', $id)
+                        ->where('active', '=', 1)
+                        ->where('visible', '=', 1)
+                        ->pluck('id')->all();
 
-                        $count =  Tweet::where('active', '=', 1)
-                            ->where('fragment_id', '=', $id)
-                            ->where('visible','=',0)
-                            ->count();
+                    $user_ids = [];
+                    foreach ($tweets as $k => $v) {
+                        $user_ids[] = Tweet::find($v)->user_id;
+                    }
 
+                    $second_tweets = [];
+                    foreach ($user_ids as $k => $v) {
+                        $first = Friend::where('from', '=', $user->id)->where('to', '=', $v)->first();
+
+                        if ($first) {
+                            $second = Friend::where('from', '=', $v)->where('to', '=', $user->id)->first();
+
+                            if ($second) {
+                                //好友数据
+                                $second_tweets[] = Tweet::where('id', '=', $tweets[$k])
+                                    ->with([
+                                        'hasOneContent' => function ($query) {
+                                            $query->select(['tweet_id', 'content']);
+                                        },
+                                        'belongsToUser' => function ($q) {
+                                            $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                                        }])
+                                    ->forPage($page, $this->paginate)
+                                    ->get();
+                            }
+                            //好友动态
+                            $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                        }
+                    }
+
+                    $datas = array_merge($special_data,$second_tweet, $third_tweets);
+                    $data = mult_unique($datas);
+
+                    $count = Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible', '=', 0)
+                        ->count();
+
+                    if ($request->get('type') == 2) {
                         return response()->json([
                             'count' => $count,
                             'page_count' => ceil(count($data) / $this->paginate),
                             'data' => $data,
                         ]);
                     }
+
+                    return response()->json([
+                        'page_count' => ceil(count($data) / $this->paginate),
+                        'data' => $data,
+                    ]);
+
                 }
+
+            }else {
+                if ($request->get('type') == 1) {
+                    //如果不是第一页
+                    $five_tweets = Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible', '=', 0)
+                        ->with([
+                            'hasOneContent' => function ($query) {
+                                $query->select(['tweet_id', 'content']);
+                            },
+                            'belongsToUser' => function ($q) {
+                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                            }])
+                        ->forPage($page, $this->paginate)
+                        ->orderBy('browse_times', 'desc')
+                        ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+                    $five_tweet = $this->channelTweetsTransformer->transformCollection($five_tweets->all());
+
+                    //如果为登录状态
+                    if ($user->id) {
+                        //设置为好友可见
+                        $tweets = Tweet::where('fragment_id', '=', $id)
+                            ->where('active', '=', 1)
+                            ->where('visible', '=', 1)
+                            ->pluck('id')->all();
+
+                        $user_ids = [];
+                        foreach ($tweets as $k => $v) {
+                            $user_ids[] = Tweet::find($v)->user_id;
+                        }
+
+                        $second_tweets = [];
+                        foreach ($user_ids as $k => $v) {
+                            $first = Friend::where('from', '=', $user->id)->where('to', '=', $v)->first();
+
+                            if ($first) {
+                                $second = Friend::where('from', '=', $v)->where('to', '=', $user->id)->first();
+
+                                if ($second) {
+                                    //好友数据
+                                    $second_tweets[] = Tweet::where('id', '=', $tweets[$k])
+                                        ->with([
+                                            'hasOneContent' => function ($query) {
+                                                $query->select(['tweet_id', 'content']);
+                                            },
+                                            'belongsToUser' => function ($q) {
+                                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                                            }])
+                                        ->forPage($page, $this->paginate)
+                                        ->get();
+                                }
+                                //好友动态
+                                if(empty($second_tweets))
+                                {
+                                    $second_tweet = [];
+                                }
+                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                            }
+                        }
+                    }
+
+                    if(!$user){
+                        return response()->json([
+                            'page_count' => ceil(count($five_tweet) / $this->paginate),
+                            'data' => $five_tweet,
+                        ]);
+                    }else{
+                        $datas = array_merge($second_tweet,$five_tweet);
+
+                        $data = mult_unique($datas);
+
+                        return response()->json([
+                            'page_count' => ceil(count($data) / $this->paginate),
+                            'data' => $data,
+                        ]);
+                    }
+                } else {
+                    //如果不是第一页
+                    $six_tweets = Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible', '=', 0)
+                        ->with([
+                            'hasOneContent' => function ($query) {
+                                $query->select(['tweet_id', 'content']);
+                            },
+                            'belongsToUser' => function ($q) {
+                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                            }])
+                        ->forPage($page, $this->paginate)
+                        ->orderBy('tweet_grade_total', 'desc')
+                        ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
+                    $six_tweet = $this->channelTweetsTransformer->transformCollection($six_tweets->all());
+
+                    //如果为登录状态
+                    if ($user) {
+                        //设置为好友可见
+                        $tweets = Tweet::where('fragment_id', '=', $id)
+                            ->where('active', '=', 1)
+                            ->where('visible', '=', 1)
+                            ->pluck('id')->all();
+
+                        $user_ids = [];
+                        foreach ($tweets as $k => $v) {
+                            $user_ids[] = Tweet::find($v)->user_id;
+                        }
+
+                        $second_tweets = [];
+                        foreach ($user_ids as $k => $v) {
+                            $first = Friend::where('from', '=', $user->id)->where('to', '=', $v)->first();
+
+                            if ($first) {
+                                $second = Friend::where('from', '=', $v)->where('to', '=', $user->id)->first();
+
+                                if ($second) {
+                                    //好友数据
+                                    $second_tweets[] = Tweet::where('id', '=', $tweets[$k])
+                                        ->with([
+                                            'hasOneContent' => function ($query) {
+                                                $query->select(['tweet_id', 'content']);
+                                            },
+                                            'belongsToUser' => function ($q) {
+                                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                                            }])
+                                        ->forPage($page, $this->paginate)
+                                        ->get();
+                                }
+                                //好友动态
+                                if(empty($second_tweets))
+                                {
+                                    $second_tweet = [];
+                                }
+                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                            }
+                        }
+                    }
+
+                    if(!$user){
+                        return response()->json([
+                            'page_count' => ceil(count($six_tweet) / $this->paginate),
+                            'data' => $six_tweet,
+                        ]);
+                    }else{
+                        $datas = array_merge($second_tweet,$six_tweet);
+
+                        $data = mult_unique($datas);
+
+                        return response()->json([
+                            'page_count' => ceil(count($data) / $this->paginate),
+                            'data' => $data,
+                        ]);
+                    }
+
+                    $count = Tweet::where('active', '=', 1)
+                        ->where('fragment_id', '=', $id)
+                        ->where('visible', '=', 0)
+                        ->count();
+
+                    return response()->json([
+                        'count' => $count,
+                        'page_count' => ceil(count($data) / $this->paginate),
+                        'data' => $data,
+                    ]);
+                }
+
+            }
         }catch (\Exception $e) {
             return response()->json(['error' => 'not_found'], 404);
         }
     }
 
-    public function tweetdetails($id)
+    public function search(Request $request)
     {
-       // $tweet = Tweet::with([''])->find($id);
+        try{
+            //接收页数
+            $page = $request->get('page',1);
 
-     //   dd($tweet);
+            //接收关键词
+            $keyword = $request->get('keyword');
+
+            //判断用户是否登录
+            $user = Auth::guard('api')->user();
+
+            //官方置顶
+            $top_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })->where('ishot','=',1)->where('ishottime','>',time())
+                        ->where('active','=',1)->pluck('id');
+
+            if($top_fragment_id->count()>2){
+                $top_fragment_id = $top_fragment_id->random(2);
+            }
+
+            //官方推荐
+            $recommend_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })
+                ->where('recommend','=',1)
+                ->whereNotIn('id',$top_fragment_id)
+                ->where('active','=',1)->pluck('id');
+
+            if ($recommend_fragment_id->count()>4){
+                $recommend_fragment_id = $recommend_fragment_id->random(4);
+            }
+
+            $first_fragment_id = array_merge($top_fragment_id->toArray(),$recommend_fragment_id->toArray());
+
+            //官方推荐和置顶
+            $first_fragment_info = Fragment::with([
+                'belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
+                },'belongsToManyFragmentType'
+            ])
+                ->whereIn('id',$first_fragment_id)
+                ->get();
+
+            $second_fragment_info =  Fragment::WhereHas('keyWord',function($q) use ($keyword){
+                $q->where('keyword','=',$keyword);
+            })
+                ->with([
+                    'belongsToUser'=>function($q){
+                        $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
+                    },'belongsToManyFragmentType'
+                ])
+                ->forPage($page,$this->paginate)
+                ->where('active','=',1)
+                ->whereNotIn('id',$first_fragment_id)
+                ->get();
+
+            if($page == 1){
+                $data = array_merge($first_fragment_info->toArray(),$second_fragment_info->toArray());
+
+                return response()->json([
+                    'data'  => $this->fragCollectTransformer->searchtransform($data),
+                ],200);
+            }
+
+            return response()->json([
+                'data'=>  $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
+            ]);
+
+        }catch(\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
     }
 
 }
