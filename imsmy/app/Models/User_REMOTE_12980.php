@@ -70,7 +70,6 @@ class User extends Common implements AuthenticatableContract,
         'browse_times',
         'last_ip',
         'last_token',
-        'is_vip',
     ];
 
     /**
@@ -248,30 +247,14 @@ class User extends Common implements AuthenticatableContract,
         return $query;
     }
 
-    /**
-     *  用户与片段
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function hasManyFragment()
+
+    public function belongsToManyFragment()
     {
-        return $this->hasMany('App\Models\Fragment','user_id','fragment_id');
+        return $this->belongsToMany('App\Models\Fragment','fragment_user_collect','user_id','fragment_id');
     }
 
-    /**
-     * 用户与积分
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function hasManyIntegral()
+    public function belongsToAdministrator()
     {
-        return $this->hasMany('App\Models\User\UserIntegral','id','user_id');
-    }
-
-    /**
-     * 用户与积分支出
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function hasManyIntegralExtend()
-    {
-        return $this->hasMany('App\Models\User\UserIntegralExpend','user_id','id');
+        return $this->belongsTo('App\Models\Admin\Administrator','user_id','id');
     }
 }

@@ -39,8 +39,7 @@
             "database"
         ],
         "files": [
-            "app/Support/helpers.php",
-            "app/Library/aliyun/SmsDemo.php"
+            "app/Support/helpers.php"
         ],
         "psr-4": {
             "App\\": "app/"

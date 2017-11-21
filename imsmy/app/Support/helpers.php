@@ -686,20 +686,6 @@ function mult_unique($array)
 }
 
 
-/**
- * 秒转时分秒
- */
-function changeTimeType($seconds){
-    if ($seconds > 3600){
-        $hours = intval($seconds/3600);
-        $minutes = $seconds % 3600;
-        $time = $hours.":".gmstrftime('%M:%S', $minutes);
-    }else{
-        $time = gmstrftime('%H:%M:%S', $seconds);
-    }
-    return $time;
-}
-
 
 
 
