@@ -39,7 +39,7 @@ class FragCollectTransformer extends Transformer
                 'fragment_id'   => $v['id'],
                 'user_id'       => $v['user_id'],
                 'name'          => $v['name'],
-                'duration'      => $v['duration'],
+                'duration'      => changeTimeType($v['duration']),
                 'cover'         => $v['cover'],
                 'url'           => $v['net_address'],
                 'down_count'    => $v['count'],
@@ -68,7 +68,7 @@ class FragCollectTransformer extends Transformer
                 'fragment_id' =>$v['id'],
                 'user_id'=>$v['user_id'],
                 'name'=>$v['name'],
-                'duration' =>$v['duration'],
+                'duration' =>changeTimeType($v['duration']),
                 'cover' =>$v['cover'],
                 'url' =>$v['net_address'],
                 'down_count'=>$v['count'],
@@ -96,7 +96,7 @@ class FragCollectTransformer extends Transformer
                 'fragment_id'   => $v['id'],
                 'user_id'       => $v['user_id'],
                 'name'          => $v['name'],
-                'duration'      => $v['duration'],
+                'duration'      => changeTimeType($v['duration']),
                 'cover'         => $v['cover'],
                 'url'           => $v['net_address'],
                 'down_count'    => $v['count'],
@@ -120,7 +120,7 @@ class FragCollectTransformer extends Transformer
                 'fragment_id'   => $v['id'],
                 'user_id'       => $v['user_id'],
                 'name'          => $v['name'],
-                'duration'      => $v['duration'],
+                'duration'      => changeTimeType($v['duration']),
                 'cover'         => $v['cover'],
                 'url'           => $v['net_address'],
                 'down_count'    => $v['count'],
@@ -132,4 +132,30 @@ class FragCollectTransformer extends Transformer
         }
         return $a;
     }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    public function searchtransform($data)
+    {
+        $a = [];
+        foreach ($data as $v){
+            $a[] = [
+                'fragment_id'   => $v['id'],
+                'user_id'       => $v['user_id'],
+                'name'          => $v['name'],
+                'duration'      => changeTimeType($v['duration']),
+                'cover'         => $v['cover'],
+                'url'           => $v['net_address'],
+                'down_count'    => $v['count'],
+                'watch_count'   => $v['watch_count'],
+                'create_time'   => $v['time_add'],
+                'user'          => $this -> userTransformer -> fragtransform($v['belongs_to_user']),
+                'type'          => $this -> fragmentTypeTransformer->transformCollection($v['belongs_to_many_fragment_type']),
+            ];
+        }
+        return $a;
+    }
+
 }

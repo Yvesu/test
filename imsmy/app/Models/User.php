@@ -274,4 +274,14 @@ class User extends Common implements AuthenticatableContract,
     {
         return $this->hasMany('App\Models\User\UserIntegralExpend','user_id','id');
     }
+
+    /**
+     * 用户与关键词 多对多
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function belongtoManyKeywords()
+    {
+        return $this->belongsToMany('App\Models\UserKeywords','user_keywords','user_id','keyword_id');
+    }
+
 }

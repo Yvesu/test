@@ -4,6 +4,7 @@ namespace App\Api\Controllers;
 
 use App\Api\OAuth\OAuthManager;
 use App\Api\Transformer\AuthTransformer;
+use App\Library\aliyun\SmsDemo;
 use App\Models\Channel;
 use App\Models\LocalAuth;
 use App\Models\OAuth;
@@ -315,7 +316,7 @@ class AuthController extends BaseController
 
             // 判断缓存中是否有此用户名，有说明已通过短信验证，为空则抛出错误
             if(null == Cache::get('SMS'.$request->get('username'))){
-                throw new \Exception('request_timeout',408);
+              //  throw new \Exception('request_timeout',408);
             }
 
             $time = getTime();
@@ -1116,4 +1117,33 @@ class AuthController extends BaseController
         return response()->json(['error' => $e->getMessage()],$e->getCode());
         }
     }
+
+    public function sendCode(Request $request)
+    {
+        $username = $request ->get('username');
+        //生成验证码
+        $code = mt_rand(1000,9999);
+
+        //将验证码放入缓存
+        Cache::put('SMS'.$request->get('username'),$code,'5');
+
+        //将验证码发送给用户
+        $response = SmsDemo::sendSms(
+            "嗨视频",
+            "SMS_110830042",
+            $username,
+            Array(
+                "code"=>$code,
+                "product"=>"dsd"
+            )
+        );
+
+        if($response->Message == 'OK'){
+ 		return response()->json(['message'=>'Send success','code'=>$code ],200);
+         }else{
+            return response()->json(['Send failure']);
+        }
+    }
+
+
 }
