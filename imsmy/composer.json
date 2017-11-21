@@ -40,7 +40,8 @@
         ],
         "files": [
             "app/Support/helpers.php",
-            "app/Library/aliyun/SmsDemo.php"
+            "app/Library/aliyun/SmsDemo.php",
+            "app/Library/pinyin/py.php"
         ],
         "psr-4": {
             "App\\": "app/"

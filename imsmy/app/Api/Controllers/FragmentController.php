@@ -8,6 +8,7 @@ use App\Api\Transformer\FragmentDetailTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Library\aliyun\SmsDemo;
+use App\Library\pinyin\CUtf8_PY;
 use App\Models\Fragment;
 use App\Models\Friend;
 use App\Models\Keywords;
@@ -1196,6 +1197,11 @@ class FragmentController extends BaseController
         }
     }
 
+    /**
+     * 搜索
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function search(Request $request)
     {
         try{
@@ -1203,120 +1209,240 @@ class FragmentController extends BaseController
             $page = $request->get('page',1);
 
             //接收关键词
-            $keyword = $request->get('keyword');
+            $keyword = preg_replace('# #','',$request->get('keyword'));
 
             //判断用户是否登录
             $user = Auth::guard('api')->user();
 
-            //写入用户喜好
-            $user_keywords_ids = Keywords::WhereHas('belongtoManyUser',function($q) use ($user) {
-                $q->where('user_id','=',$user->id);
-            })->where('keyword','=',$keyword)->first(['id']);
+            if(preg_match('/^[\x{4e00}-\x{9fa5}]+$/u', $keyword)>0) {
 
-            //如果用户喜好不存在  则存入
-            if(!$user_keywords_ids){
-                $keyword_id =  Keywords::where('keyword','=',$keyword)->pluck('id');
+                if ($user) {
+                    //写入用户喜好
+                    $user_keywords_ids = Keywords::WhereHas('belongtoManyUser', function ($q) use ($user) {
+                        $q->where('user_id', '=', $user->id);
+                    })->where('keyword', '=', $keyword)->first(['id']);
 
-                if($keyword_id->all()){
-                    $user_keywords_count = UserKeywords::where('user_id','=',$user->id)
-                                ->orderBy('create_time','asc')
+                    //如果用户喜好不存在  则存入
+                    if (!$user_keywords_ids) {
+                        $keyword_id = Keywords::where('keyword', '=', $keyword)->pluck('id');
+
+                        if ($keyword_id->all()) {
+                            $user_keywords_count = UserKeywords::where('user_id', '=', $user->id)
+                                ->orderBy('create_time', 'asc')
                                 ->get();
 
-                    //如果用户喜好大于50
-                    if($user_keywords_count->count()>50){
-                        $user_keywords_last = UserKeywords::where('user_id','=',$user->id)
-                            ->orderBy('create_time','asc')
-                            ->take(1)
-                            ->delete();
+                            //如果用户喜好大于50
+                            if ($user_keywords_count->count() > 50) {
+                                $user_keywords_last = UserKeywords::where('user_id', '=', $user->id)
+                                    ->orderBy('create_time', 'asc')
+                                    ->take(1)
+                                    ->delete();
+                            }
+
+                            $new_keyword = new UserKeywords();
+
+                            $new_keyword->user_id = $user->id;
+
+                            $new_keyword->keyword_id = $keyword_id->all()[0];
+
+                            $new_keyword->create_time = time();
+
+                            $new_keyword->save();
+                        }
                     }
+                }
 
-                        $new_keyword = new UserKeywords();
+                //官方置顶
+                $top_fragment_id = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
+                    $q->where('keyword', '=', $keyword);
+                })
+                    ->where('ishot', '=', 1)
+                    ->where('ishottime', '>', time())
+                    ->where('active', '=', 1)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->pluck('id');
 
-                        $new_keyword->user_id = $user->id;
+                if ($top_fragment_id->count() > 2) {
+                    $top_fragment_id = $top_fragment_id->random(2);
+                }
 
-                        $new_keyword->keyword_id = $keyword_id->all()[0];
+                //官方推荐
+                $recommend_fragment_id = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
+                    $q->where('keyword', '=', $keyword);
+                })
+                    ->where('recommend', '=', 1)
+                    ->whereNotIn('id', $top_fragment_id)
+                    ->where('active', '=', 1)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->pluck('id');
 
-                        $new_keyword->create_time = time();
+                if ($recommend_fragment_id->count() > 4) {
+                    $recommend_fragment_id = $recommend_fragment_id->random(4);
+                }
 
-                        $new_keyword ->save();
-                    }
-            }
+                $first_fragment_id = array_merge($top_fragment_id->toArray(), $recommend_fragment_id->toArray());
 
-            //官方置顶
-            $top_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
-                $q->where('keyword','=',$keyword);
-            })
-                ->where('ishot','=',1)
-                ->where('ishottime','>',time())
-                ->where('active','=',1)
-                ->orWhere('name','like','%'.$keyword.'%')
-                ->pluck('id');
-
-            if($top_fragment_id->count()>2){
-                $top_fragment_id = $top_fragment_id->random(2);
-            }
-
-            //官方推荐
-            $recommend_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
-                $q->where('keyword','=',$keyword);
-            })
-                ->where('recommend','=',1)
-                ->whereNotIn('id',$top_fragment_id)
-                ->where('active','=',1)
-                ->orWhere('name','like','%'.$keyword.'%')
-                ->pluck('id');
-
-            if ($recommend_fragment_id->count()>4){
-                $recommend_fragment_id = $recommend_fragment_id->random(4);
-            }
-
-            $first_fragment_id = array_merge($top_fragment_id->toArray(),$recommend_fragment_id->toArray());
-
-            //官方推荐和置顶
-            $first_fragment_info = Fragment::with([
-                'belongsToUser'=>function($q){
-                $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
-                },'belongsToManyFragmentType'
-            ])
-                ->whereIn('id',$first_fragment_id)
-                ->get();
-
-            //搜索相关
-            $second_fragment_info =  Fragment::WhereHas('keyWord',function($q) use ($keyword){
-                $q->where('keyword','=',$keyword);
-            })
-                ->with([
-                    'belongsToUser'=>function($q){
-                        $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
-                    },'belongsToManyFragmentType'
+                //官方推荐和置顶
+                $first_fragment_info = Fragment::with([
+                    'belongsToUser' => function ($q) {
+                        $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
+                    }, 'belongsToManyFragmentType'
                 ])
-                ->forPage($page,$this->paginate)
-                ->where('active','=',1)
-                ->whereNotIn('id',$first_fragment_id)
-                ->orWhere('name','like','%'.$keyword.'%')
-                ->orderBy('watch_count','DESC')
-                ->get();
+                    ->whereIn('id', $first_fragment_id)
+                    ->get();
 
-            if($page == 1){
-                $data = array_merge($first_fragment_info->toArray(),$second_fragment_info->toArray());
+                //搜索相关
+                $second_fragment_info = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
+                    $q->where('keyword', '=', $keyword);
+                })
+                    ->with([
+                        'belongsToUser' => function ($q) {
+                            $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
+                        }, 'belongsToManyFragmentType'
+                    ])
+                    ->forPage($page, $this->paginate)
+                    ->where('active', '=', 1)
+                    ->whereNotIn('id', $first_fragment_id)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orderBy('watch_count', 'DESC')
+                    ->get();
 
-                if(empty($data)){
-                     return response()->json([
-                         'error' => 'Not found'
-                     ],404);
-                 }
+                if ($page == 1) {
+                    $data = array_merge($first_fragment_info->toArray(), $second_fragment_info->toArray());
+
+                    if (empty($data)) {
+                        return response()->json([
+                            'error' => 'Not found'
+                        ], 404);
+                    }
+
+                    return response()->json([
+                        'data' => $this->fragCollectTransformer->searchtransform($data),
+                    ], 200);
+
+                }
 
                 return response()->json([
-                    'data'  => $this->fragCollectTransformer->searchtransform($data),
-                ],200);
+                    'data' => $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
+                ]);
+
+            }else{
+
+                $keyword_pin =  preg_replace('# #','',CUtf8_PY::encode($request->get('keyword'),'all'));
+
+                if ($user) {
+                    //写入用户喜好
+                    $user_keywords_ids = Keywords::WhereHas('belongtoManyUser', function ($q) use ($user) {
+                        $q->where('user_id', '=', $user->id);
+                    })
+                        ->where('keyword_pinyin', '=', $keyword_pin)
+                        ->first(['id']);
+
+                    //如果用户喜好不存在  则存入
+                    if (!$user_keywords_ids) {
+                        $keyword_id = Keywords::where('keyword_pinyin', '=', $keyword_pin)->pluck('id');
+
+                        if ($keyword_id->all()) {
+                            $user_keywords_count = UserKeywords::where('user_id', '=', $user->id)
+                                ->orderBy('create_time', 'asc')
+                                ->get();
+
+                            //如果用户喜好大于50
+                            if ($user_keywords_count->count() > 50) {
+                                $user_keywords_last = UserKeywords::where('user_id', '=', $user->id)
+                                    ->orderBy('create_time', 'asc')
+                                    ->take(1)
+                                    ->delete();
+                            }
+
+                            $new_keyword = new UserKeywords();
+
+                            $new_keyword->user_id = $user->id;
+
+                            $new_keyword->keyword_id = $keyword_id->all()[0];
+
+                            $new_keyword->create_time = time();
+
+                            $new_keyword->save();
+                        }
+                    }
+                }
+
+                //官方置顶
+                $top_fragment_id = Fragment::WhereHas('keyWord', function ($q) use ($keyword_pin) {
+                    $q->where('keyword_pinyin', '=', $keyword_pin);
+                })
+                    ->where('ishot', '=', 1)
+                    ->where('ishottime', '>', time())
+                    ->where('active', '=', 1)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->pluck('id');
+
+                if ($top_fragment_id->count() > 2) {
+                    $top_fragment_id = $top_fragment_id->random(2);
+                }
+
+                //官方推荐
+                $recommend_fragment_id = Fragment::WhereHas('keyWord', function ($q) use ($keyword_pin) {
+                    $q->where('keyword_pinyin', '=', $keyword_pin);
+                })
+                    ->where('recommend', '=', 1)
+                    ->whereNotIn('id', $top_fragment_id)
+                    ->where('active', '=', 1)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->pluck('id');
+
+                if ($recommend_fragment_id->count() > 4) {
+                    $recommend_fragment_id = $recommend_fragment_id->random(4);
+                }
+
+                $first_fragment_id = array_merge($top_fragment_id->toArray(), $recommend_fragment_id->toArray());
+
+                //官方推荐和置顶
+                $first_fragment_info = Fragment::with([
+                    'belongsToUser' => function ($q) {
+                        $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
+                    }, 'belongsToManyFragmentType'
+                ])
+                    ->whereIn('id', $first_fragment_id)
+                    ->get();
+
+                //搜索相关
+                $second_fragment_info = Fragment::WhereHas('keyWord', function ($q) use ($keyword_pin) {
+                    $q->where('keyword_pinyin', '=', $keyword_pin);
+                })
+                    ->with([
+                        'belongsToUser' => function ($q) {
+                            $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
+                        }, 'belongsToManyFragmentType'
+                    ])
+                    ->forPage($page, $this->paginate)
+                    ->where('active', '=', 1)
+                    ->whereNotIn('id', $first_fragment_id)
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orderBy('watch_count', 'DESC')
+                    ->get();
+
+                if ($page == 1) {
+                    $data = array_merge($first_fragment_info->toArray(), $second_fragment_info->toArray());
+
+                    if (empty($data)) {
+                        return response()->json([
+                            'error' => 'Not found'
+                        ], 404);
+                    }
+
+                    return response()->json([
+                        'data' => $this->fragCollectTransformer->searchtransform($data),
+                    ], 200);
+
+                }
+
+                return response()->json([
+                    'data' => $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
+                ]);
 
             }
-
-            return response()->json([
-                'data'=>  $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
-            ]);
-
-
         }catch(\Exception $e){
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
