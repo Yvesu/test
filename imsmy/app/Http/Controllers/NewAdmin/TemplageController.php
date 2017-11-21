@@ -19,9 +19,12 @@ class TemplageController extends Controller
     public function addType(Request $request)
     {
         try{
+            $admin = Auth::guard('api')->user();
+            $operator = $admin->id;
+            $creater = $admin->id;
             $name = $request->get('name');
             $icon = $request->file('type_icon');
-            $active = $request->get('active');
+            $active = $request->get('active',0);
             if(is_null($name) || is_null($icon)){
                 return;
             }
@@ -30,32 +33,21 @@ class TemplageController extends Controller
             if(FragmentType::where('name',$name)->first()){
                 return response()->json(['error'=>'已存在'],200);
             }
-
             DB::beginTransaction();
-            $fragmenttype = FragmentType::create([
-                'name'      => $name,
-                'sort'      => ++Channel::orderBy('sort','DESC')->first()->sort,
-                'icon'      => 'temp_key',
-                'hash_icon' => 'temp_hash',
-                'active'    => $active
-            ]);
-
-            // 获取随机数
-            $rand = mt_rand(1000000,9999999);
-
-            $result = CloudStorage::putFile(
-                'fragmenttype/' . $fragmenttype->id . '/' . getTime() . $rand . '.' . $icon->getClientOriginalExtension(),
-                $icon);
-
-            if($result[1] !== null){
-                DB::rollBack();
-            } else {
-                $fragmenttype->hash_icon = $result[0]['hash'];
-                $fragmenttype->icon = $result[0]['key'];
-                $fragmenttype->save();
-                DB::commit();
+            $data = new FragmentType;
+            if($active == 1)
+            {
+                $sort =1 + FragmentType::max('sort');
+                $data ->sort = $sort;
             }
-
+            $data->name = $name;
+            $data->icon = 'temp_key';
+            $data->active = $active;
+            $data->operator_id = $operator;
+            $data->create_id =$creater;
+            $data->time_add = time();
+            $data->time_update = time();
+            $data->save();
             return response()->json(['data'=>'添加成功'],200);
         }catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'], 404);

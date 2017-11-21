@@ -18,8 +18,6 @@ class Fragment extends Model
         'net_address',
         'cover',
         'name',
-        'bgm',
-        'volume',
         'official',
         'address_country',
         'address_province',
@@ -38,6 +36,9 @@ class Fragment extends Model
         'watch_count',
         'praise',
         'test_results',
+        'operator_id',
+        'ishot',
+        'zip_address'
     ];
 
     public $timestamps = false;
@@ -75,7 +76,14 @@ class Fragment extends Model
         return $this->belongsToMany('App\Models\FragmentType','fragmenttype_fragment','fragment_id','fragmentType_id');
     }
 
-
+    /**
+     * 片段与分镜的一对多
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function hasManyStoryboard()
+    {
+        return $this->hasMany('App\Models\Storyboard','fragment_id','id');
+    }
 
     /**
      * 片段与字幕  一对多
@@ -84,5 +92,83 @@ class Fragment extends Model
     public function hasManySubtitle()
     {
         return $this->hasMany('App\Models\Subtitle','fragment_id','id');
+    }
+
+    /**
+     * @param $query
+     * @param $name
+     * @return mixed
+     * 多条件搜索-名称
+     */
+    public function scopeName($query,$name)
+    {
+        return $query->where('name','like',"%$name%");
+    }
+
+    /**
+     * @param $query
+     * @param $operator
+     * @return mixed
+     * 多条件搜索-操作员
+     */
+    public function scopeOperator($query,$operator)
+    {
+        if(!empty($operator))
+        {
+            return $query->where('operator_id','=',$operator);
+        }else{
+            return $query;
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $integral
+     * @return mixed
+     * 多条件搜索-下载费用
+     */
+    public function scopeIntegral($query,$integral)
+    {
+        if(!empty($integral)){
+            return $query->where('integral','=',$integral);
+        }else{
+            return $query;
+        }
+
+    }
+
+    /**
+     * @param $query
+     * @param $count
+     * @return mixed
+     * 多条件搜索-下载量
+     */
+    public function scopeCount($query,$count)
+    {
+        return $query->where('count','>=',$count);
+    }
+
+    /**
+     * @param $query
+     * @param $time
+     * @return mixed
+     * 多条件搜索-时间
+     */
+    public function scopeTime($query,$time)
+    {
+        return $query->where('time_add','>=',$time);
+    }
+
+    /**
+     * @param $query
+     * @param $duration
+     * @return mixed
+     * 多条件搜索-时长
+     */
+    public function scopeDuration($query,$duration)
+    {
+        $duration = explode(':',$duration);
+        $sumduration = $duration[0]*60 + $duration[1];
+        return $query->where('duration','>=',$sumduration);
     }
 }

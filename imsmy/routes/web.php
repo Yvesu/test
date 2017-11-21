@@ -213,6 +213,16 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                     $api->post('/issue/fragment/addtype','FodderController@isserFragmentAddtype');
 
                     /**
+                     * 发布片段-添加画面比例
+                     */
+                    $api->post('/issue/fragment/addaspectradio','FodderController@issueFragmentAddAspectRadio');
+
+                    /**
+                     * 发布片段-添加资费
+                     */
+                    $api->post('/issue/fragment/addintergal','FodderController@issueFragmentAddIntergal');
+
+                    /**
                      * 发布片段-添加地址-国家
                      */
                     $api->post('/issue/fragment/addresscountry','AddAddressController@addresscountry');
@@ -237,31 +247,122 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                      */
                     $api->post('/issue/fragment/addresscounty','AddAddressController@addresscounty');
 
-                   /**
-                    * 发布片段-上传资源页面
-                    */
-                   $api->post('/issue/fragment/resource','FodderController@isserFragmentResource');
-
-
-                    /**
-                     * 发布片段-添加字幕
-                     */
-                    $api->post('/issue/fragment/addsubtitle','FodderController@issueFragmentAddSubtitle');
-
                     /**
                      * 发布片段-发布
                      */
                     $api->post('/issue/fragment/issue','FodderController@issue');
 
-                    /**
-                     * 删除分镜
-                     */
-                    $api->post('/issue/fragment/deleteStoryboard','FodderController@issueFragmentDeleteStoryboard');
+
 
                     /**
                      * 执行发布
                      */
                     $api->post('/issue/fragment/doissue','FodderController@doissue');
+
+                    /**
+                     * 取消发布
+                     */
+                    $api->post('/issue/fragment/cancel','FodderController@cancel');
+
+                    /**
+                     * 片段   未写接口文档
+                     */
+                    $api->group(['prefix'=>'fragment'],function ($api){
+
+                        /**
+                         * 片段首页
+                         */
+                        $api->post('/index','Fodder\FragmentController@index');
+
+                        /**
+                         * 获取分类
+                         */
+                        $api->post('/gettype','Fodder\FragmentController@gettype');
+
+                        /**
+                         * 获取操作员
+                         */
+                        $api->post('/getoperator','Fodder\FragmentController@getOperator');
+
+                        /**
+                         * 获取发布时间
+                         */
+                        $api->post('/gettime','Fodder\FragmentController@getTime');
+
+                        /**
+                         * 获取时长
+                         */
+                        $api->post('/getduration','Fodder\FragmentController@getDuration');
+
+                        /**
+                         * 获取下载量
+                         */
+                        $api->post('/getcount','Fodder\FragmentController@getCount');
+
+                        /**
+                         * 变更推荐状态
+                         */
+                        $api->post('/changerecommend','Fodder\FragmentController@changeRecommend');
+
+                        /**
+                         * 变更置顶状态
+                         */
+                        $api->post('/changeishot','Fodder\FragmentController@changeIsHot');
+
+                        /**
+                         * 设置置顶过期时间
+                         */
+                        $api->post('/ishottime','Fodder\FragmentController@isHotTime');
+                        /**
+                         * 进行屏蔽
+                         */
+                        $api->post('/doshield','Fodder\FragmentController@doShield');
+
+                        /**
+                         * 推荐位片段
+                         */
+                        $api->post('/recommend','Fodder\FragmentController@recommend');
+
+                        /**
+                         * 片段分类管理
+                         */
+                        $api->post('/type','Fodder\fragmentController@type');
+
+                        /**
+                         * 分类排序向上
+                         */
+                        $api->post('/up','Fodder\FragmentController@up');
+
+                        /**
+                         * 分类排序向下
+                         */
+                        $api->post('/down','Fodder\FragmentController@down');
+
+                        /**
+                         * 变更是否分类启用停用状态
+                         */
+                        $api->post('/chagestop','Fodder\FragmentController@chageStop');
+
+                        /**
+                         * 屏蔽仓
+                         */
+                        $api->post('/shieldwarehouse','Fodder\FragmentController@shieldWareHouse');
+
+                        /**
+                         * 取消屏蔽
+                         */
+                        $api->post('/cancelshield','Fodder\FragmentController@cancelShield');
+
+                        /**
+                         * 删除片段
+                         */
+                        $api->post('/delete','Fodder\FragmentController@delete');
+
+                        /**
+                         * 变更分类
+                         */
+                        $api->post('/changetype','Fodder\FragmentController@changeType');
+                    });
 
 
                    /**
@@ -379,6 +480,24 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         $api->post('/delete','FilterController@delete');
 
                     });
+                });
+
+
+                /**
+                 * 用户
+                 */
+                $api->group(['prefix'=>'user'],function ($api){
+
+                    /**
+                     * 监控模块
+                     */
+                    $api->group(['prefix'=>'supervisory'],function ($api){
+
+
+                        $api->post('/index','User\SupervisoryController@index');
+
+                    });
+
                 });
 
             });
