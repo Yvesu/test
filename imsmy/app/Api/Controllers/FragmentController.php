@@ -10,10 +10,12 @@ use App\Api\Transformer\UsersTransformer;
 use App\Library\aliyun\SmsDemo;
 use App\Models\Fragment;
 use App\Models\Friend;
+use App\Models\Keywords;
 use App\Models\Tweet;
 use App\Models\TweetHot;
 use App\Models\User;
 use App\Models\FragmentType;
+use App\Models\UserKeywords;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
@@ -73,6 +75,9 @@ class FragmentController extends BaseController
             if(!is_numeric($page = $request -> get('page',1)))
                 return response()->json(['error'=>'bad_request'],403);
 
+            //判断用户是否登录
+            $user = Auth::guard('api')->user();
+
             //街道
             $address_street = $request->get('address_street');
                 //区县
@@ -86,14 +91,38 @@ class FragmentController extends BaseController
 
             //国家
             $address_country = $request->get('address_country');
-            //搜索官方推荐
-            $official_fragments = Fragment::with(['belongsToManyFragmentType'=>function($q){
-                $q->select('name');
-            },'belongsToUser'])
-                ->where('recommend','=','1')
-                ->where('active','!=','2')
+
+            //官方置顶
+            $top_fragment_id = Fragment::where('ishot','=',1)
+                ->where('ishottime','>',time())
+                ->where('active','=',1)
                 ->where('test_results',1)
-                ->take(3)
+                ->pluck('id');
+
+            if($top_fragment_id->count()>2){
+                $top_fragment_id = $top_fragment_id->random(2);
+            }
+
+            //官方推荐
+            $recommend_fragment_id = Fragment::where('recommend','=',1)
+                ->whereNotIn('id',$top_fragment_id)
+                ->where('active','=',1)
+                ->where('test_results',1)
+                ->pluck('id');
+
+            if ($recommend_fragment_id->count()>4){
+                $recommend_fragment_id = $recommend_fragment_id->random(4);
+            }
+
+            $first_fragment_id = array_merge($top_fragment_id->toArray(),$recommend_fragment_id->toArray());
+
+            //官方推荐和置顶
+            $official_fragments = Fragment::with([
+                'belongsToUser'=>function($q){
+                    $q->select(['id','nickname','avatar','cover','verify','verify_info','signature']);
+                },'belongsToManyFragmentType'
+            ])
+                ->whereIn('id',$first_fragment_id)
                 ->get();
 
             //随机取出数据
@@ -102,6 +131,8 @@ class FragmentController extends BaseController
             },'belongsToUser'])
                 ->where('active','!=','2')
                 ->where('test_results',1)
+                ->whereNotIn('id',$first_fragment_id)
+                ->orderBy('watch_count','DESC')
                 -> forPage($page,$this->paginate)
                 ->get();
 
@@ -112,7 +143,7 @@ class FragmentController extends BaseController
                 ->where('address_street','=',$address_street)
                 ->where('active','!=','2')
                 ->where('test_results',1)
-                ->orderBy('count', 'desc')
+                ->orderBy('watch_count', 'desc')
                 ->take(3)
                 ->get();
 
@@ -132,7 +163,7 @@ class FragmentController extends BaseController
                     ->where('address_county','=',$address_county)
                     ->where('active','!=','2')
                     ->where('test_results',1)
-                    ->orderBy('count', 'desc')
+                    ->orderBy('watch_count', 'desc')
                     ->take(3)
                     ->get();
                 //官方 + 区
@@ -150,7 +181,7 @@ class FragmentController extends BaseController
                         ->where('address_city','=',$address_city)
                         ->where('active','!=','2')
                         ->where('test_results',1)
-                        ->orderBy('count', 'desc')
+                        ->orderBy('watch_count', 'desc')
                         ->take(3)
                         ->get();
 
@@ -169,7 +200,7 @@ class FragmentController extends BaseController
                         ->where('address_province','=',$address_province)
                         ->where('active','!=','2')
                         ->where('test_results',1)
-                        ->orderBy('count', 'desc')
+                        ->orderBy('watch_count', 'desc')
                         ->take(3)
                         ->get();
 
@@ -188,7 +219,7 @@ class FragmentController extends BaseController
                         ->where('address_country','=',$address_country)
                         ->where('active','!=','2')
                         ->where('test_results',1)
-                        ->orderBy('count', 'desc')
+                        ->orderBy('watch_count', 'desc')
                         ->take(3)
                         ->get();
 
@@ -227,16 +258,24 @@ class FragmentController extends BaseController
                }
             }
 
-            if ($count){
-               return response() -> json([
-                    // 应取数据的条数
-                    'count'      => $this->paginate,
-                    'classify_data'=>$this->ClassifyCollection($classifys),
-                    'fragment_data' =>  $this->fragCollectTransformer->transform($data),
-                ], 200);
-            }else{
-		return response() -> json(['error'=>'not_found'], 404);
+            if($page == 1){
+                if ($count){
+                    return response() -> json([
+                        // 应取数据的条数
+                        'count'      => $this->paginate,
+                        'classify_data'=>$this->ClassifyCollection($classifys),
+                        'fragment_data' =>  $this->fragCollectTransformer->transform($data),
+                    ], 200);
+                }else{
+                    return response() -> json(['error'=>'not_found'], 404);
+                }
             }
+
+            //当不是第一页的时候
+            return response() -> json([
+                'fragment_data' =>  $this->fragCollectTransformer->transform($rand_fragment),
+            ], 200);
+
         }catch (\Exception $e) {
              return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
@@ -1006,7 +1045,7 @@ class FragmentController extends BaseController
                     $five_tweet = $this->channelTweetsTransformer->transformCollection($five_tweets->all());
 
                     //如果为登录状态
-                    if ($user->id) {
+                    if ($user) {
                         //设置为好友可见
                         $tweets = Tweet::where('fragment_id', '=', $id)
                             ->where('active', '=', 1)
@@ -1169,11 +1208,49 @@ class FragmentController extends BaseController
             //判断用户是否登录
             $user = Auth::guard('api')->user();
 
+            //写入用户喜好
+            $user_keywords_ids = Keywords::WhereHas('belongtoManyUser',function($q) use ($user) {
+                $q->where('user_id','=',$user->id);
+            })->where('keyword','=',$keyword)->first(['id']);
+
+            //如果用户喜好不存在  则存入
+            if(!$user_keywords_ids){
+                $keyword_id =  Keywords::where('keyword','=',$keyword)->pluck('id');
+
+                if($keyword_id->all()){
+                    $user_keywords_count = UserKeywords::where('user_id','=',$user->id)
+                                ->orderBy('create_time','asc')
+                                ->get();
+
+                    //如果用户喜好大于50
+                    if($user_keywords_count->count()>50){
+                        $user_keywords_last = UserKeywords::where('user_id','=',$user->id)
+                            ->orderBy('create_time','asc')
+                            ->take(1)
+                            ->delete();
+                    }
+
+                        $new_keyword = new UserKeywords();
+
+                        $new_keyword->user_id = $user->id;
+
+                        $new_keyword->keyword_id = $keyword_id->all()[0];
+
+                        $new_keyword->create_time = time();
+
+                        $new_keyword ->save();
+                    }
+            }
+
             //官方置顶
             $top_fragment_id = Fragment::WhereHas('keyWord',function($q) use ($keyword){
                 $q->where('keyword','=',$keyword);
-            })->where('ishot','=',1)->where('ishottime','>',time())
-                        ->where('active','=',1)->pluck('id');
+            })
+                ->where('ishot','=',1)
+                ->where('ishottime','>',time())
+                ->where('active','=',1)
+                ->orWhere('name','like','%'.$keyword.'%')
+                ->pluck('id');
 
             if($top_fragment_id->count()>2){
                 $top_fragment_id = $top_fragment_id->random(2);
@@ -1185,7 +1262,9 @@ class FragmentController extends BaseController
             })
                 ->where('recommend','=',1)
                 ->whereNotIn('id',$top_fragment_id)
-                ->where('active','=',1)->pluck('id');
+                ->where('active','=',1)
+                ->orWhere('name','like','%'.$keyword.'%')
+                ->pluck('id');
 
             if ($recommend_fragment_id->count()>4){
                 $recommend_fragment_id = $recommend_fragment_id->random(4);
@@ -1202,6 +1281,7 @@ class FragmentController extends BaseController
                 ->whereIn('id',$first_fragment_id)
                 ->get();
 
+            //搜索相关
             $second_fragment_info =  Fragment::WhereHas('keyWord',function($q) use ($keyword){
                 $q->where('keyword','=',$keyword);
             })
@@ -1213,19 +1293,29 @@ class FragmentController extends BaseController
                 ->forPage($page,$this->paginate)
                 ->where('active','=',1)
                 ->whereNotIn('id',$first_fragment_id)
+                ->orWhere('name','like','%'.$keyword.'%')
+                ->orderBy('watch_count','DESC')
                 ->get();
 
             if($page == 1){
                 $data = array_merge($first_fragment_info->toArray(),$second_fragment_info->toArray());
 
+                if(empty($data)){
+                     return response()->json([
+                         'error' => 'Not found'
+                     ],404);
+                 }
+
                 return response()->json([
                     'data'  => $this->fragCollectTransformer->searchtransform($data),
                 ],200);
+
             }
 
             return response()->json([
                 'data'=>  $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
             ]);
+
 
         }catch(\Exception $e){
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
