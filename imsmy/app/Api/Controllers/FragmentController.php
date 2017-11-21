@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Facades\CloudStorage;
@@ -1216,6 +1217,33 @@ class FragmentController extends BaseController
 
             if(preg_match('/^[\x{4e00}-\x{9fa5}]+$/u', $keyword)>0) {
 
+                //总搜索次数+1
+                DB::table('keywords')->where('keyword','=',$keyword)->increment('count_sum_pv');
+
+                //日搜索+1
+                DB::table('keywords')->where('keyword','=',$keyword)->increment('count_day_pv');
+
+                //周搜索 +1
+                DB::table('keywords')->where('keyword','=',$keyword)->increment('count_week_pv');
+
+
+               if( $keyword != Cache::get( getIP() ) ){
+                   //总搜索次数+1
+                   DB::table('keywords')->where('keyword','=',$keyword)->increment('count_sum');
+
+                   //日搜索+1
+                   DB::table('keywords')->where('keyword','=',$keyword)->increment('count_day');
+
+                   //周搜索 +1
+                   DB::table('keywords')->where('keyword','=',$keyword)->increment('count_week');
+
+               }
+
+                //将IP写入缓存
+                $ip = getIP();
+
+                Cache::add($ip,$keyword,'10');
+
                 if ($user) {
                     //写入用户喜好
                     $user_keywords_ids = Keywords::WhereHas('belongtoManyUser', function ($q) use ($user) {
@@ -1327,8 +1355,34 @@ class FragmentController extends BaseController
                 ]);
 
             }else{
-
+                //接收用户搜索的内容
                 $keyword_pin =  preg_replace('# #','',CUtf8_PY::encode($request->get('keyword'),'all'));
+
+                //总搜索次数+1
+                DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_sum_pv');
+
+                //日搜索+1
+                DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_day_pv');
+
+                //周搜索 +1
+                DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_week_pv');
+
+                if( $keyword != Cache::get( getIP() ) ){
+                    //总搜索次数+1
+                    DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_sum');
+
+                    //日搜索+1
+                    DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_day');
+
+                    //周搜索 +1
+                    DB::table('keywords')->where('keyword_pinyin','=',$keyword_pin)->increment('count_week');
+
+                }
+
+                //将IP写入缓存
+                $ip = getIP();
+
+                Cache::add($ip,'$keyword_pin','10');
 
                 if ($user) {
                     //写入用户喜好
@@ -1441,11 +1495,9 @@ class FragmentController extends BaseController
                 return response()->json([
                     'data' => $this->fragCollectTransformer->searchtransform($second_fragment_info->toArray()),
                 ]);
-
             }
         }catch(\Exception $e){
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
     }
-
 }
