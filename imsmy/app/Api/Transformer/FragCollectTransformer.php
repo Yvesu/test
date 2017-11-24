@@ -50,6 +50,8 @@ class FragCollectTransformer extends Transformer
                 'city'          => $v['address_city'],
                 'county'        => $v['address_county'],
                 'street'        => $v['address_street'],
+                'operator_id'   => $v['operator_id'],
+                'storyboard_count' => $v['storyboard_count'],
                 'create_time'   => $v['time_add'],
                 'user'          => $this -> userTransformer -> fragtransform( $v['belongs_to_user'] ),
                 'type'          => $this -> fragmentTypeTransformer->transformCollection($v['belongs_to_many_fragment_type']),

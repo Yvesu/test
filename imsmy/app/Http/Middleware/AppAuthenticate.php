@@ -26,9 +26,9 @@ class AppAuthenticate
             return response()->json(['error' => 'unauthorized'],401);
         }
 
-        /*if(strtotime($user->last_token) > $iat){
+        if(strtotime($user->last_token) > $iat){
             return response()->json(['error' => 'token_expire'],401);
-        }*/
+        }
 
         return $next($request);
     }

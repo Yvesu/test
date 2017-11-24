@@ -700,6 +700,54 @@ function changeTimeType($seconds){
     return $time;
 }
 
+/**
+ * @param string $title
+ * @return array|mixed
+ */
+function getKeywords($title = "",$number=10) {
+    if (empty ( $title )) {
+        return array ();
+    }
+
+    $data = $title . $title . $title; // 为了增加title的权重，这里连接3次
+
+    //这个地方写上phpanalysis对应放置路径
+
+    \App\Library\phpanalysis\PhpAnalysis::$loadInit = false;
+    $pa = new \App\Library\phpanalysis\PhpAnalysis ( 'utf-8', 'utf-8', false );
+    $pa->LoadDict ();
+    $pa->SetSource ( $data );
+    $pa->StartAnalysis ( true );
+
+    $tags = $pa->GetFinallyKeywords ( $number); // 获取文章中的五个关键字
+
+    $tagsArr = explode ( ",", $tags );
+
+    return  $tagsArr;//返回关键字数组
+}
+
+/**
+ * @param $arr
+ * @param $n
+ * @return mixed
+ */
+function getRandomN($arr,$n=3){
+    $len = count($arr);
+    if($len<=$n){
+        return $arr;
+    }
+    $number = array_rand($arr,$n);
+
+    $new_arr = [];
+    foreach ($number as $k=>$v){
+        $new_arr[] = $arr[$v];
+    }
+
+    return $new_arr;
+}
+
+
+
 
 
 

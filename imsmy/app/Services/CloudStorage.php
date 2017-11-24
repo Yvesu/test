@@ -171,9 +171,34 @@ class CloudStorage
         return $uploadManager->putFile($token,$key,$filePath);
     }
 
+    public function download($key)
+    {
+        $http = \Config::get('constants.HTTP');
+
+        if(empty($key)){
+            return $key;
+        }
+
+        $url = $http.$key;
+        return $url;
+    }
+
     public function downloadUrl($key)
     {
         $http = \Config::get('constants.HTTP');
+
+        if(empty($key)){
+            return $key;
+        }
+
+        $arr =[];
+        if(is_array($key)){
+            foreach ($key as $v){
+                $arr[] = $http.$v;
+            }
+
+            return $arr;
+        }
 
         $url = $http.$key;
         return $url;
@@ -298,9 +323,31 @@ class CloudStorage
 
         $urls = $qi->privateDownloadUrl($url);
 
+        return $url;
+    }
+
+    /**
+     * @param $a
+     * @return string
+     */
+    public function privateUrl_zip($a)
+    {
+        $http = \Config::get('constants.HTTP');
+        $ak = \Config::get('constants.AK');
+        $sk = \Config::get('constants.SK');
+        $qi =  new \Qiniu\Auth($ak , $sk);
+
+        $url = $http.$a;
+
+        $urls = $qi->privateDownloadUrl($url);
+
         return $urls;
     }
 
+    /**
+     * @param $a
+     * @return string
+     */
     public function publicImage($a)
     {
         $http = \Config::get('constants.HTTP');
@@ -310,5 +357,39 @@ class CloudStorage
         return $url;
     }
 
+    /**
+     * @param $image
+     * @return string
+     */
+    public function ImageCheck($image)
+    {
+        $http = \Config::get('constants.HTTP');
+
+        $url = $http.$image.'?qpulp';
+
+        return $url;
+    }
+
+    /**
+     * @param $image
+     * @return string
+     */
+    public function qpolitician($image)
+    {
+        $http = \Config::get('constants.HTTP');
+
+        $url = $http.$image.'?qpolitician';
+
+        return $url;
+    }
+
+    public function tupuvideo($video)
+    {
+        $http = \Config::get('constants.HTTP');
+
+        $url = $http.$video.'?qpolitician';
+
+        return $url;
+    }
 
 }

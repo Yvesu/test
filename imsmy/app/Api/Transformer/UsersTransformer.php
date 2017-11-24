@@ -11,7 +11,7 @@ class UsersTransformer extends Transformer
         return [
             'id'           =>  $user->id,
             'nickname'     =>  $user->nickname,
-            'avatar'       =>   CloudStorage::publicImage($user->avatar),
+            'avatar'       =>  $user->avatar==null? null : CloudStorage::publicImage($user->avatar),
             'cover'        =>  $user->cover,
             'verify'       =>  $user->verify,
 //            'hash_avatar'  =>  $user->hash_avatar,

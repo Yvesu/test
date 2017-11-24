@@ -133,7 +133,7 @@ class AuthController extends BaseController
             } else {
                 try {
                     // 获取用户名及phone_id
-                    $username = (int)$request->get('username');
+                    $username = $request->get('username');
 
                     // 通过用户名获取用户信息，如果没有则返回错误信息
                     $auth = User::whereHas('hasOneLocalAuth',function ($q) use ($username) {

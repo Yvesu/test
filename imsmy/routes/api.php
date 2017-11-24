@@ -1009,7 +1009,17 @@ $api->version(['v1'],function($api){
             //搜索
             $api->post('/search','FragmentController@search');
 
+            $api->group(['middleware' => ['app.user']],function ($api) {
+                //相关
+                $api ->get('/correlation/{id}','FragmentController@correlation')
+                    ->where('id','[0-9]+');
+            });
+
         });
+
+        //视频接口
+        $api->post('/video/{id}','TweetController@videoShow')
+            ->where('id','[0-9]+');
 
         //获取某个人的用户信息  通过姓名
         $api->post('/person','UserController@person' );
@@ -1022,7 +1032,6 @@ $api->version(['v1'],function($api){
 
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
-
 
     });
 });

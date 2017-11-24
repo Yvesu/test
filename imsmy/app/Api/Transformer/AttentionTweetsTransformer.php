@@ -49,7 +49,7 @@ class AttentionTweetsTransformer extends Transformer
             // 视频截图
             'screen_shot'   => $tweet->screen_shot === null ? '' : CloudStorage::downloadUrl($tweet->screen_shot),
             // 相册
-            'photo'         => $tweet->photo === null ? [] : CloudStorage::downloadUrl(json_decode($tweet->photo,true)),
+            'photo'         => $tweet->photo == null ? [] : CloudStorage::download(json_decode($tweet->photo,true)),
             'user'          => $this->usersTransformer->transform($tweet->belongsToUser),
             'shot_width_height' => $tweet->shot_width_height,
             'location'      => $tweet->location,

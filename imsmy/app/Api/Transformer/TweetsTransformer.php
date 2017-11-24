@@ -39,7 +39,7 @@ class TweetsTransformer extends Transformer
             'id'            =>  $tweet->id,
             'type'          =>  $tweet->type,
             'video'         =>  CloudStorage::downloadUrl($tweet->video),
-            'photo'         =>  $tweet->photo === null ? null : CloudStorage::downloadUrl(json_decode($tweet->photo,true)),
+            'photo'         =>  $tweet->photo == null ? [] : CloudStorage::downloadUrl(json_decode($tweet->photo,true)),
             'already_like'  =>  $user ? TweetLike::where('tweet_id',$tweet->id)->where('user_id',$user->id)->count() : 0,
             'like_count'    =>  $tweet->like_count,
             'reply_count'   =>  $tweet->reply_count,
