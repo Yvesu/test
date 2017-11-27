@@ -14,6 +14,7 @@ class TweetPhone extends Common
     protected $fillable = [
         'phone_type',
         'phone_os',
+        'camera_type',
         'time_add',
         'time_update',
     ];

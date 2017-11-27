@@ -42,7 +42,7 @@
             "app/Support/helpers.php",
             "app/Library/aliyun/SmsDemo.php",
             "app/Library/pinyin/CUtf8_PY.php",
-            "app/Library/phpanalysis/phpanalysis.class.php"
+            "app/Library/phpanalysis/phpanalysis.php"
         ],
         "psr-4": {
             "App\\": "app/"

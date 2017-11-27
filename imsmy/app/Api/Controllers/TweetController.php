@@ -794,6 +794,7 @@ class TweetController extends BaseController
                 'type'          =>  (int)$request->get('type') ?? 0,
                 'visible'       =>  (int)$request->get('visible') ?? 0,
                 'visible_range' =>  $request->get('visible_range'),
+                'is_download'   =>  $request->get('is_download',1),
                 'fragment_id'       =>  $request->get('category_id') ? $request->get('fragment_id') : '',
                 'filter_id'       =>  $request->get('category_id') ? $request->get('filter_id') : '',
                 'template_id'       =>  $request->get('category_id') ? $request->get('template_id') : '',
@@ -854,31 +855,41 @@ class TweetController extends BaseController
                 $newTweet['location_id'] = $location_able -> id;
             }
 
-            // 发布动态的手机系统
-            if($phone_type = removeXSS($request->get('phone_type')) && $phone_os = removeXSS($request->get('phone_os'))) {
+//``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+            //TODO 发布动态的手机系统
+          if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
+              //手机类型
+              $phone_type = $request->get('phone_type', '');
 
-                $phone = TweetPhone::where('phone_type',$phone_type)->where('phone_os',$phone_os)->first();
+              //手机系统信息
+              $phone_os = $request->get('phone_os', '');
 
-                if(!$phone) {
+              //相机信息
+              $camera_type = $request->get('camera_type', '');
 
-                    $phone = TweetPhone::create([
-                        'phone_type'    => $phone_type,
-                        'phone_os'      => $phone_os,
-                        'time_add'      => $time,
-                        'time_update'   => $time,
-                    ]);
-                }
+              $phone = TweetPhone::where('phone_type', $phone_type)->where('phone_os', $phone_os)->where('camera_type', $camera_type)->first();
 
-                $phone_id = $phone -> id;
+              if (!$phone) {
 
-                // 将手机信息存入tweet数组中
-                $newTweet['phone_id'] = $phone_id;
-            }
+                  $phone = TweetPhone::create([
+                      'phone_type' => $phone_type,
+                      'phone_os' => $phone_os,
+                      'camera_type' => $camera_type,
+                      'time_add' => $time,
+                      'time_update' => $time,
+                  ]);
+              }
+
+              $phone_id = $phone->id;
+
+              // 将手机信息存入tweet数组中
+              $newTweet['phone_id'] = $phone_id;
+          }
 
             //TODO 应该加判断，//后不做正则匹配
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);
-//``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
  /*       if($request->get('screen_shot') != null ) {
               // 图片鉴黄
               $url = CloudStorage::ImageCheck($request->get('screen_shot'));
@@ -988,13 +999,6 @@ class TweetController extends BaseController
                     }
                 }
             }
-
-            //TODO  机型  标签
-
-
-
-
-
 
 
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````

@@ -1015,6 +1015,8 @@ $api->version(['v1'],function($api){
                     ->where('id','[0-9]+');
             });
 
+            $api->get('aaaa','FragmentController@aaaa');
+
         });
 
         //视频接口

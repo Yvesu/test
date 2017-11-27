@@ -1,4 +1,5 @@
 <?php
+namespace App\Library\phpanalysis;
 /*
  * 居于Unicode编码词典的php分词器
  *  1、只适用于php5，必要函数 iconv
@@ -11,7 +12,7 @@
  * @version 2.0
  *
  */
-namespace App\Library\phpanalysis;
+
 //常量定义
 define('_SP_', chr(0xFF).chr(0xFE)); 
 define('UCS2', 'ucs-2be');

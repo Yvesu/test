@@ -34,6 +34,7 @@ class Tweet extends Common
         'user_top',
         'visible',
         'visible_range',
+        'is_download',
         'active',
         'location_id',
         'phone_id',
