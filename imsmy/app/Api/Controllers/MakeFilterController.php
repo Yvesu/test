@@ -35,7 +35,7 @@ class MakeFilterController extends BaseController
             $search = removeXSS($request->get('search'));
             $where = [['active',1]];
             $page = [(int)$request -> get('page',1), $this->paginate];
-            $select = ['id','user_id','name','cover','content','folder_id','count','integral','time_add'];
+            $select = ['id','user_id','name','cover','content','count','integral','time_add'];
 
             // 我的 下载过的
             if(1 === $type){
@@ -59,16 +59,43 @@ class MakeFilterController extends BaseController
                 $with = [['belongsToUser',['nickname']]];
 
                 // 获取数据
-                $audio = MakeFilterFile::ofType($type,$folder_id)
-                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);
+//                $audio = MakeFilterFile::ofType($type,$folder_id)
+//                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);
+
+                // yy  修改
+                $audio = MakeFilterFile::WhereHas('belongsToManyFolder',function ($q) use ($folder_id){
+                    $q->where('folder_id','=',$folder_id);
+                })
+                    ->ofSearch($search)
+                    ->with(['belongsToUser'=>function($q){
+                        $q->select(['id','nickname']);
+                    },'belongsToManyFolder'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->forpage($request->get('page',1),$this->paginate)
+                    ->where('active',1)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add']);
 
             } else {
 
                 $with = [['belongsToUser',['nickname']],['belongsToManyFolder',['name']]];
 
+                //原始
+              /*  $audio = MakeFilterFile::ofType($type)
+                    -> ofSearch($search)
+                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);*/
+
+              //  2017 11 27 修改
                 $audio = MakeFilterFile::ofType($type)
                     -> ofSearch($search)
-                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);
+                    ->with(['belongsToUser'=>function($q){
+                        $q->select(['id','nickname']);
+                    },'belongsToManyFolder'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->forpage($request->get('page',1),$this->paginate)
+                    ->where('active',1)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add']);
             }
 
             foreach($audio as $value){

@@ -5,6 +5,7 @@ namespace App\Api\Controllers;
 use App\Api\Transformer\ChannelTweetsTransformer;
 use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\FragmentDetailTransformer;
+use App\Api\Transformer\FragmentTweetsTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Library\aliyun\SmsDemo;
@@ -56,12 +57,15 @@ class FragmentController extends BaseController
 
     private $channelTweetsTransformer;
 
+    private $fragmentTweetsTransformer;
+
     public function __construct(
         UsersTransformer $usersTransformer,
         FragCollectTransformer $fragCollectTransformer,
         UserIntegralTransformer $userIntegralTransformer,
         FragmentDetailTransformer $fragmentDetailTransformer,
-        ChannelTweetsTransformer $channelTweetsTransformer
+        ChannelTweetsTransformer $channelTweetsTransformer,
+        FragmentTweetsTransformer $fragmentTweetsTransformer
     )
     {
         $this->usersTransformer = $usersTransformer;
@@ -69,6 +73,7 @@ class FragmentController extends BaseController
         $this->userIntegralTransform = $userIntegralTransformer;
         $this->fragmentDetailTransformer = $fragmentDetailTransformer;
         $this ->channelTweetsTransformer = $channelTweetsTransformer;
+        $this ->fragmentTweetsTransformer = $fragmentTweetsTransformer;
     }
 
     /**
@@ -982,14 +987,18 @@ class FragmentController extends BaseController
     {
         try {
             $user = J_Auth::guard('api')->user();
-
+            $user = User::find(1000240);
             //接受页数
             $page = (int)$request->get('page', 1);
 
             if($page==1) {
 
                 //获取官推片段动态
-                $top_tweets = TweetHot::top()->pluck('tweet_id');
+                $top_tweets = TweetHot::WhereHas('hasOneTweet',function ($q){
+                    $q->where('fragment_id','!=',0);
+                })
+                    ->top()
+                    ->pluck('tweet_id');
 
                 // 如果置顶动态id多于2条，随机取2条置顶的动态
                 if ($top_tweets->count() > 2) {
@@ -997,7 +1006,10 @@ class FragmentController extends BaseController
                 }
 
                 //获取推荐动态
-                $recommend_tweets = TweetHot::recommend()->whereNotIn('tweet_id', $top_tweets->all())->pluck('tweet_id');
+                $recommend_tweets = TweetHot::WhereHas('hasOneTweet',function ($q){
+                    $q->where('fragment_id','!=',0);
+                })
+                ->recommend()->whereNotIn('tweet_id', $top_tweets->all())->pluck('tweet_id');
 
                 // 如果推荐动态id多于4条，随机取4条动态
                 if ($recommend_tweets->count() > 4) {
@@ -1014,14 +1026,21 @@ class FragmentController extends BaseController
                     // 获取相关热门动态的数据
                     foreach ($special_ids as $v) {
                         $special_tweets = Tweet::whereType(0)
+                            ->with(['hasOneFragment'=>function($q){
+                                $q->select(['id','name']);
+                            },'hasManyTweetReply'=>function($q){
+                                $q->with(['belongsToUser'=>function($q){
+                                    $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                            }])
                             ->where('visible', '=', 0)
                             ->where('id', $v)
                             ->where('fragment_id', $id)
-//                            ->where('')
                             ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
 
                         // 官方推荐动态
-                        $special_data[] = $this->channelTweetsTransformer->transformCollection($special_tweets->all())[0];
+                        $special_data[] =  $this->fragmentTweetsTransformer->transformCollection($special_tweets->all())[0];
+
                     }
                 }
 
@@ -1033,6 +1052,14 @@ class FragmentController extends BaseController
                         'hasOneContent' => function ($query) {
                             $query->select(['tweet_id', 'content']);
                         },
+                        'hasOneFragment'=>function($q){
+                            $q->select(['id','name']);
+                        },
+                        'hasManyTweetReply'=>function($q){
+                            $q->with(['belongsToUser'=>function($q){
+                                $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                            }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                        },
                         'belongsToUser' => function ($q) {
                             $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                         }])
@@ -1041,7 +1068,7 @@ class FragmentController extends BaseController
                     ->orderBy('browse_times', 'desc')
                     ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
 
-                $third_tweets = $this->channelTweetsTransformer->transformCollection($third_tweets->all());
+                $third_tweets = $this->fragmentTweetsTransformer->transformCollection($third_tweets->all());
 
                 //如果用户未登录
                 if (!$user){
@@ -1096,6 +1123,14 @@ class FragmentController extends BaseController
                                         'hasOneContent' => function ($query) {
                                             $query->select(['tweet_id', 'content']);
                                         },
+                                        'hasOneFragment'=>function($q){
+                                            $q->select(['id','name']);
+                                        },
+                                        'hasManyTweetReply'=>function($q){
+                                            $q->with(['belongsToUser'=>function($q){
+                                                $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                            }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                                        },
                                         'belongsToUser' => function ($q) {
                                             $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                                         }])
@@ -1103,7 +1138,8 @@ class FragmentController extends BaseController
                                     ->get();
                             }
                             //好友动态
-                            $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                            $second_tweet[]  = $this->fragmentTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+//                            $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
                         }
                     }
 
@@ -1140,13 +1176,23 @@ class FragmentController extends BaseController
                             'hasOneContent' => function ($query) {
                                 $query->select(['tweet_id', 'content']);
                             },
+                            'hasOneFragment'=>function($q){
+                                $q->select(['id','name']);
+                            },
+                            'hasManyTweetReply'=>function($q){
+                                $q->with(['belongsToUser'=>function($q){
+                                    $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                            },
                             'belongsToUser' => function ($q) {
                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                             }])
                         ->forPage($page, $this->paginate)
                         ->orderBy('browse_times', 'desc')
                         ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
-                    $five_tweet = $this->channelTweetsTransformer->transformCollection($five_tweets->all());
+
+//                    $five_tweet = $this->channelTweetsTransformer->transformCollection($five_tweets->all());
+                    $five_tweet = $this->fragmentTweetsTransformer->transformCollection($five_tweets->all());
 
                     //如果为登录状态
                     if ($user) {
@@ -1175,6 +1221,14 @@ class FragmentController extends BaseController
                                             'hasOneContent' => function ($query) {
                                                 $query->select(['tweet_id', 'content']);
                                             },
+                                            'hasOneFragment'=>function($q){
+                                                $q->select(['id','name']);
+                                            },
+                                            'hasManyTweetReply'=>function($q){
+                                                $q->with(['belongsToUser'=>function($q){
+                                                    $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                                }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                                            },
                                             'belongsToUser' => function ($q) {
                                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                                             }])
@@ -1186,7 +1240,8 @@ class FragmentController extends BaseController
                                 {
                                     $second_tweet = [];
                                 }
-                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                                $second_tweet[]  = $this->fragmentTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+//                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
                             }
                         }
                     }
@@ -1215,13 +1270,22 @@ class FragmentController extends BaseController
                             'hasOneContent' => function ($query) {
                                 $query->select(['tweet_id', 'content']);
                             },
+                            'hasOneFragment'=>function($q){
+                                $q->select(['id','name']);
+                            },
+                            'hasManyTweetReply'=>function($q){
+                                $q->with(['belongsToUser'=>function($q){
+                                    $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                            },
                             'belongsToUser' => function ($q) {
                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                             }])
                         ->forPage($page, $this->paginate)
                         ->orderBy('tweet_grade_total', 'desc')
                         ->get(['id', 'type', 'user_id', 'fragment_id', 'duration', 'size', 'location', 'photo', 'screen_shot', 'video', 'created_at']);
-                    $six_tweet = $this->channelTweetsTransformer->transformCollection($six_tweets->all());
+//                    $six_tweet = $this->channelTweetsTransformer->transformCollection($six_tweets->all());
+                    $six_tweet = $this->fragmentTweetsTransformer->transformCollection($six_tweets->all());
 
                     //如果为登录状态
                     if ($user) {
@@ -1250,6 +1314,14 @@ class FragmentController extends BaseController
                                             'hasOneContent' => function ($query) {
                                                 $query->select(['tweet_id', 'content']);
                                             },
+                                            'hasOneFragment'=>function($q){
+                                                $q->select(['id','name']);
+                                            },
+                                            'hasManyTweetReply'=>function($q){
+                                                $q->with(['belongsToUser'=>function($q){
+                                                    $q->select(['id','nickname','avatar','verify','verify_info','signature']);
+                                                }])->where('status',0)->orderBy('like_count','DESC')->take(3);
+                                            },
                                             'belongsToUser' => function ($q) {
                                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                                             }])
@@ -1261,7 +1333,8 @@ class FragmentController extends BaseController
                                 {
                                     $second_tweet = [];
                                 }
-                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+                                $second_tweet[] = $this->fragmentTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
+//                                $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
                             }
                         }
                     }
@@ -1679,4 +1752,74 @@ class FragmentController extends BaseController
 
     }
 
+    //创建收藏
+    public function addCollect($id,Request $request)
+    {
+        try {
+            //接收页数
+            $page = $request->get('page', 1);
+
+            //判断用户是否登录
+            $user = J_Auth::guard('api')->user();
+
+            //取出收藏的片段的关键词
+            $key_ids = Keywords::WhereHas('belongstofragment', function ($q) use ($id) {
+                $q->where('fragment_id', $id);
+            })
+                ->pluck('id');
+
+            //查询用户喜好
+            $user_keywords_ids = Keywords::WhereHas('belongtoManyUser', function ($q) use ($user) {
+                $q->where('user_id', '=', $user->id);
+            })
+                ->pluck('id');
+
+            //写入用户喜好表
+            if (!$user_keywords_ids->toArray()) {
+                array_map(function ($callback) use ($user) {
+                    DB::table('user_keywords')->insert([
+                        'user_id' => $user->id,
+                        'keyword_id' => $callback,
+                        'create_time' => time(),
+                        'update_time' => time(),
+                    ]);
+                }, $key_ids->all());
+            } else {
+                array_map(function ($callback) use ($user, $user_keywords_ids) {
+                    if (!in_array($callback, $user_keywords_ids->toArray())) {
+                        DB::table('user_keywords')->insert([
+                            'user_id' => $user->id,
+                            'keyword_id' => $callback,
+                            'create_time' => time(),
+                            'update_time' => time(),
+                        ]);
+                    }
+                }, $key_ids->all());
+            }
+
+            //加入用户收藏表
+            $user_collect = DB::table('fragment_user_collect')->where('user_id', $user->id)
+                ->where('fragment_id', $id)
+                ->first();
+
+            if ($user_collect) {
+                return response()->json(['error' => 'collected'], 403);
+            } else {
+                $res = DB::table('fragment_user_collect')->insert([
+                    'user_id' => $user->id,
+                    'fragment_id' => $id,
+                    'create_at' => time(),
+                    'way' => 1,
+                ]);
+
+                if ($res) {
+                    return response()->json(['error' => 'success'], 200);
+                } else {
+                    return response()->json(['error' => 'failed'], 500);
+                }
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
 }

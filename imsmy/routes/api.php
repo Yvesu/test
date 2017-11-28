@@ -990,8 +990,21 @@ $api->version(['v1'],function($api){
                 ->where('id','[0-9]+');
 
             $api->group(['middleware' => 'jwt.auth'],function ($api) {
-                // 收藏
-                $api -> post('/collect','FragmentController@collect');
+
+                $api->group(['middleware' => ['app.user']],function ($api) {
+
+                    // 收藏
+                    $api -> post('/collect','FragmentController@collect');
+
+                    //相关
+                    $api ->get('/correlation/{id}','FragmentController@correlation')
+                            ->where('id','[0-9]+');
+
+                    //TODO 创建收藏
+                    $api->post('/addcollect/{id}','FragmentController@addCollect')
+                    ->where('id','[0-9]+');
+                });
+
             });
 
             //片段详情
@@ -1008,14 +1021,6 @@ $api->version(['v1'],function($api){
 
             //搜索
             $api->post('/search','FragmentController@search');
-
-            $api->group(['middleware' => ['app.user']],function ($api) {
-                //相关
-                $api ->get('/correlation/{id}','FragmentController@correlation')
-                    ->where('id','[0-9]+');
-            });
-
-            $api->get('aaaa','FragmentController@aaaa');
 
         });
 
