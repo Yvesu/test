@@ -340,4 +340,35 @@ class MakeTemplateController extends BaseController
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+    /**
+     * 记录登录信息
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function record(Request $request)
+    {
+        try {
+            // 用户的登录信息
+            $user = Auth::guard('api')->user();
+
+            if ($user) {
+                DB::table('user_login_log')->insert([
+                    'user_id' => $user->id,
+                    'login_time' => time(),
+                    'way' => $request->get('phone_type') ?: '',
+                    'ip' => getIP() ?: null,
+                ]);
+            } else {
+                DB::table('user_login_log')->insert([
+                    'login_time' => time(),
+                    'way' => $request->get('phone_type') ?: '',
+                    'ip' => getIP() ?: null,
+                ]);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
 }

@@ -127,6 +127,7 @@ class AuthController extends BaseController
 
                     // 通过获取的用户信息生成token
                     $token = JWTAuth::fromUser($auth);
+
                 } catch (ModelNotFoundException $e) {
                     return response()->json(['error' => 'invalid_credentials'],401);
                 }
@@ -149,6 +150,7 @@ class AuthController extends BaseController
                     // attempt to verify the credentials and create a token for the user
                     // 验证用户登录信息，如果验证成功则生成唯一凭证token，否则返回错误
                     if (! $token = JWTAuth::attempt($credentials)) {
+
                         return response()->json(['error' => 'invalid_credentials'], 401);
                     }
 
@@ -188,6 +190,14 @@ class AuthController extends BaseController
                     Cache::forget('SMS'.$request->get('username'));
                 }
             }
+
+            //记录登陆信息
+            DB::table('user_login_log')->insert([
+                'user_id'       =>  $auth->id ?: '',
+                'login_time'    =>  time(),
+                'way'           =>  $request->get('phone_type') ?: '',
+                'ip'            =>  getIP() ?: null,
+            ]);
 
             // 获取用户地理位置信息
             $location = $request -> get('location','');

@@ -2670,7 +2670,7 @@ class TweetController extends BaseController
             $type = $request -> get('type',0);
 
             // 如果为排行榜，一次取全部50条数据
-            if (1 == $type) {
+            if (1 == $type) {       // 1 热门  0全部
 
                 // 动态详情
                 $tweets = TweetActivity::with(['hasOneUser'=>function($q){
@@ -2695,12 +2695,12 @@ class TweetController extends BaseController
                 # 获取每个动态的奖金
                 $account = new GoldTransactionService;
 
-                $tweet_bonus = $account -> bonusAllocation($count,Activity::findOrFail($id)->bonus);
+                $tweet_bonus = $account -> bonusAllocation($count,Activity::find($id)->bonus);
 
-                foreach($tweets as $key=>$value){
-
-                    $value -> bonus = $tweet_bonus[$key];
+                foreach($tweets->toArray() as $key=>$value){
+                    $tweets[$key] -> bonus = $tweet_bonus[$key];
                 }
+
 
             } else {
 

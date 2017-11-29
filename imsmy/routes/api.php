@@ -1000,7 +1000,7 @@ $api->version(['v1'],function($api){
                     $api ->get('/correlation/{id}','FragmentController@correlation')
                             ->where('id','[0-9]+');
 
-                    //TODO 创建收藏
+                    //创建收藏
                     $api->post('/addcollect/{id}','FragmentController@addCollect')
                     ->where('id','[0-9]+');
                 });
@@ -1040,5 +1040,11 @@ $api->version(['v1'],function($api){
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
 
+        //登录记录
+        $api->group(['middleware' => ['app.user']],function ($api) {
+
+            $api->post('record','MakeTemplateController@record');
+
+        });
     });
 });

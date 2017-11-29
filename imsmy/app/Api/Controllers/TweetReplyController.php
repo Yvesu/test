@@ -198,7 +198,8 @@ class TweetReplyController extends BaseController
             return response()->json([
                 'id'            => $reply->id,
                 'content'       => $reply->content,
-                'tweet_grade'   => $reply -> tweet_grade_total <= 9.8 ? $reply -> tweet_grade_total : 9.8
+                'tweet_grade'   => $reply -> tweet_grade_total <= 9.8 ? $reply -> tweet_grade_total : 9.8,
+                'anonymity'     => $reply->anonymity,
             ],201);
 
         } catch (ModelNotFoundException $e){

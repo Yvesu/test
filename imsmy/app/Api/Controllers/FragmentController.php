@@ -1084,13 +1084,11 @@ class FragmentController extends BaseController
                     if ($request->get('type') == 2) {
                         return response()->json([
                             'count' => $count,
-                            'page_count' => ceil(count($data) / $this->paginate),
                             'data' => $data,
                         ]);
                     }
 
                     return response()->json([
-                        'page_count' => ceil(count($data) / $this->paginate),
                         'data' => $data,
                     ]);
 
@@ -1154,13 +1152,11 @@ class FragmentController extends BaseController
                     if ($request->get('type') == 2) {
                         return response()->json([
                             'count' => $count,
-                            'page_count' => ceil(count($data) / $this->paginate),
                             'data' => $data,
                         ]);
                     }
 
                     return response()->json([
-                        'page_count' => ceil(count($data) / $this->paginate),
                         'data' => $data,
                     ]);
 
@@ -1753,12 +1749,9 @@ class FragmentController extends BaseController
     }
 
     //创建收藏
-    public function addCollect($id,Request $request)
+    public function addCollect($id)
     {
         try {
-            //接收页数
-            $page = $request->get('page', 1);
-
             //判断用户是否登录
             $user = J_Auth::guard('api')->user();
 
