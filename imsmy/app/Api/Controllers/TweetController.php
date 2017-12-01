@@ -3,6 +3,7 @@
 namespace App\Api\Controllers;
 
 use App\Api\Transformer\ChannelTweetsTransformer;
+use App\Api\Transformer\CorrelationTweetsTransformer;
 use App\Api\Transformer\TweetsLikeTransformer;
 use App\Api\Transformer\TopicsTransformer;
 use App\Api\Transformer\AttentionTweetsTransformer;
@@ -27,6 +28,7 @@ use App\Models\Channel;
 use App\Models\Friend;
 use App\Models\HotSearch;
 use App\Models\Keywords;
+use App\Models\KeywordTweets;
 use App\Models\Make\MakeTemplateFile;
 use App\Models\TweetActivity;
 use App\Models\TweetContent;
@@ -51,6 +53,7 @@ use App\Models\User;
 use App\Models\Word_filter;
 use Carbon\Carbon;
 use CloudStorage;
+use function foo\func;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -125,6 +128,8 @@ class TweetController extends BaseController
     // 发现页面广告
     protected $adsDiscoverTransformer;
 
+    private $correlationTweetsTransformer;
+
     public function __construct(
         TweetsTransformer $tweetsTransformer,
         ChannelTweetsTransformer $channelTweetsTransformer,
@@ -144,7 +149,9 @@ class TweetController extends BaseController
         TweetsLikeTransformer $tweetsLikeTransformer,
         ActivityDiscoverTransformer $activityDiscoverTransformer,
         TemplateDiscoverTransformer $templateDiscoverTransformer,
-        AdsDiscoverTransformer $adsDiscoverTransformer
+        AdsDiscoverTransformer $adsDiscoverTransformer,
+        CorrelationTweetsTransformer $correlationTweetsTransformer
+
     )
     {
         $this -> tweetsTransformer = $tweetsTransformer;
@@ -166,6 +173,7 @@ class TweetController extends BaseController
         $this -> activityDiscoverTransformer = $activityDiscoverTransformer;
         $this -> templateDiscoverTransformer = $templateDiscoverTransformer;
         $this -> adsDiscoverTransformer = $adsDiscoverTransformer;
+        $this -> correlationTweetsTransformer = $correlationTweetsTransformer;
     }
 
     /**
@@ -423,7 +431,6 @@ class TweetController extends BaseController
             // 统计或获取数据的数量
             $count = $replys->count();
 
-
             // 非第一次请求，只返回评论信息
             if($page > 1) {
 
@@ -491,6 +498,7 @@ class TweetController extends BaseController
                 -> status()
                 -> orderBy('like_count', 'DESC')
                 -> take(3)
+                -> where('reply_id',null)
                 -> get(['id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
 
             //按时间排序的评论
@@ -501,8 +509,10 @@ class TweetController extends BaseController
                 -> status()
                 -> orderBy('created_at', 'DESC')
                 -> forPage($page, $this -> paginate)
+                -> where('reply_id',null)
                 -> get(['id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
 
+//            dd($now_replys->toArray());
            // $reply_data =  array_merge($hot_replys->toArray(),$now_replys->toArray());
 
           //  $replys_data = mult_unique($reply_data);
@@ -3332,10 +3342,119 @@ class TweetController extends BaseController
         return array($date, $limit);
     }
 
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function videoShow($id)
     {
         return CloudStorage::privateUrl(Tweet::find($id)->video);
     }
 
+    /**
+     * 动态相关
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function correlation($id,Request $request)
+    {
+        //接收页数
+        if(!is_numeric( $page = $request->get('page',1)))
+            return response()->json(['error'=>'bad_request'],403);
+
+        //判断用户是否登录
+        $user = Auth::guard('api')->user();
+
+        //获取片段的关键词
+        $keywords_ids = KeywordTweets::where('tweet_id','=',$id)->pluck('keyword_id')->all();
+
+        //根据关键词进行匹配
+        $tweets = Tweet::WhereHas('belongsToManyKeywords',function ($q) use ($keywords_ids){
+            $q->whereIn('keyword_id',$keywords_ids);
+        })
+            ->with(['belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','verify','cover','verify_info','signature']);
+            },'hasOneContent'=>function($q){
+                $q->select(['id','tweet_id','content']);
+            }])
+            ->where('visible',0)
+            ->where('id','!=',$id)
+            ->where('active',1)
+            ->orderBy('browse_times','DESC')
+            ->forPage($page,$this->paginate)
+            ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+
+        if($user) {
+            if ($tweets->count() < $this->paginate) {
+                //搜索好友
+                $res1 = Friend::where('from', $user->id)->pluck('to');
+
+                if ($res1->all()) {
+                    $friends = [];
+                    foreach ($res1->toArray() as $k => $v) {
+                        $res2 = Friend::where('from', $v)->first();
+
+                        if ($res2) {
+                            $friends[] = $v;
+                        }
+                    }
+
+                    //朋友可见的动态
+                    $friends_tweets = Tweet::WhereHas('belongsToUser', function ($q) use ($friends) {
+                        $q->whereIn('id', $friends);
+                    })
+                        ->WhereHas('belongsToManyKeywords', function ($q) use ($keywords_ids) {
+                            $q->whereIn('keyword_id', $keywords_ids);
+                        })
+                        ->with(['belongsToUser' => function ($q) {
+                            $q->select(['id','nickname','avatar','verify','cover','verify_info','signature']);
+                        }, 'hasOneContent' => function ($q) {
+                            $q->select(['id', 'tweet_id', 'content']);
+                        }])
+                        ->where('id', '!=', $id)
+                        ->where('visible', 1)
+                        ->orderBy('created_at', 'desc')
+                        ->forPage($page, $this->paginate)
+                        ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+                }else{
+                    $friends_tweets = Tweet::where('visible',10)->get();
+                }
+
+                //仅自己可见的动态
+                $self_tweets = Tweet::WhereHas('belongsToUser', function ($q) use ($user) {
+                    $q->where('id', $user->id);
+                })
+                    ->WhereHas('belongsToManyKeywords', function ($q) use ($keywords_ids) {
+                        $q->whereIn('keyword_id', $keywords_ids);
+                    })
+                    ->with(['belongsToUser' => function ($q) {
+                        $q->select(['id','nickname','avatar','verify','cover','verify_info','signature']);
+                    }, 'hasOneContent' => function ($q) {
+                        $q->select(['id', 'tweet_id', 'content']);
+                    }])
+                    ->where('id', '!=', $id)
+                    ->where('visible', 2)
+                    ->orderBy('created_at', 'desc')
+                    ->forPage($page, $this->paginate)
+                    ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+            }
+        }
+            //合并数据
+        if($user){
+            if ($tweets->count()<$this->paginate) {
+                $data = array_merge($tweets->toArray(), $friends_tweets->toArray(), $self_tweets->toArray());
+            }else{
+                $data = $tweets->toArray();
+            }
+        }else{
+            $data = $tweets->toArray();
+        }
+
+        return response()->json([
+            'data'=> $this->correlationTweetsTransformer->transformCollection($data),
+        ],200);
+
+    }
 
 }

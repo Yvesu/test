@@ -284,4 +284,9 @@ class User extends Common implements AuthenticatableContract,
         return $this->belongsToMany('App\Models\UserKeywords','user_keywords','user_id','keyword_id');
     }
 
+    public function hasManyFriends()
+    {
+        return $this->hasMany('App\Models\Friend', 'to', 'id');
+    }
+
 }

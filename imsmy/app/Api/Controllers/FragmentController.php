@@ -107,9 +107,9 @@ class FragmentController extends BaseController
 
             //官方置顶
             $top_fragment_id = Fragment::where('ishot','=',1)
-                ->where('ishottime','>',time())
                 ->where('active','=',1)
                 ->where('test_results',1)
+                ->where('ishottime','>',time())
                 ->pluck('id');
 
             if($top_fragment_id->count()>2){
@@ -118,9 +118,9 @@ class FragmentController extends BaseController
 
             //官方推荐
             $recommend_fragment_id = Fragment::where('recommend','=',1)
-                ->whereNotIn('id',$top_fragment_id)
                 ->where('active','=',1)
                 ->where('test_results',1)
+                ->whereNotIn('id',$top_fragment_id)
                 ->pluck('id');
 
             if ($recommend_fragment_id->count()>4){
@@ -351,7 +351,6 @@ class FragmentController extends BaseController
                }
             }
 
-//            dd(($classifys));
             if($page == 1){
                 if ($count){
                     return response() -> json([

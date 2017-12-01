@@ -751,12 +751,41 @@ class Tweet extends Common
     }
 
     /**
+     * @param $query
+     * @param $user
+     * @param $id
+     */
+    public function scopeOfVs($query,$user,$id =null)
+    {
+        if(!$id){
+            return $query;
+        }
+
+     $ids = [];
+     foreach ($id->toArray() as $k=>$v){
+            $ids[] = $v['belongs_to_user']['id'];
+     }
+
+
+
+
+
+    }
+
+
+
+    /**
      * 动态与片段一对一
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function hasOneFragment()
     {
         return $this -> hasOne('App\Models\Fragment','id','fragment_id');
+    }
+
+    public function belongsToManyKeywords()
+    {
+        return $this->belongsToMany('App\Models\keywords','keywords_tweet','tweet_id','keyword_id');
     }
 
 

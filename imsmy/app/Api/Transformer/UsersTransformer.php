@@ -32,4 +32,22 @@ class UsersTransformer extends Transformer
             'verify_info'  =>  $user['verify_info'],
         ];
     }
+
+    /**
+     * 动态相关
+     * @param $user
+     * @return array
+     */
+    public function tweettransformer($user)
+    {
+        return [
+            'id'           =>  $user['id'],
+            'nickname'     =>  $user['nickname'],
+            'avatar'       =>  CloudStorage::publicImage($user['avatar']),
+            'cover'        =>  $user['cover'],
+            'verify'       =>  $user['verify'],
+            'signature'    =>  $user['signature'],
+            'verify_info'  =>  $user['verify_info'],
+        ];
+    }
 }

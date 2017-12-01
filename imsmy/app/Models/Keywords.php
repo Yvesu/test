@@ -52,4 +52,11 @@ class Keywords extends Model
         return $this->belongsToMany('App\Models\User','user_keywords','keyword_id','user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function belongsToManyTweet()
+    {
+        return $this->belongsToMany('App\Models\Tweet','keywords_tweet','keyword_id','tweet_id');
+    }
 }

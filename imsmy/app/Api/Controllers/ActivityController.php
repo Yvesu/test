@@ -277,9 +277,20 @@ class ActivityController extends BaseController
         }]) -> where('tweet_id', $tweet_id)
             -> where('status', 0)
             -> orderBy('id', 'DESC')
+            -> where('reply_id','!=',null)
             -> get();
 
-        return [
+       if(!$reply->toArray()){
+           $reply = TweetReply::with(['belongsToUser' => function($q) {
+               $q -> select(['id','nickname','avatar']);
+           }]) -> where('tweet_id', $tweet_id)
+               -> where('status', 0)
+               -> orderBy('id', 'DESC')
+               -> where('reply_id','=',null)
+               -> get();
+       }
+
+       return [
             'page_count' => ceil($reply -> count()/$this->paginate),
             'data' => $this->tweetActivityRepliesTransformer->transformCollection($reply-> forPage($page, $this->paginate)->all())
         ];

@@ -337,7 +337,8 @@ class AuthController extends BaseController
             // 将用户信息存入 user 表
             $user = User::create([
                 'last_token' => new Carbon,
-                'location'   => $location
+                'location'   => $location,
+                'is_phonenumber' => 1,
             ]);
 
             // 判断接收信息是否为空，如果不为空，执行下面操作  用于下次判断用户是否更换手机登录APP，需要再完善为空的操作
@@ -666,6 +667,7 @@ class AuthController extends BaseController
                     'last_token' => $now,
                     'nickname' => $input['oauth_nickname'],
                     'location' => $request->get('location'),
+                    'is_thirdparty' => 1,
                 ]);
 
                 // 判断接收信息是否为空，如果不为空，执行下面操作  用于下次判断用户是否更换手机登录APP，需要再完善为空的操作
