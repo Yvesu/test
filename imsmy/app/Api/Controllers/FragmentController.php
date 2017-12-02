@@ -1737,7 +1737,9 @@ class FragmentController extends BaseController
                         'fragment_data' => $this->fragCollectTransformer->transform($fragment->toArray()),
                     ], 200);
                 }else{
-                    return [];
+                    return response()->json([
+                        'fragment_data'=>[],
+                    ],200);
                 }
 
             }

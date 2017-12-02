@@ -50,4 +50,18 @@ class UsersTransformer extends Transformer
             'verify_info'  =>  $user['verify_info'],
         ];
     }
+
+    /**
+     * 滤镜
+     * @param $user
+     * @return array
+     */
+    public function filetransformer($user)
+    {
+        return [
+            'id'           =>  $user['id'],
+            'nickname'     =>  $user['nickname'],
+        ];
+    }
+
 }

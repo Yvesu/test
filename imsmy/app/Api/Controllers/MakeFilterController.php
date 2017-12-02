@@ -1,6 +1,7 @@
 <?php
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\MakeFiterTransformer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
@@ -19,6 +20,17 @@ use Auth;
 class MakeFilterController extends BaseController
 {
     protected $paginate = 20;
+
+    private $makeFiterTransformer;
+
+    public function __construct
+    (
+        MakeFiterTransformer $makeFiterTransformer
+    )
+    {
+        $this -> makeFiterTransformer = $makeFiterTransformer;
+    }
+
 
     /**
      * 编辑视频，滤镜
@@ -103,7 +115,7 @@ class MakeFilterController extends BaseController
             }
 
             // 调用内部函数，返回数据
-            return response() -> json(['data'=>$audio],200);
+            return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
 
         } catch (ModelNotFoundException $e) {
             return response()->json(['error'=>'not_found'],404);
