@@ -17,6 +17,8 @@ class FragmentController extends Controller
 {
 
     private $paginate = 20;
+
+    private $protocol = 'http://';
     //
 
     /**
@@ -31,15 +33,15 @@ class FragmentController extends Controller
             //  关键字
             $name = $request->get('name');
             //  类别
-            $type = $request->get('type_id','');
+            $type = $request->get('type_id',null);
             //  操作员
-            $operator = $request->get('operator_id','');
+            $operator = $request->get('operator_id',null);
             //  下载量 0 为0  1 为 100  2 为 500 3 为1000   4 为5000  5 为1W  6 为5 W
             $count = $request->get('count',0);
             //  播放时长
             $duration = $request->get('duration','00:00');
             //  费用
-            $integral = $request->get('integral','');
+            $integral = $request->get('integral',null);
             //  发布时间
             $time = $request->get('time');
             //  页码
@@ -87,10 +89,9 @@ class FragmentController extends Controller
             }
 
             $data = [];
-            $type = [];
             foreach($maindata as $k => $value)
             {
-
+                $type = [];
                 //  发布人
                 $issuer = User::find($value->user_id)->nickname;
                 //  类别
@@ -101,7 +102,11 @@ class FragmentController extends Controller
                 //  时长
                 $sumduration = floor(($value->duration)/60).':'.($value->duration)%60;
                 //  操作员
-                $operator = Administrator::find($value->operator_id)->name;
+                if(!is_null($operator)){
+                    $operator = Administrator::find($value->operator_id)->name;
+                }else{
+                    $operator = null;
+                }
                 //  可进行操作
                 if($value->active != 1)
                 {
@@ -146,10 +151,12 @@ class FragmentController extends Controller
 
 
                 $tempdata = [
+                    'id' => $value->id,
+                    'active' => $value->active,
                     'status' => $value->active,
                     'type' => $type,
                     'issuer' => $issuer,
-                    'cover' => $value->cover,
+                    'cover' => $this->protocol.$value->cover,
                     'description' => $value->name,
                     'duration' => $sumduration,
                     'time' => date('Y-m-d H:i:s',$value->time_add),
@@ -171,6 +178,8 @@ class FragmentController extends Controller
     }
 
 
+
+
     /**
      * @return \Illuminate\Http\JsonResponse
      * 获取分类
@@ -182,7 +191,7 @@ class FragmentController extends Controller
             $type = [];
             foreach($data as $k => $v)
             {
-                array_push($type,['type'=>$v->name]);
+                array_push($type,['type'=>$v->name,'id'=>$v->id]);
             }
 
             return response() -> json(['data'=>$type], 200);
@@ -303,7 +312,11 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
             foreach($id as $k => $v)
             {
                 $data = Fragment::find($v);
@@ -350,8 +363,12 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
-            $time = $request->get('$time');
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            $time = $request->get('time');
             switch ($time){
                 case 0:
                     $time = time()+(60*60*24);
@@ -380,13 +397,17 @@ class FragmentController extends Controller
                     if($data -> recommend == 0)
                     {
                         $data -> recommend = 1;
+                        $data -> time_update = time();
+                        $data -> operator_id = $admin->id;
+                        $data -> ishottime = $time;
+                        $data -> save();
                     }else{
                         $data -> recommend = 0;
+                        $data -> time_update = time();
+                        $data -> operator_id = $admin->id;
+                        $data -> save();
                     }
-                    $data -> time_update = time();
-                    $data -> operator_id = $admin->id;
-                    $data -> ishottime = $time;
-                    $data -> save();
+
                     DB::commit();
 
                 }else{
@@ -429,12 +450,23 @@ class FragmentController extends Controller
         }
     }
 
-
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     */
     public function changeType(Request $request)
     {
         try{
-            $type = $request->get('type');
-            $id = $request->get('id');
+            $type = $request->get('type',null);
+            $id = $request->get('id',null);
+            if(is_null($id) || is_null($type)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            $type = explode('|',$type);
+            $type = array_slice($type,0,3,true);
+            DB::beginTransaction();
             foreach($id as $k => $v)
             {
                 $data = Fragment::find($v);
@@ -443,23 +475,21 @@ class FragmentController extends Controller
                 }
                 $active = $data->active;
                 if($active == 1){
+                FragmentTypeFragment::where('fragment_id',$v)->delete();
                     foreach($type as $kk => $vv)
                     {
-                        DB::beginTransaction();
-                        FragmentTypeFragment::where('fragment_id',$vv)->delete();
-                        $channel_id = FragmentType::where('name',$vv)->first()->id;
                         $fragmentType = new FragmentTypeFragment;
                         $fragmentType ->fragment_id = $v;
-                        $fragmentType ->fragmentType_id = $channel_id;
+                        $fragmentType ->fragmentType_id = $vv;
                         $fragmentType ->time_add = time();
                         $fragmentType ->time_update  = time();
                         $fragmentType ->save();
-                        DB::commit();
                     }
                 }else{
                     return response()->json(['message'=>'数据不合法'],200);
                 }
             }
+            DB::commit();
             return response()->json(['message'=>'修改成功'],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -477,7 +507,11 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
             foreach ($id as $k => $v)
             {
                 $data = Fragment::find($v);
@@ -519,15 +553,15 @@ class FragmentController extends Controller
             //  关键字
             $name = $request->get('name');
             //  类别
-            $type = $request->get('type_id','');
+            $type = $request->get('type_id',null);
             //  操作员
-            $operator = $request->get('operator_id','');
+            $operator = $request->get('operator_id',null);
             //  下载量 0 为0  1 为 100  2 为 500 3 为1000   4 为5000  5 为1W  6 为5 W
             $count = $request->get('count',0);
             //  播放时长
             $duration = $request->get('duration','00:00');
             //  费用
-            $integral = $request->get('integral','');
+            $integral = $request->get('integral',null);
             //  发布时间
             $time = $request->get('time');
             //  页码
@@ -575,9 +609,9 @@ class FragmentController extends Controller
             }
 
             $data = [];
-            $type = [];
             foreach($maindata as $k => $value)
             {
+                $type = [];
                 //  发布人
                 $issuer = User::find($value->user_id)->nickname;
                 //  类别
@@ -588,7 +622,11 @@ class FragmentController extends Controller
                 //  时长
                 $sumduration = floor(($value->duration)/60).':'.($value->duration)%60;
                 //  操作员
-                $operator = Administrator::find($value->operator_id)->name;
+                if(!is_null($operator)){
+                    $operator = Administrator::find($value->operator_id)->name;
+                }else{
+                    $operator = null;
+                }
                 //  可进行操作
                 if($value->recommend === 0)
                 {
@@ -611,9 +649,10 @@ class FragmentController extends Controller
                 }
 
                 $tempdata = [
+                    'id' => $value->id,
                     'type' => $type,
                     'issuer' => $issuer,
-                    'cover' => $value->cover,
+                    'cover' => $this->protocol.$value->cover,
                     'description' => $value->name,
                     'duration' => $sumduration,
                     'time' => date('Y-m-d H:i:s',$value->time_add),
@@ -645,7 +684,7 @@ class FragmentController extends Controller
         try{
             $active = $request->get('active',1);
             $page = $request->get('page',1);
-            if($active == 2){
+            if($active == 2 || $active == 0){
                 return response()->json(['message'=>'无数据'],200);
             }
             $maindata1 = FragmentType::where('active','=',$active)->orderBy('sort')->get();
@@ -657,8 +696,18 @@ class FragmentController extends Controller
             {
                 $num = $value->belongsToManyFragment->count();
                 $downloadnum = $value->belongsToManyFragment->sum('count');
-                $operator = Administrator::where('id','=',$value->operator_id)->first()->name;
-                $creater = Administrator::where('id','=',$value->create_id)->first()->name;
+                if(!is_null($value->operator_id))
+                {
+                    $operator = Administrator::where('id','=',$value->operator_id)->first()->name;
+                }else{
+                    $operator = null;
+                }
+                if(!is_null($value->create_id))
+                {
+                    $creater = Administrator::where('id','=',$value->create_id)->first()->name;
+                }else{
+                    $creater = null;
+                }
                 $tempdata = [
                     'id' => $value->id,
                     'name' => $value->name,
@@ -823,7 +872,12 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
+            $id = $request->get('id',null);
+            if(is_null($id))
+            {
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
             foreach($id as $k => $v)
             {
                 DB::beginTransaction();
@@ -927,9 +981,9 @@ class FragmentController extends Controller
             }
 
             $data = [];
-            $type = [];
             foreach($maindata as $k => $value)
             {
+                $type = [];
                 //  发布人
                 $issuer = User::find($value->user_id)->nickname;
                 //  类别
@@ -945,9 +999,10 @@ class FragmentController extends Controller
                 $behavior = ['behavior1'=>'取消屏蔽','behavior2'=>'删除',];
 
                 $tempdata = [
+                    'id' => $value->id,
                     'type' => $type,
                     'issuer' => $issuer,
-                    'cover' => $value->cover,
+                    'cover' => $this->protocol.$value->cover,
                     'description' => $value->name,
                     'duration' => $sumduration,
                     'time_add' => date('Y-m-d H:i:s',$value->time_add),
@@ -979,7 +1034,11 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
             foreach($id as $k => $v)
             {
                 $data = Fragment::find($v);
@@ -1018,7 +1077,11 @@ class FragmentController extends Controller
     {
         try{
             $admin = Auth::guard('api')->user();
-            $id = $request->get('id');
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
             foreach ($id as $k => $v)
             {
                 $data = Fragment::find($v);

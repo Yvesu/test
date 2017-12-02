@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         // Commands\Inspire::class,
         Commands\Statistics::class,
+        Commands\CountUser::class,
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
 //        Commands\CacheSave::class,
@@ -59,5 +60,9 @@ class Kernel extends ConsoleKernel
 //        $schedule->command('backup:run --only-db')->cron('0 */4 * * * *');
 //        $schedule->command('backup:clean')->daily()->at('00:10');
 //        $schedule->command('backup:monitor')->daily()->at('10:00');
+
+
+        //  统计每年月登录用户量
+        $schedule->command('CountUser')->daily();
     }
 }

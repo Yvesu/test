@@ -11,7 +11,6 @@ class UserIntegral extends Model
     protected $fillable = [
         'user_id',
         'integral_count',
-        'type',
         'create_at',
         'update_at',
     ];

@@ -97,5 +97,14 @@ class Administrator extends Model implements AuthenticatableContract,
         return $this->hasOne('App\Models\User','id','user_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与特权用户表关系  一对多
+     */
+    public function privilegeUser()
+    {
+        return $this->hasMany('App\Models\PrivilegeUser','id','checker_id');
+    }
+
 
 }

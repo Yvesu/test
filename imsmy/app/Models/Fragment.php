@@ -157,7 +157,7 @@ class Fragment extends Model
      */
     public function scopeTime($query,$time)
     {
-        return $query->where('time_add','>=',$time);
+        return $query->where('fragment.time_add','>=',$time);
     }
 
     /**
