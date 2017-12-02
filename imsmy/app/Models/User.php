@@ -73,6 +73,16 @@ class User extends Common implements AuthenticatableContract,
         'is_vip',
     ];
 
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与登录日志表一对多关系，目前登录日志表仅有登录时间
+     */
+    public function loginTime()
+    {
+        return $this->hasMany('App\Models\User\UserLoginLog','user_id','id');
+    }
+
     /**
      * 返回LocalAuth密码
      * @return mixed
@@ -263,7 +273,7 @@ class User extends Common implements AuthenticatableContract,
      */
     public function hasManyIntegral()
     {
-        return $this->hasMany('App\Models\User\UserIntegral','id','user_id');
+        return $this->hasOne('App\Models\User\UserIntegral','user_id','id');
     }
 
     /**
@@ -284,9 +294,175 @@ class User extends Common implements AuthenticatableContract,
         return $this->belongsToMany('App\Models\UserKeywords','user_keywords','user_id','keyword_id');
     }
 
+    /**
+     * [hasManyFriends description]
+     * @return boolean [description]
+     */
     public function hasManyFriends()
     {
         return $this->hasMany('App\Models\Friend', 'to', 'id');
+    }
+
+
+    /**
+     * @param $query
+     * @param $userType
+     * @return mixed
+     * 查询用户种类
+     */
+    public function scopeUserType($query,$userType)
+    {
+        if($userType == null)
+        {
+            return $query;
+        }elseif ($userType == 2){
+            return $query->where('is_thirdparty','=',1)->where('is_phonenumber','=',0);
+        }elseif($userType == 3){
+            return $query->where('is_phonenumber','=',1)->where('verify','=',2);
+        }elseif($userType == 0){
+            return $query->where('is_vip','=',0)->where('is_phonenumber','=',1);
+        }else{
+            return $query->where('is_vip','>',0)->where('verify','<>',2);
+        }
+    }
+
+
+    /**
+     * @param $query
+     * @param $vipLevel
+     * @return mixed
+     * 搜索vip等级
+     */
+    public function scopeVipLevel($query,$vipLevel)
+    {
+        if($vipLevel == null)
+        {
+            return $query;
+        }elseif($vipLevel == 101){
+            return $query->where('is_vip','>',100);
+        }else{
+            return $query->where('is_vip','=',$vipLevel);
+        }
+    }
+
+
+    /**
+     * @param $query
+     * @param $fans
+     * @return mixed
+     * 查询粉丝调节
+     */
+    public function scopeFans($query,$fans)
+    {
+        return $query->where('fans_count','>=',$fans);
+    }
+
+    /**
+     * @param $query
+     * @param $playNum
+     * @return mixed
+     * 查询播放量
+     */
+    public function scopePlayCount($query,$playCount)
+    {
+        return $query->where('browse_times','>=',$playCount);
+    }
+
+
+    /**
+     * @param $query
+     * @param $productionNum
+     * @return mixed
+     * 查询作品数
+     */
+    public function scopeProductionNum($query,$productionNum)
+    {
+        return $query->where('work_count','>=',$productionNum);
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 认证用户与管理员用户审核人对应   反向1对多
+     */
+    public function verifyCheck()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','verify_checker','id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与特权用户表关系  一对多
+     */
+    public function privilegeUser()
+    {
+        return $this->hasMany('App\Models\PrivilegeUser','user_id','id');
+    }
+
+    /**
+     * @param $query
+     * @param $checker
+     * @return mixed
+     * 审核人搜索
+     */
+    public function scopeChecker($query,$checker)
+    {
+        if(is_null($checker))
+        {
+            return $query;
+        }else{
+            return $query->where('verify_checker','=',$checker);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 精选用户与管理员用户审核人对应   反向1对多
+     */
+    public function choiceness()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','choiceness_id','id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 冻结用户与管理员用户审核人对应   反向1对多
+     */
+    public function stop()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','stop_id','id');
+    }
+
+    /**
+     * @param $query
+     * @param $checker
+     * @return mixed
+     * 推选人搜索
+     */
+    public function scopeChoiceness($query,$checker)
+    {
+        if(is_null($checker))
+        {
+            return $query;
+        }else{
+            return $query->where('choiceness_id','=',$checker);
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $checker
+     * @return mixed
+     * 冻结人搜索
+     */
+    public function scopeStop($query,$checker)
+    {
+        if(is_null($checker))
+        {
+            return $query;
+        }else{
+            return $query->where('stop_id','=',$checker);
+        }
     }
 
 }

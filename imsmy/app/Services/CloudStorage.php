@@ -303,7 +303,7 @@ class CloudStorage
         $ops = BucketManager::buildBatchCopy($srcbucket,$key,$destbucket,true);
         list($ret,$error) = $this->bucketManager->batch($ops);
         if($error !== null){
-            throw new \Exception($err->message(),$err->code());
+            throw new \Exception($error->message(),$error->code());
         }
         return $ret;
     }

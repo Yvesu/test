@@ -56,7 +56,7 @@ Route::group(['namespace' => 'Web'], function() {
     /**
      * 网站首页
      */
-    Route::get('/','IndexController@index');
+    Route::get('/admins','IndexController@index');
 
     /**
      * APP各类协议数据
@@ -326,7 +326,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         /**
                          * 片段分类管理
                          */
-                        $api->post('/type','Fodder\fragmentController@type');
+                        $api->post('/type','Fodder\FragmentController@type');
 
                         /**
                          * 分类排序向上
@@ -341,7 +341,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         /**
                          * 变更是否分类启用停用状态
                          */
-                        $api->post('/chagestop','Fodder\FragmentController@chageStop');
+                        $api->post('/changestop','Fodder\FragmentController@chageStop');
 
                         /**
                          * 屏蔽仓
@@ -362,6 +362,8 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                          * 变更分类
                          */
                         $api->post('/changetype','Fodder\FragmentController@changeType');
+
+
                     });
 
 
@@ -373,7 +375,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                        /**
                         * 分类-添加分类
                         */
-                       $api->post('/add/type','TemplateController@addType');
+                       $api->post('/add/type','TemplageController@addType');
 
 
 
@@ -454,6 +456,31 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         $api->post('/addfilter','FilterController@addfilter');
 
                         /**
+                         * 获得滤镜资费情况
+                         */
+                        $api->post('/getintegral','FilterController@getIntegral');
+
+                        /**
+                         * 发布页面获得滤镜纹理混合分类
+                         */
+                        $api->post('/gettexturemixtype','FilterController@getTextureMixType');
+
+                        /**
+                         * 获取操作员
+                         */
+                        $api->post('/getoperator','FilterController@getOperator');
+
+                        /**
+                         * 获取发布时间
+                         */
+                        $api->post('/gettime','FilterController@getTime');
+
+                        /**
+                         * 获取下载量
+                         */
+                        $api->post('/getcount','FilterController@getCount');
+
+                        /**
 
                          * 执行发布滤镜
                          */
@@ -479,6 +506,16 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                          */
                         $api->post('/delete','FilterController@delete');
 
+                        /**
+                         * 设置置顶过期时间
+                         */
+                        $api->post('/ishottime','FilterController@isHotTime');
+
+                        /**
+                         * 变更分类
+                         */
+                        $api->post('/changetype','FilterController@changeType');
+
                     });
                 });
 
@@ -496,6 +533,133 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
 
                         $api->post('/index','User\SupervisoryController@index');
 
+                    });
+
+                    /**
+                     * 用户管理模块
+                     */
+                    $api->group(['prefix'=>'manage'],function ($api){
+                        /**
+                         * 首页
+                         */
+                        $api->post('/index','User\UserManageController@index');
+
+                        /**
+                         * 用户管理首页所用的角色类别
+                         */
+                        $api->post('/index/getVipLevel','User\UserManageController@getVipLevel');
+
+                        /**
+                         * 第三方用户页面
+                         */
+                        $api->post('/thirdparty','User\UserManageController@thirdparty');
+
+                        /**
+                         * 第三方用户页面类型条件
+                         */
+                        $api->post('/thirdparty/thirdtype','User\UserManageContorller@thirdType');
+
+                        /**
+                         * vip页面
+                         */
+                        $api->post('/vipuser','User\UserManageController@vipUser');
+
+                        /**
+                         * vip用户页面专用vip级别
+                         */
+                        $api->post('/vipuser/viplevel','User\UserManageController@vipLevel');
+
+                        /**
+                         * 机构页面
+                         */
+                        $api->post('/organization','User\UserManageController@organization');
+
+                        /**
+                         * 认证用户
+                         */
+                        $api->post('/verifyuser','User\UserManageController@verifyUser');
+
+                        /**
+                         * 创作者
+                         */
+                        $api->post('/creater','User\UserManageController@creater');
+
+                        /**
+                         * 审查者
+                         */
+                        $api->post('/investigate','User\UserManageController@investigate');
+
+                        /**
+                         * 精选用户界面
+                         */
+                        $api->post('/choiceness','User\UserManageController@choiceness');
+
+                        /**
+                         * 冻结用户界面
+                         */
+                        $api->post('/stop','User\UserManageController@stop');
+
+                        /**
+                         * 公共条件以及操作
+                         */
+                        $api->group(['prefix'=>'common'],function ($api){
+
+                            /**
+                             * 粉丝数量
+                             */
+                            $api->post('/getfansnum','User\UserCommonTypeController@getFansNum');
+
+                            /**
+                             * 播放数量
+                             */
+                            $api->post('/getplaycount','User\UserCommonTypeController@getPlayCount');
+
+                            /**
+                             * 作品数量
+                             */
+                            $api->post('/productionnum','User\UserCommonTypeController@productionNum');
+
+                            /**
+                             * 资产数量
+                             */
+                            $api->post('/integralnum','User\UserCommonTypeController@intergalNum');
+
+                            /**
+                             * 选择审核人
+                             */
+                            $api->post('/checker','User\UserCommonTypeController@checker');
+
+                            /**
+                             * 精选操作
+                             */
+                            $api->post('/dochoiceness','User\UserCommonTypeController@doChoiceness');
+
+                            /**
+                             * 升级操作
+                             */
+                            $api->post('/levelup','User\UserCommonTypeController@levelUp');
+
+                            /**
+                             * 冻结操作
+                             */
+                            $api->post('/dostop','User\UserCommonTypeController@doStop');
+
+                            /**
+                             * 取消精选操作
+                             */
+                            $api->post('/cancelchoiceness','User\UserCommonTypeController@cancelChoiceness');
+
+                            /**
+                             * 解冻操作
+                             */
+                            $api->post('/cancelstop','User\UserCommonTypeController@cancelStop');
+
+                            /**
+                             * 删除操作
+                             */
+                            $api->post('/delete','User\UserCommonTypeController@delete');
+
+                        });
                     });
 
                 });

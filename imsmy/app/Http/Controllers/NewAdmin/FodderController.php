@@ -272,10 +272,11 @@ class FodderController extends Controller
                         'address_county' => $olddata->address_county,
                         'address_street' => $olddata->address_street,
                         'vipfree' => $olddata->vipfree,
-                        'net_address' => $this->protocol.'ects.cdn.hivideo.com/'.$olddata->net_address,
-                        'zip_address' =>  $this->protocol.'ects.cdn.hivideo.com/'.$olddata->zip_address,
-                        'cover' => $this->protocol.'ects.cdn.hivideo.com/'.$olddata->cover,
+                        'net_address' => $this->protocol.'viedo.ects.cdn.hivideo.com/'.$olddata->net_address,
+                        'zip_address' =>  $this->protocol.'file.ects.cdn.hivideo.com/'.$olddata->zip_address,
+                        'cover' => $this->protocol.'img.ects.cdn.hivideo.com/'.$olddata->cover,
                         'size' => $olddata->size,
+                        'storyboard_count'=>$olddata->storyboard,
 
 
 
@@ -421,6 +422,7 @@ class FodderController extends Controller
             $data['net_address'] = $request->get('net_address',null);
             $data['zip_address'] = $request->get('zip_address',null);
             $data['size'] = $request->get('size',null);
+            $data['storyboard_num'] = $request->get('storyboard_num',0);
             if(is_null($data['zip_address']) || is_null($data['net_address']) || is_null($data['name']) || is_null($data['id']) || is_null($data['aspect_radio']) || is_null($data['duration']) || is_null($data['integral']) || is_null($data['vipfree']) || is_null($data['channel']) || is_null($data['cover']) ){
                 return response()->json(['message'=>'数据不合法'],200);
             }
@@ -442,6 +444,7 @@ class FodderController extends Controller
             $fragment->address_county = $data['address_county'];
             $fragment->address_street = $data['address_street'];
             $fragment->size = $data['size'];
+            $fragment->storyboard_num = $data['storyboard_num'];
             $fragment->time_add = time();
             $fragment->time_update = time();
             $fragment->save();
@@ -491,14 +494,14 @@ class FodderController extends Controller
             $content = [
                 'id' => $fragment->id,
                 'user_id' => $fragment->user_id,
-                'cover' => $this->protocol.'ects.cdn.hivideo.com/'.$fragment->cover,
+                'cover' => $this->protocol.'img.ects.cdn.hivideo.com/'.$fragment->cover,
                 'description' => $fragment->name,
                 'aspect_radio' => $fragment->aspect_radio,
                 'duration' => floor(($fragment->duration)/60).':'.(($fragment->duration)%60),
                 'integral' => $fragment->intergral,
                 'address' => $fragment->address_country.'·'.$fragment->address_province.'·'.$fragment->address_city.'·'.$fragment->address_county.'·'.$fragment->address_street,
                 'label' => $label,
-                'play' => $this->protocol.'ects.cdn.hivideo.com/'.$fragment->net_address,
+                'play' => $this->protocol.'video.ects.cdn.hivideo.com/'.$fragment->net_address,
                 'size' => $fragment->size,
 
             ];
@@ -570,13 +573,15 @@ class FodderController extends Controller
                 $keyPairs3[$key] = $key;
             }
 
-            $srcbucket = 'hivideo-ects';
+            $srcbucket1 = 'hivideo-video-ects';
+            $srcbucket2 = 'hivideo-file-ects';
+            $srcbucket3 = 'hivideo-img-ects';
             $destbucket1 = 'hivideo-img';
             $destbucket2 = 'hivideo-video';
             $destbucket3 = 'hivideo-zip';
-            $message1 = CloudStorage::copyfile($keyPairs1,$srcbucket,$destbucket1);
-            $message2 = CloudStorage::copyfile($keyPairs2,$srcbucket,$destbucket2);
-            $message3 = CloudStorage::copyfile($keyPairs3,$srcbucket,$destbucket3);
+            $message1 = CloudStorage::copyfile($keyPairs1,$srcbucket3,$destbucket1);
+            $message2 = CloudStorage::copyfile($keyPairs2,$srcbucket1,$destbucket2);
+            $message3 = CloudStorage::copyfile($keyPairs3,$srcbucket2,$destbucket3);
 //            print_r($message1.'|'.$message2.'|'.$message3);
             FragmentTemporary::find($id)->delete();
             DB::commit();
