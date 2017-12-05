@@ -66,9 +66,9 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
             }
 
             $data = [];
@@ -482,9 +482,9 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
             }
 
             $data = [];
@@ -853,9 +853,9 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Count($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
             }
             $data = [];
             //  取出操作员 并和其余数据存入到数组中

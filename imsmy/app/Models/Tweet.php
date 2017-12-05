@@ -214,6 +214,9 @@ class Tweet extends Common
         return $this->hasOne('App\Models\TweetTop','tweet_id','id');
     }
 
+
+
+
     /**
      * 推送 一对一关系
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -678,7 +681,7 @@ class Tweet extends Common
      * @param $name
      * @return mixed
      */
-    public function scopeOfNewSearch($query, $search_keywords, $search_type, $search_time, $search_duration, $search_browse)
+    public function scopeOfNewSearch($query, $search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator)
     {
         // 搜索关键词
         if($search_keywords) {
@@ -692,29 +695,65 @@ class Tweet extends Common
         // 类型
         if($search_type) {
 
-            switch($search_type){
-                case 1:
-                    $query->has('hasManyActivityTweet');
-                    break;
-                case 2:
-                    $query -> has('belongsToOfficial');
-                    break;
-                case 3:
-                    $query -> whereHas('belongsToUser', function($q){
-                        $q -> where('verify','<>',0);
-                    });
-                    break;
-            }
+//            switch($search_type){
+//                case 1:
+//                    $query->has('hasManyActivityTweet');
+//                    break;
+//                case 2:
+//                    $query -> has('belongsToOfficial');
+//                    break;
+//                case 3:
+//                    $query -> whereHas('belongsToUser', function($q){
+//                        $q -> where('verify','<>',0);
+//                    });
+//                    break;
+//            }
+            $query->whereHas('belongsToManyChannel',function ($q) use($search_type){
+                $q->where('channel_id', $search_type);
+            });
         }
 
         // 多久之内的
         if($search_time) {
+            switch ($search_time){
+                case 0:
+                    $search_time = 0;
+                    break;
+                case 1:
+                    $search_time = strtotime(date('Y-m-d',time()));
+                    break;
+                case 2:
+                    $search_time = mktime(23,59,59,date('m'),date('d')-date('w')+7-7,date('Y'));
+                    break;
+                case 3:
+                    $search_time = mktime(0,0,0,date('m'),1,date('Y'));
+                    break;
+                default:
+                    $search_time = 0;
+            }
 
-            $query->where('created_at', '<=', date_format('Y-m-d H:i:s', $search_time));
+            $query->where('created_at', '>=', date_format('Y-m-d H:i:s', $search_time));
         }
 
         // 搜索时长
         if($search_duration) {
+            switch ($search_duration){
+                case 0:
+                    $search_duration = 0;
+                    break;
+                case 1:
+                    $search_duration = 10*60;
+                    break;
+                case 2:
+                    $search_duration = 30*60;
+                    break;
+                case 3:
+                    $search_duration = 60*60;
+                    break;
+                default:
+                    $search_duration = 0;
+            }
+
 
             $query->where('duration', '>=', $search_duration);
         }
@@ -725,7 +764,23 @@ class Tweet extends Common
             $query->where('browse_times', '>=', $search_browse);
         }
 
+        //  操作员
+        if($operator){
+            $query->where('operator','=',$operator)->orWhereHas('hasOneTop',function ($q) use($operator){
+               $q->where('toper_id','=',$operator)->orWhere('recommender_id','=',$operator);
+            });
+        }
+
         return $query;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与管理员表多对一关系   审核通过人id
+     */
+    public function belongsToPass()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','pass_id','id');
     }
 
     /**
@@ -771,6 +826,10 @@ class Tweet extends Common
 
 
     }
+
+
+
+
 
 
 

@@ -83,9 +83,9 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
             }
 
             $data = [];
@@ -603,9 +603,9 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
             }
 
             $data = [];
@@ -975,9 +975,9 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Count($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
             }
 
             $data = [];

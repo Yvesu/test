@@ -38,6 +38,61 @@ class VideoIndexTransformer extends Transformer
             }
         }
 
+        $behavior = [
+            'dotype' => '推荐',
+            'stop' => '屏蔽',
+        ];
+
+        $a =$tweet->belongsToCheck->first()?$tweet -> belongsToCheck->first()->name:'';
+        if(!is_null($tweet->hasOneTop()->first())){
+            $behavior['dohot']='热门';
+            if(!is_null($tweet->hasOneTop()->first()->belongstoToper->first())){
+                $b = $tweet->hasOneTop()->first()->belongstoToper->first()->name;
+            }else{
+                $b = '';
+            }
+        }else{
+            $behavior['cancelhot']='取消热门';
+            $b = '';
+        }
+        if(!is_null($tweet->hasOneTop()->first())){
+            if(!is_null($tweet->hasOneTop()->first()->belongsToRecommender->first())){
+                $c = $tweet->hasOneTop->first()->belongsToRecommender->first()->name;
+            }else{
+                $c = '';
+            }
+        }else{
+            $c = '';
+        }
+        if($a){
+            if($b){
+                if($c){
+                    $operator = $a.'、'.$b.'、'.$c;
+                }else{
+                    $operator = $a.'、'.$b;
+                }
+            }else{
+                if($c){
+                    $operator = $a.'、'.$c;
+                }else{
+                    $operator = $a;
+                }
+            }
+        }else{
+            if($b){
+                if($c){
+                    $operator = $b.'、'.$c;
+                }else{
+                    $operator = $b;
+                }
+            }else{
+                if($c){
+                    $operator = $c;
+                }else{
+                    $operator = '';
+                }
+            }
+        }
         return [
             'id'            =>  $tweet->id,
             'browse_times'  =>  $tweet->browse_times,
@@ -47,6 +102,8 @@ class VideoIndexTransformer extends Transformer
             'duration'      =>  floor($tweet->duration),
             'user'          =>  $this->usersTransformer->transform($tweet->belongsToUser),
             'created_at'    =>  strtotime($tweet->created_at),
+            'operator'      =>  $operator,
+            'behavior'      =>  $behavior,
         ];
     }
 }

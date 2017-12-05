@@ -176,6 +176,37 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                      */
                     $api->post('/check', 'VideosController@check');
 
+                    /**
+                     * 公共类别
+                     */
+                    $api->group(['prefix'=>'common'],function ($api){
+
+                        /**
+                         * 分类
+                         */
+                        $api->post('/gettype','Video\CommonController@getType');
+
+                        /**
+                         * 多久之内
+                         */
+                        $api->post('/gettime','Video\CommonController@getTime');
+
+                        /**
+                         * 操作员
+                         */
+                        $api->post('/operator','Video\CommonController@operator');
+
+                        /**
+                         * 时长
+                         */
+                        $api->post('/getduration','Video\CommonController@getDuration');
+
+                        /**
+                         * 播放量
+                         */
+                        $api->post('/playnum','Video\CommonController@playNum');
+                    });
+
                 });
 
                 /**
@@ -379,6 +410,9 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
 
 
 
+
+
+
                    });
 
 
@@ -557,7 +591,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         /**
                          * 第三方用户页面类型条件
                          */
-                        $api->post('/thirdparty/thirdtype','User\UserManageContorller@thirdType');
+                        $api->post('/thirdparty/thirdtype','User\UserManageController@thirdType');
 
                         /**
                          * vip页面
@@ -600,7 +634,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         $api->post('/stop','User\UserManageController@stop');
 
                         /**
-                         * 公共条件以及操作
+                         * 用户公共条件以及操作
                          */
                         $api->group(['prefix'=>'common'],function ($api){
 

@@ -144,7 +144,7 @@ class Fragment extends Model
      * @return mixed
      * 多条件搜索-下载量
      */
-    public function scopeCount($query,$count)
+    public function scopeCounta($query,$count)
     {
         return $query->where('count','>=',$count);
     }
