@@ -20,6 +20,7 @@ use App\Http\Transformer\VideoIndexUndeterminedTransformer;
 use App\Http\Transformer\VideoIndexForbidTransformer;
 use App\Http\Transformer\TrophyLogTransformer;
 use App\Http\Transformer\TweetCheckTransformer;
+use App\Http\Transformer\VideoNoCheckTransformer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use CloudStorage;
@@ -38,6 +39,7 @@ class VideosController extends Controller
     private $videoIndexTransformer;
     private $trophyLogTransformer;
     private $tweetCheckTransformer;
+    private $videoNoCheckTransformer;
 
     public function __construct(
         TweetDetailsTransformer $tweetDetailsTransformer,
@@ -46,7 +48,8 @@ class VideosController extends Controller
         VideoIndexForbidTransformer $videoIndexForbidTransformer,
         VideoIndexTransformer $videoIndexTransformer,
         TrophyLogTransformer $trophyLogTransformer,
-        TweetCheckTransformer $tweetCheckTransformer
+        TweetCheckTransformer $tweetCheckTransformer,
+        VideoNoCheckTransformer $videoNoCheckTransformer
     )
     {
         $this -> tweetDetailsTransformer = $tweetDetailsTransformer;
@@ -56,6 +59,7 @@ class VideosController extends Controller
         $this -> videoIndexTransformer = $videoIndexTransformer;
         $this -> trophyLogTransformer = $trophyLogTransformer;
         $this -> tweetCheckTransformer = $tweetCheckTransformer;
+        $this -> videoNoCheckTransformer = $videoNoCheckTransformer;
     }
 
     /**
@@ -72,7 +76,7 @@ class VideosController extends Controller
         $page = $request -> get('page', 1);
 
         // 0待审批（视频审查），1推荐视频（有所属频道），2屏蔽，4待定
-        $active = (int)$request -> get('active', 0);
+        $active = (int)$request -> get('active', 4);
 
         // 搜索条件
         $search_keywords = $request -> get('keywords', '');
@@ -80,6 +84,11 @@ class VideosController extends Controller
         $search_time = $request -> get('time', '');
         $search_duration = $request -> get('duration', '');
         $search_browse = $request -> get('browse', '');
+        $operator = $request->get('operator_id',null);
+
+        // 视频总条数
+        $count = Tweet::get(['id', 'created_at'])->count();
+        $today_count = Tweet::where('created_at', '>', date('Y-m-d H:i:s', getTime()))->get(['id', 'created_at'])->count();
 
         // 判断动态类型,0待审批（视频审查），1推荐视频（有所属频道），2屏蔽，4待定
         if(4 == $active) {
@@ -87,11 +96,12 @@ class VideosController extends Controller
             $tweets = Tweet::has('belongsToCheck') -> with(['belongsToCheck', 'hasOneContent']);
 
         } elseif(0 == $active) {
-
-            $tweets = Tweet::with(['belongsToUser' => function($q){
-                $q -> select('id', 'nickname');
-            },'hasOneContent']);
-
+            return response() -> json([
+                'tweets' => [],
+                'count'  => $count,
+                'today_count'  => $today_count,
+            ], 200);
+//
         } elseif(2 == $active) {
 
             $tweets = Tweet::has('belongsToReason') -> with('belongsToReason','hasOneContent','belongsToReasonAdmin');
@@ -101,8 +111,8 @@ class VideosController extends Controller
             $tweets = Tweet::has('hasManyChannelTweet');
         }
 
-        $tweets = $tweets -> where('original',0)
-            -> ofNewSearch($search_keywords, $search_type, $search_time, $search_duration, $search_browse)
+        $tweets = $tweets -> where('original',0)->where('type','=',0)
+            -> ofNewSearch($search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator)
             -> where('active', $active)
             -> forPage($page, $this -> paginate)
             -> get(['id', 'user_id', 'screen_shot', 'video', 'duration', 'created_at', 'browse_times']);
@@ -114,8 +124,8 @@ class VideosController extends Controller
 
         } elseif(0 == $active) {
 
-            $data = $this->videoIndexTransformer->transformCollection($tweets -> all());
-
+//            $data = $this->videoNoCheckTransformer->transformCollection($tweets -> all());
+            $data = [];
         } elseif(2 == $active) {
 
             $data = $this->videoIndexForbidTransformer->transformCollection($tweets -> all());
@@ -125,14 +135,19 @@ class VideosController extends Controller
             $data = $this->videoIndexTransformer->transformCollection($tweets -> all());
         }
 
-        // 视频总条数
-        $count = Tweet::get(['id', 'created_at'])->count();
-        $today_count = Tweet::where('created_at', '>', date('Y-m-d H:i:s', getTime()))->get(['id', 'created_at'])->count();
+
 
         return response() -> json([
             'tweets' => $data,
             'count'  => $count,
             'today_count'  => $today_count,
+            'batchBehavior'=>   [
+                'dotype' => '推荐',
+                'dohot'  => '热门',
+                'cancelhot' => '取消热门',
+                'cs'=> '取消屏蔽',
+                'delete' => '删除',
+            ],
         ], 200);
     }
 
@@ -150,7 +165,10 @@ class VideosController extends Controller
 
             # 1:上一个 2:下一个
             // 0待审批（视频审查），1推荐视频（有所属频道），2屏蔽，4待定
-            $active = (int)$request -> get('active', 0);
+//            $active = $request -> get('active', null);
+//            if(is_null($active)){
+//                return response()->json(['message'=>'数据不合法'],200);
+//            }
 
             // 搜索条件
             $search_keywords = $request -> get('keywords', '');
@@ -158,36 +176,45 @@ class VideosController extends Controller
             $search_time = $request -> get('time', '');
             $search_duration = $request -> get('duration', '');
             $search_browse = $request -> get('browse', '');
-
+            $operator = $request->get('operator_id',null);
             // 上一个或下一个 id
-            $next_tweet = $this -> nextPrev($id,2,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse);
-            $prev_tweet = $this -> nextPrev($id,1,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse);
+            $tweets_data = Tweet::with(['hasOneContent','belongsToUser'=>function($q){
+                $q -> select('id', 'advertisement');
+            }])->find($id);
+            $active = $tweets_data->active;
+            $next_tweet = $this -> nextPrev($id,2,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator);
+            $prev_tweet = $this -> nextPrev($id,1,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator);
+
 
             $page = (int)$request -> get('page', 1);
 
             // 获取要查询的动态详情
-            $tweets_data = Tweet::with([
-                'hasOneContent',
-                'belongsToUser'=>function($q){
-                    $q -> select('id', 'advertisement');
-                }])
-                -> able()
-                -> findOrFail($id);
+//            $tweets_data = Tweet::with([
+//                'hasOneContent',
+//                'belongsToUser'=>function($q){
+//                    $q -> select('id', 'advertisement');
+//                }])
+//                -> able()
+//                -> findOrFail($id);
 
             // 取8条评论普通评论，按时间排序
-            $replys_count = TweetReply::with(['belongsToUser' => function($q){
-                $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
-            }, 'belongsToReply' => function($q) use($id) {
-                $q -> with(['belongsToUser' => function($q) {
-                    $q -> select(['id','nickname']);
-                }])-> where('status', 0);
-            }])
-                -> where('tweet_id',$id)
-                -> orderBy('id','desc')
-                -> status();
+//            $replys_count = TweetReply::with(['belongsToUser' => function($q){
+//                $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
+//            }, 'belongsToReply' => function($q) use($id) {
+//                $q -> with(['belongsToUser' => function($q) {
+//                    $q -> select(['id','nickname']);
+//                }])-> where('status', 0);
+//            }])
+//                -> where('tweet_id',$id)
+//                -> orderBy('id','desc')
+//                -> status();
 
+            $replys_count = TweetReply::with(['belongsToUser'=>function($q){
+                $q->select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
+            }])->where('tweet_id',$id)->where('reply_id','=',null)->Status()->orderBy('created_at','desc')->limit(8);
             $replys = $replys_count -> forPage($page, $this -> paginate)
                 -> get(['id', 'user_id', 'reply_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
+
 
             // 评论总数量
             $count = $replys_count->count();
@@ -196,23 +223,28 @@ class VideosController extends Controller
             $trophy_count = TweetTrophyLog::where('tweet_id', $id)
                 -> orderBy('id', 'desc')
                 -> count();
-
             // 取出热评信息，目前暂定20个赞以上为热评
-            $hot_replys = TweetReply::with(['belongsToUser' => function($q){
-                $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
-            }, 'belongsToReply' => function($q) use($id) {
-                $q -> with(['belongsToUser' => function($q) {
-                    $q -> select(['id','nickname']);
-                }])-> where('status', 0);
+//            $hot_replys = TweetReply::with(['belongsToUser' => function($q){
+//                $q -> select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
+//            }, 'belongsToReply' => function($q) use($id) {
+//                $q -> with(['belongsToUser' => function($q) {
+//                    $q -> select(['id','nickname']);
+//                }])-> where('status', 0);
+//            }])
+            $hot_replys = TweetReply::with(['belongsToUser'=>function($q){
+                $q->select('nickname');
             }])
                 -> where('tweet_id', $id)
+                -> where('reply_id','=',null)
                 -> where('status', 0)
                 -> where('like_count', '>' , 20)
                 -> orderBy('like_count', 'DESC')
                 -> take(3)
                 -> get(['id', 'reply_id', 'user_id', 'content', 'created_at', 'anonymity', 'like_count', 'grade']);
 
+//dd(($hot_replys->count()==0)?'':$this->tweetHotReplyTransformer->transformCollection($hot_replys->all()));
             // 返回数据
+//dd($tweets_data);
             return [
 
                 // 该动态详情与发表用户详情
@@ -225,10 +257,11 @@ class VideosController extends Controller
                 'replys_count' => $count,
 
                 // 热门评论
-                'hot_replys'   => $this->tweetHotReplyTransformer->transformCollection($hot_replys->all()),
+                'hot_replys'   => ($hot_replys->count()==0)?'':$this->tweetHotReplyTransformer->transformCollection($hot_replys->all()),
 
                 // 评论
-                'replys'       => $this->tweetHotReplyTransformer->transformCollection($replys->all()),
+                'replys'       => ($replys->count()==0)?'':$this->tweetHotReplyTransformer->transformCollection($replys->all()),
+
 
                 // 评论总页码
                 'page_count'   => ceil($count/$this->paginate),
@@ -241,6 +274,13 @@ class VideosController extends Controller
 
                 // 上一个id
                 'prev_id'      => $prev_tweet ? $prev_tweet -> id : '',
+
+                // 操作
+                'behavior' => [
+                    'dotype'=>'推荐',
+                    'pass' => '待定',
+                    'stop' => '屏蔽',
+                ]
             ];
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'], 404);
@@ -261,7 +301,7 @@ class VideosController extends Controller
      * @param $search_browse
      * @return mixed
      */
-    protected function nextPrev($id,$sort,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse){
+    protected function nextPrev($id,$sort,$active,$search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator){
 
         // 判断动态类型,0待审批（视频审查），1推荐视频（有所属频道），2屏蔽，4待定
         if(4 == $active) {
@@ -283,7 +323,7 @@ class VideosController extends Controller
             $tweets = Tweet::has('hasManyChannelTweet');
         }
         $tweets = $tweets -> with('belongsToPhone') -> where('original',0)
-            -> ofNewSearch($search_keywords, $search_type, $search_time, $search_duration, $search_browse)
+            -> ofNewSearch($search_keywords, $search_type, $search_time, $search_duration, $search_browse,$operator)
             -> where('active', $active);
 
         // sort  1上一个，2下一个
@@ -474,7 +514,7 @@ class VideosController extends Controller
             // 推荐类目的id array
             if(empty($recommend_ids = $request -> get('recommend')) || !is_array($recommend_ids))
                 return response() -> json(['error'=>'bad_request', 403]);
-
+            $recommend_ids = array_slice($recommend_ids,0,2,true);
             $time = new Carbon();
 
             DB::beginTransaction();
@@ -483,7 +523,7 @@ class VideosController extends Controller
             foreach($tweet_ids as $tweet_id){
 
                 foreach($recommend_ids as $recommend_id){
-
+                    ChannelTweet::where('tweet_id','=',$tweet_id)->delete();
                     ChannelTweet::create([
                         'channel_id'    => $recommend_id,
                         'tweet_id'      => $tweet_id,
@@ -492,6 +532,7 @@ class VideosController extends Controller
                     ]);
 
                     // 操作记录
+                    TweetBlocking::where('tweet_id','=',$tweet_id)->delete();
                     TweetCheckLog::create([
                         'tweet_id'      => $tweet_id,
                         'active'        => 1,

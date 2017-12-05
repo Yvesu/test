@@ -187,6 +187,18 @@ class User extends Common implements AuthenticatableContract,
         return $query->where('nickname', 'LIKE BINARY', $name);
     }
 
+
+    public function scopeName($query,$name)
+    {
+        if(is_null($name))
+        {
+            return $query;
+        }else{
+            return $query->where('nickname','like',"%$name%")->orWhere('id','like',"%$name%")->orWhereHas('hasOneLocalAuth',function ($q) use($name){
+                $q->where('username','like',"%$name%");
+            });
+        }
+    }
     /**
      * 认证用户
      * @param $query

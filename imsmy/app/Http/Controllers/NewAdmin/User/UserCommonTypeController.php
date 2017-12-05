@@ -243,17 +243,21 @@ class UserCommonTypeController extends Controller
             $id = explode('|',$id);
             DB::beginTransaction();
             $admin = Auth::guard('api')->user();
+            $c = [];
             foreach($id as $k => $v)
             {
                 $data = User::find($v);
                 if($data){
-                    if($data->verify > 0 && $data->active != 2 && $data->active != 0)
+                    if($data->verify > 0 && $data->active != 2 && $data->active != 0 && $data->is_phonenumber == 1)
                     {
                         $data->active = 2;
                         $data->choiceness_id = $admin->id;
                         $data->choiceness_time = time();
                         $data->save();
+
                     }
+                }else{
+                    return response()->json(['message'=>'无数据'],200);
                 }
 
             }
@@ -323,7 +327,7 @@ class UserCommonTypeController extends Controller
                 if($data){
                     $data->active = 0;
                     $data->stop_id = $admin->id;
-                    $data->stop_causes = $request->get('cause',null);
+                    $data->stop_cause = $request->get('cause',null);
                     $data->stop_time = time();
                     $data->save();
                 }

@@ -50,6 +50,10 @@ class VideoIndexForbidTransformer extends Transformer
             'forbid_time'   =>  $tweet -> belongsToReason->first() -> pivot -> time_add,    // 屏蔽审批时间
             'forbid_user'   =>  $tweet -> belongsToReasonAdmin->first()->name,    // 审批人员
             'forbid_reason' =>  $tweet -> belongsToReason->first()->reason,    // 审批人员
+            'behavior'      =>  [
+                'cs'    => '取消屏蔽',
+                'delete'    => '删除',
+            ],
         ];
     }
 }

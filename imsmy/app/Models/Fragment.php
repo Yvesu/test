@@ -140,6 +140,17 @@ class Fragment extends Model
 
     /**
      * @param $query
+     * @param $count
+     * @return mixed
+     * 多条件搜索-下载量
+     */
+    public function scopeCounta($query,$count)
+    {
+        return $query->where('count','>=',$count);
+    }
+
+    /**
+     * @param $query
      * @param $time
      * @return mixed
      * 多条件搜索-时间

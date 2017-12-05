@@ -20,6 +20,26 @@ class TweetTop extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与管理员表多对一关系    置顶操作员
+     */
+    public function belongstoToper()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','toper_id','id');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与管理员表多对一关系    推荐操作员
+     */
+    public function belongsToRecommender()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','recommender_id','id');
+    }
+
+
+    /**
      * 查询置顶热门动态
      * @param $query
      * @return mixed
