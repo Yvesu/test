@@ -238,6 +238,7 @@ class TweetController extends BaseController
                 -> forPage($page,$this->paginate)
                 -> get(['id','type','user_id','location','user_top','photo','screen_shot','video','created_at']);
 
+
             // 将所关注用户的未读视频设置为0
             if($user && $user->id != $id){
 
@@ -801,13 +802,13 @@ class TweetController extends BaseController
                 'size'          =>  (int)$request->get('size',0),
                 'screen_shot'   =>  $request->get('screen_shot'),
                 'shot_width_height'   =>  $request->get('shot_width_height'),
-                'type'          =>  (int)$request->get('type') ?? 0,
-                'visible'       =>  (int)$request->get('visible') ?? 0,
+                'type'          =>  (int)$request->get('type') ?: 0,
+                'visible'       =>  (int)$request->get('visible') ?: 0,
                 'visible_range' =>  $request->get('visible_range'),
                 'is_download'   =>  $request->get('is_download',1),
-                'fragment_id'       =>  $request->get('category_id') ? $request->get('fragment_id') : '',
-                'filter_id'       =>  $request->get('category_id') ? $request->get('filter_id') : '',
-                'template_id'       =>  $request->get('category_id') ? $request->get('template_id') : '',
+                'fragment_id'       =>  $request->get('category_id') ?: '',
+                'filter_id'       =>  $request->get('category_id') ?: '',
+                'template_id'       =>  $request->get('category_id') ?: '',
             ];
 
             // 内容 过滤内容

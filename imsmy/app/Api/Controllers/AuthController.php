@@ -533,7 +533,7 @@ class AuthController extends BaseController
     {
         try{
             // 获取用户输入的用户名和密码
-            $username = (int)$request->get('username');
+            $username = $request->get('username');
             $password = $request->get('password');
 
             // 判断密码格式
@@ -563,10 +563,12 @@ class AuthController extends BaseController
             DB::table('tig_users')->where('user_id',$auth->user_id.'@goobird')->update(['user_pw'=>$new_password]);
 
             // 设置last_token为最新时间
-            $user = User::findOrFail($auth->user_id) -> update(['last_token' => new Carbon]);
+            User::findOrFail($auth->user_id) -> update(['last_token' => new Carbon]);
 
+            $user = User::find($auth->user_id);
             // 生成新的 token
             $token = JWTAuth::fromUser($user);
+
 //            EaseMob::resetPassword($user->id,$password); //暂停环信业务
 
             // 删除缓存中的用户名信息
@@ -1151,11 +1153,36 @@ class AuthController extends BaseController
         );
 
         if($response->Message == 'OK'){
- 		return response()->json(['message'=>'Send success','code'=>$code ],200);
+ 		return response()->json(['message'=>'Send success'],200);
          }else{
             return response()->json(['Send failure']);
         }
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifycode(Request $request)
+    {
+        try {
+
+            if(!is_numeric($code = $request->get('code'))){
+                return response()->json(['message'=>'bad_request'],403);
+            }
+
+            $code_s = Cache::get('SMS' . $request->get('username'));
+
+            if($code_s == $code){
+                return response()->json(['message'=>'success'],200);
+            }else{
+                return response()->json(['message'=>'failed'],403);
+            }
+
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
 
 }

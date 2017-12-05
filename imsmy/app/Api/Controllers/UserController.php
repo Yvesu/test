@@ -323,7 +323,16 @@ class UserController extends BaseController
             }
 
             // 初始化数组
-            $set = ['stranger_comment','stranger_at','stranger_private_letter','location_recommend','search_phone','new_message_comment','new_message_fans','new_message_like'];
+            $set = [
+                'stranger_comment',
+                'stranger_at',
+                'stranger_private_letter',
+                'location_recommend',
+                'search_phone',
+                'new_message_comment',
+                'new_message_fans',
+                'new_message_like'
+            ];
             $keys = [1,1];
 
             foreach($settings as $key => $setting){

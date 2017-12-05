@@ -107,7 +107,7 @@ class MakeFilterController extends BaseController
                     }])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
-                    ->get(['id','user_id','name','cover','content','count','integral','time_add']);
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
             }
 
             foreach($audio as $value){

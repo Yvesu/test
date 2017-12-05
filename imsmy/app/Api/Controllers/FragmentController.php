@@ -5,11 +5,13 @@ namespace App\Api\Controllers;
 use App\Api\Transformer\ChannelTweetsTransformer;
 use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\FragmentDetailTransformer;
+use App\Api\Transformer\FragmentTestTransformer;
 use App\Api\Transformer\FragmentTweetsTransformer;
 use App\Api\Transformer\UserIntegralTransformer;
 use App\Api\Transformer\UsersTransformer;
 use App\Library\aliyun\SmsDemo;
 use App\Library\pinyin\CUtf8_PY;
+use App\Models\Batch;
 use App\Models\Config;
 use App\Models\Fragment;
 use App\Models\Friend;
@@ -59,13 +61,16 @@ class FragmentController extends BaseController
 
     private $fragmentTweetsTransformer;
 
+    private $framentTestTransformer;
+
     public function __construct(
         UsersTransformer $usersTransformer,
         FragCollectTransformer $fragCollectTransformer,
         UserIntegralTransformer $userIntegralTransformer,
         FragmentDetailTransformer $fragmentDetailTransformer,
         ChannelTweetsTransformer $channelTweetsTransformer,
-        FragmentTweetsTransformer $fragmentTweetsTransformer
+        FragmentTweetsTransformer $fragmentTweetsTransformer,
+        FragmentTestTransformer $fragmentTestTransformer
     )
     {
         $this->usersTransformer = $usersTransformer;
@@ -74,6 +79,7 @@ class FragmentController extends BaseController
         $this->fragmentDetailTransformer = $fragmentDetailTransformer;
         $this ->channelTweetsTransformer = $channelTweetsTransformer;
         $this ->fragmentTweetsTransformer = $fragmentTweetsTransformer;
+        $this ->framentTestTransformer = $fragmentTestTransformer;
     }
 
     /**
@@ -986,7 +992,7 @@ class FragmentController extends BaseController
     {
         try {
             $user = J_Auth::guard('api')->user();
-            $user = User::find(1000240);
+
             //接受页数
             $page = (int)$request->get('page', 1);
 
@@ -1136,7 +1142,6 @@ class FragmentController extends BaseController
                             }
                             //好友动态
                             $second_tweet[]  = $this->fragmentTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
-//                            $second_tweet[] = $this->channelTweetsTransformer->transformCollection($second_tweets[0]->all())[0];
                         }
                     }
 
@@ -1510,8 +1515,8 @@ class FragmentController extends BaseController
 
                     if (empty($data)) {
                         return response()->json([
-                            'error' => 'Not found'
-                        ], 404);
+                           'data'=>[],
+                        ]);
                     }
 
                     return response()->json([
@@ -1652,8 +1657,8 @@ class FragmentController extends BaseController
 
                     if (empty($data)) {
                         return response()->json([
-                            'error' => 'Not found'
-                        ], 404);
+                            'data' => [],
+                        ]);
                     }
 
                     return response()->json([
@@ -1816,4 +1821,135 @@ class FragmentController extends BaseController
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
     }
+
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = J_Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+                $data = Fragment::with([
+                    'keyWord' => function($q){
+                    $q->select('keyword');
+                    },
+                    'belongsToUser'=>function($q){
+                        $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
+                    },
+                    'belongsToManyFragmentType' =>function($q){
+                        $q->select('name');
+                    }])
+                    ->where('test_results',0)
+                    ->where('active','!=',2)
+                    ->forPage($page,$this->paginate)
+                    ->get();
+
+                return response()->json([
+                    'data'=>$this->framentTestTransformer->transformCollection($data->toArray()),
+                ],200);
+
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = J_Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = Fragment::find($id)->update(['test_results'=>$result]);
+
+                $res2 = DB::table('fragment_test_result')->insert([
+                    'fragment_id'   => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = Fragment::find($v)->update(['test_results'=>$result]);
+
+                    $ress = DB::table('fragment_test_result')->insert([
+                        'fragment_id'   => $v,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
 }

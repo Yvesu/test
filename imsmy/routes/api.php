@@ -999,6 +999,11 @@ $api->version(['v1'],function($api){
                     //创建收藏
                     $api->post('/addcollect/{id}','FragmentController@addCollect')
                     ->where('id','[0-9]+');
+
+                    //测试专列
+                    $api->post('/tester','FragmentController@tester');
+
+                    $api->post('/testresult','FragmentController@testResult');
                 });
             });
 
@@ -1041,14 +1046,31 @@ $api->version(['v1'],function($api){
         //修改用户手机类型
         $api->post('/edit/phoneinfo','AuthController@phoneinfo');
 
-        //登录记录
-        $api->group(['middleware' => ['app.user']],function ($api) {
+        //验证用户输入的验证码
+        $api->post('/verify','AuthController@verifycode');
 
+        $api->group(['middleware' => ['app.user']],function ($api) {
+            //登录记录
             $api->post('record','MakeTemplateController@record');
 
             //动态相关
             $api->post('/tweets/correlation/{id}','TweetController@correlation')
                 ->where('id','[0-9]+');
+
+            //模板测试
+            $api->post('/template/tester','MakeTemplateController@tester');
+
         });
+
+
+
+
+
+
+
+
+
+
+
     });
 });

@@ -371,4 +371,29 @@ class MakeTemplateController extends BaseController
         }
     }
 
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+            $a = MakeTemplateFile::get();
+
+            dd($a);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
 }

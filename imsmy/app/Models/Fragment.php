@@ -140,17 +140,6 @@ class Fragment extends Model
 
     /**
      * @param $query
-     * @param $count
-     * @return mixed
-     * 多条件搜索-下载量
-     */
-    public function scopeCount($query,$count)
-    {
-        return $query->where('count','>=',$count);
-    }
-
-    /**
-     * @param $query
      * @param $time
      * @return mixed
      * 多条件搜索-时间
@@ -172,4 +161,5 @@ class Fragment extends Model
         $sumduration = $duration[0]*60 + $duration[1];
         return $query->where('duration','>=',$sumduration);
     }
+
 }

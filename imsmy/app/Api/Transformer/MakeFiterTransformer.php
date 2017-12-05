@@ -39,6 +39,8 @@ class MakeFiterTransformer extends Transformer
             'content'       => CloudStorage::privateUrl_zip( $item['content'] ),
             'count'         => $item['count'],
             'integral'      => $item['integral'],
+            'texture'       => CloudStorage::downloadUrl( $item['texture']),
+            'texture_mix_type_id'   => $item['texture_mix_type_id'],
             'time_add'      => $item['time_add'],
             'user'          => $this ->userTransformer->filetransformer( $item['belongs_to_user']),
             'folder'        => $this->floderTransformer->transformCollection($item['belongs_to_many_folder']),
