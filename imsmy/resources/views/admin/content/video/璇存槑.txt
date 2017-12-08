@@ -1,0 +1,1 @@
+此文件夹下的文件暂时停用，涉及ajax自动加载功能，所对应的控制器为 /Admin/Content/VideoController.php
