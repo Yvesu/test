@@ -333,12 +333,22 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         /**
                          * 变更推荐状态
                          */
-                        $api->post('/changerecommend','Fodder\FragmentController@changeRecommend');
+                        $api->post('/dorecommend','Fodder\FragmentController@doRecommend');
+
+                        /**
+                         * 变更推荐状态
+                         */
+                        $api->post('/cancelrecommend','Fodder\FragmentController@cancelRecommend');
 
                         /**
                          * 变更置顶状态
                          */
-                        $api->post('/changeishot','Fodder\FragmentController@changeIsHot');
+                        $api->post('/doishot','Fodder\FragmentController@doIsHot');
+
+                        /**
+                         * 变更置顶状态
+                         */
+                        $api->post('/cancelishot','Fodder\FragmentController@cancelIsHot');
 
                         /**
                          * 设置置顶过期时间
@@ -372,7 +382,12 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         /**
                          * 变更是否分类启用停用状态
                          */
-                        $api->post('/changestop','Fodder\FragmentController@chageStop');
+                        $api->post('/stop','Fodder\FragmentController@stop');
+
+                        /**
+                         * 变更是否分类启用停用状态
+                         */
+                        $api->post('/start','Fodder\FragmentController@start');
 
                         /**
                          * 屏蔽仓
@@ -406,13 +421,156 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                        /**
                         * 分类-添加分类
                         */
-                       $api->post('/add/type','TemplageController@addType');
+                        $api->post('/add/type','TemplageController@addType');
+
+                       /**
+                        * 首页
+                        */
+                        $api->post('/index','Template\TemplateController@index');
+
+                        /**
+                         * 推荐页
+                         */
+                        $api->post('/recommend','Template\TemplateController@recommend');
+
+                        /**
+                         * 热门页
+                         */
+                        $api->post('/hot','Template\TemplateController@hot');
+
+                        /**
+                         * 屏蔽页
+                         */
+                        $api->post('/shield','Template\TemplateController@shield');
+
+                        /**
+                         * 分类页
+                         */
+                        $api->post('/type','Template\TemplateController@type');
+
+                        /**
+                         * 添加分类
+                         */
+                        $api->post('/addtype','Template\TemplateController@addType');
+
+                        /**
+                         * 操作及公共内容
+                         */
+                        $api->group(['prefix'=>'common'],function ($api){
+                            /**
+                             * 分类条件
+                             */
+                            $api->post('/type','Template\TemplateCommonController@type');
+
+                            /**
+                             * 操作员条件
+                             */
+                            $api->post('/operator','Template\TemplateCommonController@operator');
+
+                            /**
+                             * 时间条件
+                             */
+                            $api->post('/time','Template\TemplateCommonController@time');
+
+                            /**
+                             * 时长条件
+                             */
+                            $api->post('/duration','Template\TemplateCommonController@duration');
+
+                            /**
+                             * 下载量条件
+                             */
+                            $api->post('/count','Template\TemplateCommonController@count');
+
+                            /**
+                             * 推荐操作
+                             */
+                            $api->post('/recommend','Template\TemplateCommonController@recommend');
+
+                            /**
+                             * 取消推荐
+                             */
+                            $api->post('/cancelrecommend','Template\TemplateCommonController@cancelRecommend');
+                            /**
+                             * 热门
+                             */
+                            $api->post('/hot','Template\TemplateCommonController@hot');
+                            /**
+                             * 取消热门
+                             */
+                            $api->post('/cancelhot','Template\TemplateCommonController@cancelHot');
+                            /**
+                             * 屏蔽
+                             */
+                            $api->post('/shield','Template\TemplateCommonController@shield');
+                            /**
+                             * 取消屏蔽
+                             */
+                            $api->post('/cancelshield','Template\TemplateCommonController@cancelShield');
+                            /**
+                             * 删除
+                             */
+                            $api->post('/delete','Template\TemplateCommonController@delete');
+                            /**
+                             * 向上
+                             */
+                            $api->post('/up','Template\TemplateCommonController@up');
+                            /**
+                             * 向下
+                             */
+                            $api->post('/down','Template\TemplateCommonController@down');
+                            /**
+                             * 停用
+                             */
+                            $api->post('/stop','Template\TemplateCommonController@stop');
+                            /**
+                             * 启用
+                             */
+                            $api->post('/start','Template\TemplateCommonController@start');
+
+
+                        });
 
 
 
+                   });
 
 
+                   /**
+                    * 混合资源模块
+                    */
+                   $api->group(['prefix'=>'mixresource'],function ($api){
 
+                       /**
+                        * 上传页面
+                        */
+                       $api->post('/issue','MixResource\MixResourceController@issue');
+
+                       /**
+                        * 发布信息展示页面
+                        */
+                       $api->post('/issueplay','MixResource\MixResourceController@issuePlay');
+
+                       /**
+                        * 执行发布
+                        */
+                       $api->post('doissue','MixResource\MixResourceController@doIssue');
+
+                       /**
+                        * 公共功能与操作
+                        */
+                       $api->group(['prefix'=>'common'],function ($api){
+
+                           /**
+                            * 获取分类条件
+                            */
+                           $api->post('/type','MixResource\CommonController@type');
+
+                           /**
+                            * 获取资费
+                            */
+                           $api->post('/downloadcost','MixResource\CommonController@downloadCost');
+                       });
                    });
 
 

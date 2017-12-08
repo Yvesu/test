@@ -116,16 +116,16 @@ class FragmentController extends Controller
                     {
                         if($value->ishot ==0){
                             $behavior = [
-                                'ishot'=>'推荐',
-                                'recommend'=>'置顶',
-                                'isheild'=>'屏蔽',
+                                'recommend'=>'推荐',
+                                'dohot'=>'置顶',
+                                'dosheild'=>'屏蔽',
                                 'dotype' => '分类'
                             ];
                         }else{
                             $behavior = [
-                                'ishot'=>'取消推荐',
-                                'recommend'=>'置顶',
-                                'isheild'=>'屏蔽',
+                                'cancelrecommend'=>'取消推荐',
+                                'dohot'=>'置顶',
+                                'dosheild'=>'屏蔽',
                                 'dotype' => '分类'
                             ];
                         }
@@ -133,16 +133,16 @@ class FragmentController extends Controller
                     }elseif($value->recommend === 1){
                         if($value->ishot ==0){
                             $behavior = [
-                                'ishot'=>'推荐',
-                                'recommend'=>'取消置顶',
-                                'isheild'=>'屏蔽',
+                                'recommend'=>'推荐',
+                                'cancelhot'=>'取消置顶',
+                                'dosheild'=>'屏蔽',
                                 'dotype' => '分类'
                             ];
                         }else{
                             $behavior = [
-                                'ishot'=>'取消推荐',
-                                'recommend'=>'取消置顶',
-                                'isheid'=>'屏蔽',
+                                'cancelrecommend'=>'取消推荐',
+                                'cancelhot'=>'取消置顶',
+                                'dosheild'=>'屏蔽',
                                 'dotype' => '分类'
                             ];
                         }
@@ -168,10 +168,17 @@ class FragmentController extends Controller
                 ];
                 array_push($data,$tempdata);
             }
-
+            $batchBehavior = [
+                'recommend'=>'推荐',
+                'cancelrecommend'=>'取消推荐',
+                'dohot'=>'置顶',
+                'cancelhot'=>'取消置顶',
+                'dosheild'=>'屏蔽',
+                'dotype' => '分类'
+            ];
             $sumnum = Fragment::where('active','=',1)->get()->count();
             $todaynew = Fragment::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -308,7 +315,7 @@ class FragmentController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * 变更片段是否为推荐
      */
-    public function changeRecommend(Request $request)
+    public function doRecommend(Request $request)
     {
         try{
             $admin = Auth::guard('api')->user();
@@ -332,12 +339,53 @@ class FragmentController extends Controller
                     if($data -> ishot == 0)
                     {
                         $data -> ishot = 1;
-                    }else{
-                        $data -> ishot = 0;
+                        $data -> time_update = time();
+                        $data -> operator_id = $admin->id;
+                        $data -> save();
                     }
-                    $data -> time_update = time();
-                    $data -> operator_id = $admin->id;
-                    $data -> save();
+                    DB::commit();
+
+                }else{
+                    return response()->json(['message'=>'数据不合法'],200);
+                }
+            }
+            return response()->json(['message'=>'修改成功'],200);
+
+
+        }catch (ModelNotFoundException $e){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    public function cancelRecommend(Request $request)
+    {
+        try{
+            $admin = Auth::guard('api')->user();
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            foreach($id as $k => $v)
+            {
+                $data = Fragment::find($v);
+                if(empty($data))
+                {
+                    return response()->json(['message'=>'无数据'],200);
+                }
+                $active = $data->active;
+                if($active == 1){
+
+                    DB::beginTransaction();
+
+                    if($data -> ishot == 1)
+                    {
+                        $data -> ishot = 0;
+                        $data -> time_update = time();
+                        $data -> operator_id = $admin->id;
+                        $data -> save();
+                    }
                     DB::commit();
 
                 }else{
@@ -359,7 +407,7 @@ class FragmentController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * 变更片段是否置顶
      */
-    public function changeIsHot(Request $request)
+    public function doIsHot(Request $request)
     {
         try{
             $admin = Auth::guard('api')->user();
@@ -401,7 +449,60 @@ class FragmentController extends Controller
                         $data -> operator_id = $admin->id;
                         $data -> ishottime = $time;
                         $data -> save();
-                    }else{
+                    }
+
+                    DB::commit();
+
+                }else{
+                    return response()->json(['message'=>'数据不合法'],200);
+                }
+            }
+            return response()->json(['message'=>'修改成功'],200);
+
+        }catch (ModelNotFoundException $e){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    public function cancelIsHot(Request $request)
+    {
+        try{
+            $admin = Auth::guard('api')->user();
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            $time = $request->get('time');
+            switch ($time){
+                case 0:
+                    $time = time()+(60*60*24);
+                    break;
+                case 1:
+                    $time = time()+(60*60*24*7);
+                    break;
+                case 2:
+                    $time = time()+(60*60*24*7);
+                    break;
+                default:
+                    $time = null;
+                    break;
+            }
+            foreach($id as $k => $v)
+            {
+                $data = Fragment::find($v);
+                if(empty($data))
+                {
+                    return response()->json(['message'=>'无数据'],200);
+                }
+                $active = $data->active;
+                if($active == 1)
+                {
+                    DB::beginTransaction();
+                    if($data -> recommend == 1)
+                    {
+
                         $data -> recommend = 0;
                         $data -> time_update = time();
                         $data -> operator_id = $admin->id;
@@ -632,17 +733,17 @@ class FragmentController extends Controller
                 {
 
                         $behavior = [
-                            'ishot'=>'取消推荐',
-                            'recommend'=>'置顶',
-                            'isheild'=>'屏蔽'
+                            'cancelrecommend'=>'取消推荐',
+                            'dohot'=>'置顶',
+                            'dosheild'=>'屏蔽'
                         ];
 
 
                 }elseif($value->recommend === 1){
 
                         $behavior = [
-                            'ishot'=>'取消推荐',
-                            'recommend'=>'取消置顶',
+                            'cancelrecommend'=>'取消推荐',
+                            'cancelhot'=>'取消置顶',
                             'isheid'=>'屏蔽'
                         ];
 
@@ -664,10 +765,15 @@ class FragmentController extends Controller
                 ];
                 array_push($data,$tempdata);
             }
-
+            $batchBehavior = [
+                'cancelrecommend'=>'取消推荐',
+                'dohot'=>'置顶',
+                'cancelhot'=>'取消置顶',
+                'dosheild'=>'屏蔽'
+            ];
             $sumnum = Fragment::where('active','=',1)->get()->count();
             $todaynew = Fragment::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -725,39 +831,45 @@ class FragmentController extends Controller
                     {
                         $tempdata['behavior'] = [
                             'down' => '向下',
-                            'active' => '停用',
+                            'stop' => '停用',
                         ];
                     }else if($value->sort == $maxsort){
                         $tempdata['behavior'] = [
                             'up' => '向上',
-                            'active' => '停用',
+                            'stop' => '停用',
                         ];
                     }else{
                         $tempdata['behavior'] = [
                             'up' => '向上',
                             'down' => '向下',
-                            'active' => '停用'
+                            'stop' => '停用'
                         ];
                     }
+                    $batchBehavior = [
+                        'active' => '停用'
+                    ];
                 }else if($value->active == 3 ){
                     if($value->sort == 1)
                     {
                         $tempdata['behavior'] = [
                             'down' => '向下',
-                            'active' => '启用',
+                            'start' => '启用',
                         ];
                     }else if($value->sort == $maxsort){
                         $tempdata['behavior'] = [
                             'up' => '向上',
-                            'active' => '启用',
+                            'start' => '启用',
                         ];
                     }else{
                         $tempdata['behavior'] = [
                             'up' => '向上',
                             'down' => '向下',
-                            'active' => '启用'
+                            'start' => '启用'
                         ];
                     }
+                    $batchBehavior = [
+                        'start' => '启用'
+                    ];
                 }else{
                     $tempdata['behavior'] = [
                         'status' => '未审核',
@@ -766,7 +878,8 @@ class FragmentController extends Controller
                 array_push($data,$tempdata);
 
             }
-            return response()->json(['data'=>$data,'sum'=>$sum],200);
+
+            return response()->json(['$batchBehavior'=>$batchBehavior,'data'=>$data,'sum'=>$sum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not+found'],404);
         }
@@ -788,20 +901,31 @@ class FragmentController extends Controller
                 return response()->json(['message'=>'无数据'],200);
             }
             $active = $dataup->active;
-            if($active != 1)
+            $maxsort = FragmentType::orderBy('sort')->where('active','=',$active)->max('sort');
+            $minsort = FragmentType::orderBy('sort')->where('active','=',$active)->min('sort');
+            $alldata = FragmentType::orderBy('sort')->where('active','=',$active)->get();
+            foreach($alldata as $k => $v)
             {
-                return response()->json(['message'=>'数据不合法'],404);
+                if(($v->id)==$id){
+                    if($k==0){
+                        return response()->json(['message'=>'数据不合法'],200);
+                    }
+                    $datadown = $alldata[$k-1];
+                }
             }
-            $maxsort = FragmentType::orderBy('sort')->max('sort');
-            $datadown = FragmentType::where('sort','=',($dataup->sort)-1)->first();
-            if($dataup->sort > 1 && $dataup->sort <= $maxsort)
+            if(!$datadown){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            if($dataup->sort > $minsort && $dataup->sort <= $maxsort)
             {
-                $dataup -> sort = ($dataup->sort)-1;
+                $a = $dataup->sort;
+                $b = $datadown->sort;
+                $dataup -> sort = $b;
                 $dataup -> time_update = time();
                 $dataup -> operator_id = $admin->id;
                 $dataup -> save();
 
-                $datadown -> sort = ($datadown->sort)+1;
+                $datadown -> sort = $a;
                 $datadown -> time_update = time();
                 $datadown -> operator_id = $admin->id;
                 $datadown ->save();
@@ -835,19 +959,31 @@ class FragmentController extends Controller
                 return response()->json(['message'=>'无数据'],200);
             }
             $active = $datadown->active;
-            if($active != 1){
+            $maxsort = FragmentType::orderBy('sort')->where('active','=',$active)->max('sort');
+            $minsort = FragmentType::orderBy('sort')->where('active','=',$active)->min('sort');
+            $alldata = FragmentType::orderBy('sort')->where('active','=',$active)->get();
+            foreach($alldata as $k => $v)
+            {
+                if(($v->id)==$id){
+                    if($k==0){
+                        return response()->json(['message'=>'数据不合法'],200);
+                    }
+                    $dataup = $alldata[$k+1];
+                }
+            }
+            if(!$dataup){
                 return response()->json(['message'=>'数据不合法'],200);
             }
-            $maxsort = FragmentType::orderBy('sort')->max('sort');
-            if($datadown->sort >= 1 && $datadown->sort < $maxsort)
+            if($datadown->sort >= $minsort && $datadown->sort < $maxsort)
             {
-                $dataup = FragmentType::where('sort','=',($datadown->sort)+1)->first();
-                $dataup -> sort = ($dataup->sort)-1;
+                $a = $dataup->sort;
+                $b = $datadown->sort;
+                $dataup -> sort = $b;
                 $dataup -> time_update = time();
                 $dataup -> operator_id = $admin->id;
                 $dataup -> save();
 
-                $datadown -> sort = ($datadown->sort)+1;
+                $datadown -> sort = $a;
                 $datadown -> time_update = time();
                 $datadown -> operator_id = $admin->id;
                 $datadown ->save();
@@ -868,7 +1004,7 @@ class FragmentController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * 变更分类是否停用
      */
-    public function changeStop(Request $request)
+    public function stop(Request $request)
     {
         try{
             $admin = Auth::guard('api')->user();
@@ -893,14 +1029,56 @@ class FragmentController extends Controller
                     return response()->json(['message'=>'数据不合法'],200);
                 }else if($active === 1){
                     $data -> active = 3;
+                    $data -> operator_id = $admin->id;
+
+                    $data -> time_update = time();
+
+                    $data -> save();
+                }
+
+                DB::commit();
+            }
+
+            return response()->json(['message'=>'修改成功'],200);
+        }catch (ModelNotFoundException $e){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
+
+    public function start(Request $request)
+    {
+        try{
+            $admin = Auth::guard('api')->user();
+            $id = $request->get('id',null);
+            if(is_null($id))
+            {
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            foreach($id as $k => $v)
+            {
+                DB::beginTransaction();
+                $data = FragmentType::find($v);
+                if(empty($data))
+                {
+                    return response()->json(['message'=>'无数据'],200);
+                }
+                $active = $data->active;
+//            dd($active);
+                DB::beginTransaction();
+                if($active !== 1 && $active !== 3  ){
+                    return response()->json(['message'=>'数据不合法'],200);
                 }else if($active === 3){
                     $data -> active = 1;
+                    $data -> operator_id = $admin->id;
+
+                    $data -> time_update = time();
+
+                    $data -> save();
                 }
-                $data -> operator_id = $admin->id;
 
-                $data -> time_update = time();
-
-                $data -> save();
                 DB::commit();
             }
 
@@ -996,7 +1174,7 @@ class FragmentController extends Controller
                 //  操作员
                 $operator = Administrator::find($value->operator_id)->name;
                 //  可进行操作
-                $behavior = ['behavior1'=>'取消屏蔽','behavior2'=>'删除',];
+                $behavior = ['cancelshield'=>'取消屏蔽','delete'=>'删除',];
 
                 $tempdata = [
                     'id' => $value->id,
@@ -1015,10 +1193,10 @@ class FragmentController extends Controller
                 ];
                 array_push($data,$tempdata);
             }
-
+            $batchBehavior = ['cancelshield'=>'取消屏蔽','delete'=>'删除',];
             $sumnum = Fragment::where('active','=',3)->get()->count();
             $todaynew = Fragment::where('active','=',3)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['$batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }

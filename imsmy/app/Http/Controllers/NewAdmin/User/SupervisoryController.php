@@ -76,7 +76,11 @@ class SupervisoryController extends Controller
                         for ($i = 0;$i <24;)
                         {
                             $num = UserLoginLog::where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->groupBy('ip')->get()->count();
-                            array_push($todayNum,[$i.':00'=>$num]);
+                            $tempdata = [
+                                'label'=>$i.':00',
+                                'num' => $num
+                            ];
+                            array_push($todayNum,$tempdata);
                             $i = $i+2;
                         }
                         $activeNum = $todayNum;
@@ -94,7 +98,11 @@ class SupervisoryController extends Controller
                             for($j = 0;$j<7;$j++){
                                 $num += UserLoginLog::where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
                             }
-                            array_push($weekNum,[$i.':00'=>$num]);
+                            $tempdata = [
+                                'label'=>$i.':00',
+                                'num' => $num
+                            ];
+                            array_push($weekNum,$tempdata);
                             $i = $i+2;
                         }
                         $activeNum = $weekNum;
@@ -113,7 +121,12 @@ class SupervisoryController extends Controller
                             $numIp = UserLoginLogSumIp::where('year','=',$year)->where('month','=',$month)->first();
                             if($numIp){
                                 $monthNumIp = $numIp->$a;
-                                array_push($monthNum,[$i.':00'=>$monthNumIp]);
+                                $tempdata = [
+                                    'label'=>$i.':00',
+                                    'num' => $monthNumIp
+                                ];
+                                array_push($monthNum,$tempdata);
+//                                array_push($monthNum,[$i.':00'=>$monthNumIp]);
                             }
 
                             $i = $i+2;
@@ -132,7 +145,12 @@ class SupervisoryController extends Controller
                             $num = UserLoginLogSumIp::where('year','=',$year)->get();
                             if($num){
                                 $num = $num->sum($i.':00');
-                                array_push($yearNum,[$i.':00'=>$num]);
+                                $tempdata = [
+                                    'label'=>$i.':00',
+                                    'num' => $num
+                                ];
+                                array_push($yearNum,$tempdata);
+//                                array_push($yearNum,[$i.':00'=>$num]);
                             }
                             $i = $i+2;
 
@@ -161,7 +179,12 @@ class SupervisoryController extends Controller
                         for($j = 0;$j<$dayNum;$j++){
                             $num += UserLoginLog::where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
                         }
-                        array_push($daysNum,[$i.':00'=>$num]);
+                        $tempdata = [
+                            'label'=>$i.':00',
+                            'num' => $num
+                        ];
+                        array_push($daysNum,$tempdata);
+//                        array_push($daysNum,[$i.':00'=>$num]);
                         $i = $i+2;
                     }
 
@@ -180,7 +203,12 @@ class SupervisoryController extends Controller
                         for ($i = 0;$i <24;)
                         {
                             $num = UserLoginLog::where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->get()->count();
-                            array_push($todayNum,[$i.':00'=>$num]);
+                            $tempdata = [
+                                'label'=>$i.':00',
+                                'num' => $num
+                            ];
+                            array_push($todayNum,$tempdata);
+//                            array_push($todayNum,[$i.':00'=>$num]);
                             $i = $i+2;
                         }
                         $todayIosNum = UserLoginLog::where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','ios')->get()->count();
@@ -212,7 +240,12 @@ class SupervisoryController extends Controller
                             for($j = 0;$j<7;$j++){
                                 $num += UserLoginLog::where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->get()->count();
                             }
-                            array_push($weekNum,[$i.':00'=>$num]);
+                            $tempdata = [
+                                'label'=>$i.':00',
+                                'num' => $num
+                            ];
+                            array_push($weekNum,$tempdata);
+//                            array_push($weekNum,[$i.':00'=>$num]);
                             $i = $i+2;
                         }
                         $weekSum = array_sum($weekNum);
@@ -259,7 +292,12 @@ class SupervisoryController extends Controller
                                 array_push($monthWebNum,$WebNum);
                             }
                             $num = $iosNum + $AndroidNum + $WebNum;
-                            array_push($monthNum,[$i.':00'=>$num]);
+                            $tempdata = [
+                                'label'=>$i.':00',
+                                'num' => $num
+                            ];
+                            array_push($monthNum,$tempdata);
+//                            array_push($monthNum,[$i.':00'=>$num]);
                             $i = $i+2;
 
                         }
@@ -352,7 +390,12 @@ class SupervisoryController extends Controller
                         for($j = 0;$j<$dayNum;$j++){
                             $num += UserLoginLog::where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->get()->count();
                         }
-                        array_push($daysNum,[$i.':00'=>$num]);
+                        $tempdata = [
+                            'label'=>$i.':00',
+                            'num' => $num
+                        ];
+                        array_push($daysNum,$tempdata);
+//                        array_push($daysNum,[$i.':00'=>$num]);
                         $i = $i+2;
                     }
                     $daysSum = array_sum($daysNum);
