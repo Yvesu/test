@@ -63,6 +63,8 @@ class Kernel extends ConsoleKernel
 
 
         //  统计每年月登录用户量
-        $schedule->command('CountUser')->daily();
+
+        $schedule->command('CountUser')->everyMinute();
+
     }
 }

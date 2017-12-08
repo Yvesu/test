@@ -245,6 +245,7 @@ class MakeTemplateController extends BaseController
     private function related($id, $page)
     {
         try{
+
             $folder = MakeTemplateFile::ofNormal()-> where('test_result',1) -> active() -> find($id, ['folder_id']);
 
             // 获取数据集合
@@ -495,7 +496,6 @@ class MakeTemplateController extends BaseController
             DB::rollBack();
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
-
     }
 
 }

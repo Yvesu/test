@@ -771,6 +771,7 @@ class TweetController extends BaseController
         try{
 
             // 接收全部信息
+
             $input = $request -> all();   //2017-12-06 16:27:46
 
             $time = getTime();
@@ -818,7 +819,9 @@ class TweetController extends BaseController
             if($newTweet['video']){
 
                 // 判断是否为数字
+
                 if(!$newTweet['duration']) return response()->json(['error'=>'badrequest'],403);
+
             }
 
             // 通过自定义函数，获取内容中是否包含所@的用户的id
@@ -867,8 +870,10 @@ class TweetController extends BaseController
             }
 
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
 //            //TODO 发布动态的手机系统
          if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
+
               //手机类型
               $phone_type = $request->get('phone_type', '');
 
@@ -897,10 +902,12 @@ class TweetController extends BaseController
               $newTweet['phone_id'] = $phone_id;
           }
 
+
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);
 
             //移动至定时任务
+
  /*       if($request->get('screen_shot') != null ) {
               // 图片鉴黄
               $url = CloudStorage::ImageCheck($request->get('screen_shot'));
@@ -1065,6 +1072,7 @@ class TweetController extends BaseController
                 // 更新被转发动态的 retweet 字段的值 加1
                 Tweet::findOrFail($newTweet['retweet']) -> increment('retweet_count');
 
+
                 User::where('id',$id)->update(['last_token'=>$time]);
 
             // 原创
@@ -1093,6 +1101,7 @@ class TweetController extends BaseController
 
             DB::commit();
 
+
             //写入待检测
 
             DB::table('tweet_to_qiniu')->insert([
@@ -1105,6 +1114,7 @@ class TweetController extends BaseController
         }catch(ModelNotFoundException $e){
 
             DB::rollback();
+
             return response()->json(['error'=>'badrequest'],400);
         }catch(\Exception $e){
 

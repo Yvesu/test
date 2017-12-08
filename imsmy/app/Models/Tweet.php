@@ -766,7 +766,9 @@ class Tweet extends Common
 
         //  操作员
         if($operator){
-            $query->where('operator','=',$operator)->orWhereHas('hasOneTop',function ($q) use($operator){
+            $query->whereHas('belongsToCheck',function ($q) use($operator){
+                $q->where('admin_id',$operator);
+            })->orWhereHas('hasOneTop',function ($q) use($operator){
                $q->where('toper_id','=',$operator)->orWhere('recommender_id','=',$operator);
             });
         }

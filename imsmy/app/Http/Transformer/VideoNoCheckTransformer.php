@@ -10,7 +10,7 @@ use App\Models\User;
 use CloudStorage;
 use Auth;
 
-class VideoIndexForbidTransformer extends Transformer
+class VideoNoCheckTransformer extends Transformer
 {
     private $usersTransformer;
 
@@ -38,22 +38,17 @@ class VideoIndexForbidTransformer extends Transformer
             }
         }
 
+
         return [
             'id'            =>  $tweet->id,
             'browse_times'  =>  $tweet->browse_times,
             'screen_shot'   =>  CloudStorage::downloadUrl($tweet->screen_shot),
-            'video'         =>  CloudStorage::downloadUrl($tweet->video),
             'type'          =>  $official ? '官方发布' : ($activity ? '参赛作品' : ($verity ? '认证用户' : '')),   // 视频类型，参赛、官方和认证,注意优先级
+            'video'         =>  CloudStorage::downloadUrl($tweet->video),
             'duration'      =>  floor($tweet->duration),
             'user'          =>  $this->usersTransformer->transform($tweet->belongsToUser),
             'created_at'    =>  strtotime($tweet->created_at),
-            'forbid_time'   =>  $tweet -> belongsToReason->first() -> pivot -> time_add,    // 屏蔽审批时间
-            'forbid_user'   =>  $tweet -> belongsToReasonAdmin->first()->name,    // 审批人员
-            'forbid_reason' =>  $tweet -> belongsToReason->first()->reason,    // 审批人员
-            'behavior'      =>  [
-                'cancelshield'    => '取消屏蔽',
-                'delete'    => '删除',
-            ],
+            'operator'      =>  '',
         ];
     }
 }

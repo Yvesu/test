@@ -392,6 +392,7 @@ class CloudStorage
         return $url;
     }
 
+
     public function signAgain($data)
     {
         $http = \Config::get('constants.HTTP');

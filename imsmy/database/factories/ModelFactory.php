@@ -20,13 +20,3 @@ $factory->define(App\User::class, function (Faker\Generator $faker) {
     ];
 });
 
-
-$factory->define(App\Models\Make\MakeFilterFile::class, function (Faker\Generator $faker) {
-    return [
-        'user_id' => $faker->numberBetween(1000440,1111111),
-        'name' => $faker->sentence,
-        'cover' => 'img.cdn.hivideo.com/filter/cover/admins/1000240/16120171123111117_467*467_.jpg',
-        'content' => 'file.cdn.hivideo.com/filter/hiColor/admins/1000240/16120171123111121.hicolor',
-        'recommend' => 1,
-    ];
-});

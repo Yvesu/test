@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="f36f5ce1-2876-483f-b247-0b494a075a40" name="默认" comment="" />
+=======
+    <list default="true" id="e21d04d3-e39e-4906-8345-37a08042f388" name="默认" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeFilterController.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeFilterController.php" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" afterPath="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" />
+    </list>
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -9,6 +18,211 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+<<<<<<< HEAD
+=======
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_TABLE_DETAILS" value="true" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <expand />
+    <select />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="xxoo" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+<<<<<<< HEAD
+      <file leaf-file-name="api.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/imsmy/routes/api.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1201">
+              <caret line="1002" column="15" lean-forward="true" selection-start-line="1002" selection-start-column="15" selection-end-line="1002" selection-end-column="15" />
+              <folding>
+                <element signature="e#32293#32334#0#PHP" expanded="false" />
+=======
+      <file leaf-file-name="CloudStorage.php" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="24">
+              <caret line="124" column="4" lean-forward="false" selection-start-line="124" selection-start-column="4" selection-end-line="124" selection-end-column="4" />
+              <folding>
+                <element signature="e#844#945#0#PHP" expanded="false" />
+                <element signature="e#1125#1198#0#PHP" expanded="false" />
+                <element signature="e#1203#1662#0#PHP" expanded="false" />
+                <element signature="e#1668#1745#0#PHP" expanded="false" />
+                <element signature="e#1750#1832#0#PHP" expanded="false" />
+                <element signature="e#1838#2092#0#PHP" expanded="false" />
+                <element signature="e#2098#2189#0#PHP" expanded="false" />
+                <element signature="e#2194#2463#0#PHP" expanded="false" />
+                <element signature="e#2474#2539#0#PHP" expanded="false" />
+                <element signature="e#2544#2713#0#PHP" expanded="false" />
+                <element signature="e#2719#2843#0#PHP" expanded="false" />
+                <element signature="e#2850#2961#0#PHP" expanded="false" />
+                <element signature="e#2966#3169#0#PHP" expanded="false" />
+                <element signature="e#3175#3290#0#PHP" expanded="false" />
+                <element signature="e#3295#3514#0#PHP" expanded="false" />
+                <element signature="e#3668#3765#0#PHP" expanded="false" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+<<<<<<< HEAD
+      <file leaf-file-name="FragmentController.php" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1843">
+              <caret line="1742" column="17" lean-forward="true" selection-start-line="1742" selection-start-column="17" selection-end-line="1742" selection-end-column="17" />
+              <folding>
+                <element signature="e#39#88#0#PHP" expanded="true" />
+                <element signature="e#1004#1050#0#PHP" expanded="false" />
+                <element signature="e#2224#2321#0#PHP" expanded="false" />
+                <element signature="e#2326#15235#0#PHP" expanded="false" />
+                <element signature="e#15241#15294#0#PHP" expanded="false" />
+                <element signature="e#15299#15415#0#PHP" expanded="false" />
+                <element signature="e#15421#15477#0#PHP" expanded="false" />
+                <element signature="e#15482#15773#0#PHP" expanded="false" />
+                <element signature="e#15779#15832#0#PHP" expanded="false" />
+                <element signature="e#15837#15964#0#PHP" expanded="false" />
+                <element signature="e#15970#16026#0#PHP" expanded="false" />
+                <element signature="e#16031#16336#0#PHP" expanded="false" />
+                <element signature="e#16342#16367#0#PHP" expanded="false" />
+                <element signature="e#16372#20069#0#PHP" expanded="false" />
+                <element signature="e#20075#20180#0#PHP" expanded="false" />
+                <element signature="e#20185#21378#0#PHP" expanded="false" />
+                <element signature="e#21384#21507#0#PHP" expanded="false" />
+                <element signature="e#21512#23331#0#PHP" expanded="false" />
+                <element signature="e#23337#23467#0#PHP" expanded="false" />
+                <element signature="e#23472#25620#0#PHP" expanded="false" />
+                <element signature="e#25626#25726#0#PHP" expanded="false" />
+                <element signature="e#25731#26237#0#PHP" expanded="false" />
+                <element signature="e#26243#26371#0#PHP" expanded="false" />
+                <element signature="e#26376#35271#0#PHP" expanded="false" />
+                <element signature="e#35277#35392#0#PHP" expanded="false" />
+                <element signature="e#35397#54681#0#PHP" expanded="false" />
+                <element signature="e#54687#54784#0#PHP" expanded="false" />
+                <element signature="e#54789#66980#0#PHP" expanded="false" />
+                <element signature="e#70008#72491#0#PHP" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AuthController.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/AuthController.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="7000">
+              <caret line="308" column="7" lean-forward="false" selection-start-line="308" selection-start-column="7" selection-end-line="308" selection-end-column="7" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+=======
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+    </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>create</find>
+      <find>uSER</find>
+      <find>thirdRelatedAdd</find>
+      <find>template</find>
+      <find>Auth</find>
+      <find>create(</find>
+      <find>MakeTemplate</find>
+      <find>details</find>
+      <find>@details</find>
+      <find>/activity</find>
+      <find>/reply</find>
+      <find>reply</find>
+      <find>tweetReply</find>
+      <find>activity</find>
+      <find>register</find>
+      <find>tweet</find>
+      <find>关键词</find>
+      <find>内容</find>
+      <find>可见</find>
+      <find>Name</find>
+      <find>popular</find>
+      <find>VisibleTweets</find>
+      <find>动态</find>
+      <find>用户</find>
+      <find>发布动态</find>
+      <find>ofFriendTweets</find>
+      <find>visible_range</find>
+      <find>滤镜</find>
+      <find>phone</find>
+      <find>chartlet</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UserInfomationTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersSearchTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersWithFansTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersWithOauthTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersWithPhoneTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersWithSubIndexTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersWithSubTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/ZxHomeImagesTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Library/aliyun/SmsDemo.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetsDetailsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/UserKeywords.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentDetailTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Fragment.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/TweetContent.php" />
+        <option value="$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/Auth.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/ChannelTweetsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/composer.json" />
+        <option value="$PROJECT_DIR$/imsmy/app/Library/phpanalysis/phpanalysis.class.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/AttentionTweetsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/TweetQiniuCheck.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Support/helpers.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/SensitiveWord.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Http/Middleware/AppAuthenticate.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragCollectTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/TweetPhone.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Make/MakeFilterFile.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Make/MakeFilterFolder.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeEffectsController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentTweetsReplyTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentTweetsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/ActivityTweetDetailsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetReplyController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeTemplateController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetHotRepliesTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/ActivityController.php" />
+        <option value="$PROJECT_DIR$/imsmy/routes/api.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/KeywordTweets.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Keywords.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/Tweet.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Models/User.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/CorrelationTweetsTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/FloderTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Transformer/MakeFiterTransformer.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeFilterController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeChartletController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/AuthController.php" />
+        <option value="$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php" />
+      </list>
+    </option>
+  </component>
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
   <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsGulpfileManager">
@@ -16,9 +230,21 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
+<<<<<<< HEAD
   <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-8" />
     <option name="y" value="-8" />
+=======
+<<<<<<< HEAD
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+=======
+  <component name="ProjectFrameBounds">
+    <option name="x" value="224" />
+    <option name="y" value="40" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
     <option name="width" value="1133" />
     <option name="height" value="1000" />
   </component>
@@ -37,14 +263,97 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+<<<<<<< HEAD
       <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane" />
+=======
+      <pane id="Scope" />
+<<<<<<< HEAD
+=======
+      <pane id="Scratches" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+<<<<<<< HEAD
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="Api" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="Api" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="Controllers" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="app" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="Services" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="xxoo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="xxoo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="routes" type="2a2b976b:PhpTreeStructureProvider$1" />
+=======
+              <item name="HiViedo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="HiViedo" type="2a2b976b:PhpTreeStructureProvider$1" />
+            </path>
+            <path>
+              <item name="HiViedo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="HiViedo" type="2a2b976b:PhpTreeStructureProvider$1" />
+              <item name="imsmy" type="2a2b976b:PhpTreeStructureProvider$1" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+<<<<<<< HEAD
+      <pane id="Scratches" />
+=======
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
+<<<<<<< HEAD
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+=======
+<<<<<<< HEAD
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../queue/queue" />
+    <property name="settings.editor.selected.configurable" value="editor.breadcrumbs" />
+    <property name="php.override.implement.member.chooser.php.doc" value="NONE" />
+=======
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../imsmy" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.PHP" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -63,16 +372,75 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
+<<<<<<< HEAD
       <changelist id="f36f5ce1-2876-483f-b247-0b494a075a40" name="默认" comment="" />
       <created>1512707276872</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1512707276872</updated>
       <workItem from="1512707278103" duration="7000" />
+=======
+      <changelist id="e21d04d3-e39e-4906-8345-37a08042f388" name="默认" comment="" />
+      <created>1510647526253</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1510647526253</updated>
+      <workItem from="1510647527495" duration="1083000" />
+      <workItem from="1510648718620" duration="6765000" />
+      <workItem from="1510658889988" duration="3335000" />
+      <workItem from="1510707673822" duration="29942000" />
+      <workItem from="1510795497585" duration="15925000" />
+      <workItem from="1510816863171" duration="11364000" />
+      <workItem from="1510831605331" duration="315000" />
+      <workItem from="1510881625200" duration="1167000" />
+      <workItem from="1510886786363" duration="543000" />
+      <workItem from="1510894891964" duration="294000" />
+      <workItem from="1510896102258" duration="178000" />
+      <workItem from="1510897532604" duration="11000" />
+      <workItem from="1510898929073" duration="42327000" />
+      <workItem from="1511143846137" duration="2274000" />
+      <workItem from="1511159637423" duration="14651000" />
+      <workItem from="1511174995755" duration="683000" />
+      <workItem from="1511175749398" duration="2001000" />
+      <workItem from="1511226636752" duration="8670000" />
+      <workItem from="1511236155586" duration="15144000" />
+      <workItem from="1511256412556" duration="2071000" />
+      <workItem from="1511258569262" duration="1796000" />
+      <workItem from="1511261842671" duration="630000" />
+<<<<<<< HEAD
+      <workItem from="1511330662805" duration="21068000" />
+      <workItem from="1511399332562" duration="381000" />
+      <workItem from="1511399846423" duration="10600000" />
+      <workItem from="1511417581376" duration="2000" />
+      <workItem from="1511418287065" duration="1231000" />
+      <workItem from="1511422396708" duration="11592000" />
+      <workItem from="1511485491035" duration="26886000" />
+      <workItem from="1511525110188" duration="970000" />
+      <workItem from="1511572577916" duration="6229000" />
+      <workItem from="1511602842150" duration="2753000" />
+      <workItem from="1511744729577" duration="27746000" />
+      <workItem from="1511831769409" duration="8608000" />
+      <workItem from="1511848844048" duration="12048000" />
+      <workItem from="1511917465906" duration="19636000" />
+      <workItem from="1512005491291" duration="9689000" />
+      <workItem from="1512022310626" duration="16609000" />
+      <workItem from="1512090024307" duration="12394000" />
+      <workItem from="1512112036417" duration="4360000" />
+      <workItem from="1512118896196" duration="994000" />
+      <workItem from="1512120734979" duration="293000" />
+=======
+      <workItem from="1511264005786" duration="20000" />
+      <workItem from="1511312832432" duration="16000" />
+      <workItem from="1511312861267" duration="124000" />
+      <workItem from="1511313291931" duration="4000" />
+      <workItem from="1511330662644" duration="624000" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
+<<<<<<< HEAD
     <option name="totallyTimeSpent" value="7000" />
   </component>
   <component name="ToolWindowManager">
@@ -93,15 +461,734 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+=======
+<<<<<<< HEAD
+    <option name="totallyTimeSpent" value="355258000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17708333" sideWeight="0.49597585" order="0" side_tool="false" content_ui="combo" />
+=======
+    <option name="totallyTimeSpent" value="161957000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="224" y="40" width="1133" height="1000" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2014324" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32908705" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3296875" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3279678" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17708333" sideWeight="0.50402415" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
+<<<<<<< HEAD
+=======
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
+<<<<<<< HEAD
     <breakpoint-manager />
     <watches-manager />
   </component>
+=======
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php</url>
+<<<<<<< HEAD
+          <line>1645</line>
+=======
+          <line>1536</line>
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php</url>
+<<<<<<< HEAD
+          <line>2053</line>
+=======
+          <line>1945</line>
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/routes/api.php</url>
+          <line>56</line>
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php</url>
+          <line>553</line>
+          <option name="timeStamp" value="31" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php</url>
+          <line>84</line>
+          <option name="timeStamp" value="34" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php</url>
+          <line>385</line>
+          <option name="timeStamp" value="47" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php</url>
+          <line>1532</line>
+          <option name="timeStamp" value="57" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FragmentTweetsTransformer.php</url>
+          <line>48</line>
+          <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeTemplateController.php</url>
+          <line>141</line>
+          <option name="timeStamp" value="67" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/routes/api.php</url>
+          <line>744</line>
+          <option name="timeStamp" value="68" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Models/Tweet.php</url>
+          <line>757</line>
+          <option name="timeStamp" value="73" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php</url>
+          <line>3359</line>
+          <option name="timeStamp" value="78" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="80" />
+    </breakpoint-manager>
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/ActivityTweetDetailsTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="492">
+          <caret line="33" column="41" lean-forward="false" selection-start-line="33" selection-start-column="41" selection-end-line="33" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/TweetActivity.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="942">
+          <caret line="71" column="16" lean-forward="false" selection-start-line="71" selection-start-column="16" selection-end-line="71" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/bootstrap/app.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="542">
+          <caret line="41" column="2" lean-forward="true" selection-start-line="41" selection-start-column="2" selection-end-line="41" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/config/umeng.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="8" column="2" lean-forward="true" selection-start-line="8" selection-start-column="2" selection-end-line="8" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/imsmy/composer.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="16" column="28" lean-forward="true" selection-start-line="16" selection-start-column="28" selection-end-line="16" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Events/Event.php">
+=======
+    <entry file="file://$PROJECT_DIR$/imsmy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php" />
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/ChannelTweetsTransformer.php" />
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Library/aliyun/SmsDemo.php">
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$APPLICATION_HOME_DIR$/plugins/php/lib/php.jar!/stubs/ctype/ctype.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="305">
+          <caret line="52" column="9" lean-forward="false" selection-start-line="52" selection-start-column="9" selection-end-line="52" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/NotificationController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="650">
+          <caret line="98" column="22" lean-forward="true" selection-start-line="98" selection-start-column="22" selection-end-line="98" selection-end-column="22" />
+          <folding>
+            <element signature="e#40#89#0#PHP" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetReplyLikeController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1000">
+          <caret line="84" column="33" lean-forward="true" selection-start-line="84" selection-start-column="33" selection-end-line="84" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/XmppUserFiles.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="450">
+          <caret line="18" column="0" lean-forward="true" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
+=======
+        <state relative-caret-position="561">
+          <caret line="755" column="34" lean-forward="false" selection-start-line="755" selection-start-column="20" selection-end-line="755" selection-end-column="34" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/XmppController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="24" column="5" lean-forward="true" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/OAuth/OAuthManager.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="692">
+          <caret line="43" column="60" lean-forward="false" selection-start-line="43" selection-start-column="60" selection-end-line="43" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/TweetPhone.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="21" column="31" lean-forward="true" selection-start-line="21" selection-start-column="31" selection-end-line="21" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/TweetReply.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="6" column="35" lean-forward="false" selection-start-line="6" selection-start-column="24" selection-end-line="6" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TagController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetReplyController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="492">
+          <caret line="359" column="27" lean-forward="false" selection-start-line="359" selection-start-column="27" selection-end-line="359" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetHotRepliesTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="43" column="0" lean-forward="false" selection-start-line="43" selection-start-column="0" selection-end-line="47" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/ActivityController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2192">
+          <caret line="296" column="0" lean-forward="true" selection-start-line="296" selection-start-column="0" selection-end-line="296" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/vendor/nesbot/carbon/src/Carbon/Carbon.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2120">
+          <caret line="290" column="65" lean-forward="false" selection-start-line="290" selection-start-column="43" selection-end-line="290" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/KeywordTweets.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="21" column="7" lean-forward="false" selection-start-line="21" selection-start-column="7" selection-end-line="21" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/HotSearch.php">
+=======
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/UserKeywords.php" />
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/User.php">
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/KeywordFragment.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="16" column="19" lean-forward="true" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Fragment.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="6" column="6" lean-forward="false" selection-start-line="6" selection-start-column="6" selection-end-line="6" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/.env">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="775">
+          <caret line="31" column="14" lean-forward="true" selection-start-line="31" selection-start-column="14" selection-end-line="31" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/config/app.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Support/helpers.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="532">
+          <caret line="733" column="19" lean-forward="false" selection-start-line="733" selection-start-column="9" selection-end-line="733" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetLikeController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-406">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Friend.php">
+=======
+        <state relative-caret-position="603">
+          <caret line="702" column="0" lean-forward="true" selection-start-line="702" selection-start-column="0" selection-end-line="702" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/functions.php" />
+    <entry file="jar://$APPLICATION_HOME_DIR$/plugins/php/lib/php.jar!/stubs/standard/standard_3.php">
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="793">
+          <caret line="39" column="5" lean-forward="false" selection-start-line="39" selection-start-column="5" selection-end-line="39" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/CompetitionTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="4" column="17" lean-forward="true" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+=======
+    <entry file="file://$PROJECT_DIR$/imsmy/vendor/qiniu/php-sdk/src/Qiniu/Auth.php" />
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/Transformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="21" column="20" lean-forward="false" selection-start-line="21" selection-start-column="20" selection-end-line="21" selection-end-column="20" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/UserInfomationTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Tweet.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="61" column="33" lean-forward="false" selection-start-line="61" selection-start-column="20" selection-end-line="61" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/User.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1417">
+          <caret line="286" column="34" lean-forward="false" selection-start-line="286" selection-start-column="20" selection-end-line="286" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/Transformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="250">
+          <caret line="15" column="26" lean-forward="true" selection-start-line="15" selection-start-column="26" selection-end-line="15" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/TweetsDetailsTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="268">
+          <caret line="38" column="0" lean-forward="false" selection-start-line="38" selection-start-column="0" selection-end-line="57" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/TweetContent.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="575">
+          <caret line="24" column="36" lean-forward="false" selection-start-line="24" selection-start-column="36" selection-end-line="24" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Keywords.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="743">
+          <caret line="59" column="97" lean-forward="false" selection-start-line="59" selection-start-column="97" selection-end-line="59" selection-end-column="97" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/CorrelationTweetsTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="743">
+          <caret line="33" column="0" lean-forward="true" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/TweetController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1116">
+          <caret line="3386" column="0" lean-forward="true" selection-start-line="3386" selection-start-column="0" selection-end-line="3386" selection-end-column="0" />
+          <folding>
+            <element signature="e#39#88#0#PHP" expanded="true" />
+            <element signature="e#3417#6059#0#PHP" expanded="false" />
+            <element signature="e#6065#6093#0#PHP" expanded="false" />
+            <element signature="e#9240#17435#0#PHP" expanded="false" />
+            <element signature="e#17440#24132#0#PHP" expanded="false" />
+            <element signature="e#24138#24245#0#PHP" expanded="false" />
+            <element signature="e#24250#25078#0#PHP" expanded="false" />
+            <element signature="e#25084#25237#0#PHP" expanded="false" />
+            <element signature="e#26264#26342#0#PHP" expanded="false" />
+            <element signature="e#26347#29225#0#PHP" expanded="false" />
+            <element signature="e#29231#30544#0#PHP" expanded="false" />
+            <element signature="e#30549#42317#0#PHP" expanded="false" />
+            <element signature="e#42323#42456#0#PHP" expanded="false" />
+            <element signature="e#42461#43387#0#PHP" expanded="false" />
+            <element signature="e#43393#43529#0#PHP" expanded="false" />
+            <element signature="e#43534#44216#0#PHP" expanded="false" />
+            <element signature="e#44222#44537#0#PHP" expanded="false" />
+            <element signature="e#44542#45852#0#PHP" expanded="false" />
+            <element signature="e#45858#45894#0#PHP" expanded="false" />
+            <element signature="e#45895#45953#0#PHP" expanded="false" />
+            <element signature="e#47671#47707#0#PHP" expanded="false" />
+            <element signature="e#47712#49484#0#PHP" expanded="false" />
+            <element signature="e#49490#53008#0#PHP" expanded="false" />
+            <element signature="e#53013#54488#0#PHP" expanded="false" />
+            <element signature="e#54526#56084#0#PHP" expanded="false" />
+            <element signature="e#56165#60815#0#PHP" expanded="false" />
+            <element signature="e#60821#60986#0#PHP" expanded="false" />
+            <element signature="e#60991#62104#0#PHP" expanded="false" />
+            <element signature="e#62110#62159#0#PHP" expanded="false" />
+            <element signature="e#62160#62212#0#PHP" expanded="false" />
+            <element signature="e#69497#69541#0#PHP" expanded="false" />
+            <element signature="e#69542#69594#0#PHP" expanded="false" />
+            <element signature="e#73789#73845#0#PHP" expanded="false" />
+            <element signature="e#73850#78573#0#PHP" expanded="false" />
+            <element signature="e#78579#79102#0#PHP" expanded="false" />
+            <element signature="e#79107#84538#0#PHP" expanded="false" />
+            <element signature="e#84571#84757#0#PHP" expanded="false" />
+            <element signature="e#84763#85174#0#PHP" expanded="false" />
+            <element signature="e#85179#89042#0#PHP" expanded="false" />
+            <element signature="e#89048#89141#0#PHP" expanded="false" />
+            <element signature="e#89146#89351#0#PHP" expanded="false" />
+            <element signature="e#89357#89503#0#PHP" expanded="false" />
+            <element signature="e#89508#91006#0#PHP" expanded="false" />
+            <element signature="e#91012#91122#0#PHP" expanded="false" />
+            <element signature="e#91127#92532#0#PHP" expanded="false" />
+            <element signature="e#92538#92665#0#PHP" expanded="false" />
+            <element signature="e#92670#93481#0#PHP" expanded="false" />
+            <element signature="e#93487#93531#0#PHP" expanded="false" />
+            <element signature="e#93532#93593#0#PHP" expanded="false" />
+            <element signature="e#95797#99205#0#PHP" expanded="false" />
+            <element signature="e#99211#99267#0#PHP" expanded="false" />
+            <element signature="e#99268#99329#0#PHP" expanded="false" />
+            <element signature="e#101522#101636#0#PHP" expanded="false" />
+            <element signature="e#101641#104479#0#PHP" expanded="false" />
+            <element signature="e#104485#104719#0#PHP" expanded="false" />
+            <element signature="e#104724#106206#0#PHP" expanded="false" />
+            <element signature="e#106212#106446#0#PHP" expanded="false" />
+            <element signature="e#106451#108675#0#PHP" expanded="false" />
+            <element signature="e#108681#108839#0#PHP" expanded="false" />
+            <element signature="e#108844#110095#0#PHP" expanded="false" />
+            <element signature="e#110101#110200#0#PHP" expanded="false" />
+            <element signature="e#110205#110595#0#PHP" expanded="false" />
+            <element signature="e#110601#110695#0#PHP" expanded="false" />
+            <element signature="e#110700#111101#0#PHP" expanded="false" />
+            <element signature="e#111107#111355#0#PHP" expanded="false" />
+            <element signature="e#111360#111895#0#PHP" expanded="false" />
+            <element signature="e#111901#112035#0#PHP" expanded="false" />
+            <element signature="e#112040#113272#0#PHP" expanded="false" />
+            <element signature="e#113278#113369#0#PHP" expanded="false" />
+            <element signature="e#113374#113889#0#PHP" expanded="false" />
+            <element signature="e#113895#114001#0#PHP" expanded="false" />
+            <element signature="e#114006#114873#0#PHP" expanded="false" />
+            <element signature="e#114073#114132#0#PHP" expanded="false" />
+            <element signature="e#114900#115912#0#PHP" expanded="false" />
+            <element signature="e#115918#116701#0#PHP" expanded="false" />
+            <element signature="e#116707#116817#0#PHP" expanded="false" />
+            <element signature="e#116822#117245#0#PHP" expanded="false" />
+            <element signature="e#117251#117345#0#PHP" expanded="false" />
+            <element signature="e#117350#117803#0#PHP" expanded="false" />
+            <element signature="e#117809#117859#0#PHP" expanded="false" />
+            <element signature="e#117864#117972#0#PHP" expanded="false" />
+            <element signature="e#117978#118095#0#PHP" expanded="false" />
+          </folding>
+=======
+        <state relative-caret-position="288">
+          <caret line="17" column="1" lean-forward="true" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/FloderTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="350">
+          <caret line="19" column="1" lean-forward="true" selection-start-line="19" selection-start-column="1" selection-end-line="19" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/MakeFiterTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="793">
+          <caret line="45" column="5" lean-forward="true" selection-start-line="45" selection-start-column="5" selection-end-line="45" selection-end-column="5" />
+=======
+        <state relative-caret-position="788">
+          <caret line="128" column="71" lean-forward="false" selection-start-line="128" selection-start-column="71" selection-end-line="128" selection-end-column="71" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Transformer/UsersTransformer.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="643">
+          <caret line="54" column="9" lean-forward="false" selection-start-line="54" selection-start-column="9" selection-end-line="54" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="209">
+          <caret line="332" column="34" lean-forward="false" selection-start-line="332" selection-start-column="20" selection-end-line="332" selection-end-column="34" />
+          <folding />
+=======
+        <state relative-caret-position="672">
+          <caret line="28" column="46" lean-forward="false" selection-start-line="28" selection-start-column="46" selection-end-line="28" selection-end-column="46" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Make/MakeFilterFile.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="850">
+          <caret line="205" column="0" lean-forward="true" selection-start-line="205" selection-start-column="0" selection-end-line="205" selection-end-column="0" />
+=======
+        <state relative-caret-position="788">
+          <caret line="157" column="18" lean-forward="false" selection-start-line="157" selection-start-column="18" selection-end-line="157" selection-end-column="18" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeFilterController.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="650">
+          <caret line="120" column="64" lean-forward="true" selection-start-line="120" selection-start-column="64" selection-end-line="120" selection-end-column="64" />
+=======
+        <state relative-caret-position="788">
+          <caret line="1385" column="0" lean-forward="false" selection-start-line="1385" selection-start-column="0" selection-end-line="1385" selection-end-column="0" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+          <folding>
+            <element signature="e#38#83#0#PHP" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+<<<<<<< HEAD
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Make/MakeChartletFile.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="19" column="18" lean-forward="true" selection-start-line="19" selection-start-column="18" selection-end-line="19" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeChartletController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="675">
+          <caret line="82" column="41" lean-forward="false" selection-start-line="82" selection-start-column="41" selection-end-line="82" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/MakeTemplateController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2543">
+          <caret line="241" column="40" lean-forward="true" selection-start-line="241" selection-start-column="40" selection-end-line="241" selection-end-column="40" />
+          <folding>
+            <element signature="e#39#78#0#PHP" expanded="true" />
+          </folding>
+=======
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Models/Fragment.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="788">
+          <caret line="157" column="5" lean-forward="false" selection-start-line="157" selection-start-column="5" selection-end-line="157" selection-end-column="5" />
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/AttentionController.php">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="1737">
+          <caret line="145" column="42" lean-forward="true" selection-start-line="145" selection-start-column="42" selection-end-line="145" selection-end-column="42" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/AuthController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7000">
+          <caret line="308" column="7" lean-forward="false" selection-start-line="308" selection-start-column="7" selection-end-line="308" selection-end-column="7" />
+          <folding />
+=======
+        <state relative-caret-position="336">
+          <caret line="14" column="14" lean-forward="false" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/routes/api.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="308">
+          <caret line="1011" column="11" lean-forward="false" selection-start-line="1011" selection-start-column="11" selection-end-line="1011" selection-end-column="11" />
+          <folding>
+            <element signature="e#32293#32334#0#PHP" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Services/CloudStorage.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="24">
+          <caret line="124" column="4" lean-forward="false" selection-start-line="124" selection-start-column="4" selection-end-line="124" selection-end-column="4" />
+          <folding>
+            <element signature="e#844#945#0#PHP" expanded="false" />
+            <element signature="e#1125#1198#0#PHP" expanded="false" />
+            <element signature="e#1203#1662#0#PHP" expanded="false" />
+            <element signature="e#1668#1745#0#PHP" expanded="false" />
+            <element signature="e#1750#1832#0#PHP" expanded="false" />
+            <element signature="e#1838#2092#0#PHP" expanded="false" />
+            <element signature="e#2098#2189#0#PHP" expanded="false" />
+            <element signature="e#2194#2463#0#PHP" expanded="false" />
+            <element signature="e#2474#2539#0#PHP" expanded="false" />
+            <element signature="e#2544#2713#0#PHP" expanded="false" />
+            <element signature="e#2719#2843#0#PHP" expanded="false" />
+            <element signature="e#2850#2961#0#PHP" expanded="false" />
+            <element signature="e#2966#3169#0#PHP" expanded="false" />
+            <element signature="e#3175#3290#0#PHP" expanded="false" />
+            <element signature="e#3295#3514#0#PHP" expanded="false" />
+            <element signature="e#3668#3765#0#PHP" expanded="false" />
+          </folding>
+>>>>>>> 4119af5ef26e31bad662990963f927066511040f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/routes/api.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1201">
+          <caret line="1002" column="15" lean-forward="true" selection-start-line="1002" selection-start-column="15" selection-end-line="1002" selection-end-column="15" />
+          <folding>
+            <element signature="e#32293#32334#0#PHP" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/imsmy/app/Api/Controllers/FragmentController.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1843">
+          <caret line="1742" column="17" lean-forward="true" selection-start-line="1742" selection-start-column="17" selection-end-line="1742" selection-end-column="17" />
+          <folding>
+            <element signature="e#39#88#0#PHP" expanded="true" />
+            <element signature="e#1004#1050#0#PHP" expanded="false" />
+            <element signature="e#2224#2321#0#PHP" expanded="false" />
+            <element signature="e#2326#15235#0#PHP" expanded="false" />
+            <element signature="e#15241#15294#0#PHP" expanded="false" />
+            <element signature="e#15299#15415#0#PHP" expanded="false" />
+            <element signature="e#15421#15477#0#PHP" expanded="false" />
+            <element signature="e#15482#15773#0#PHP" expanded="false" />
+            <element signature="e#15779#15832#0#PHP" expanded="false" />
+            <element signature="e#15837#15964#0#PHP" expanded="false" />
+            <element signature="e#15970#16026#0#PHP" expanded="false" />
+            <element signature="e#16031#16336#0#PHP" expanded="false" />
+            <element signature="e#16342#16367#0#PHP" expanded="false" />
+            <element signature="e#16372#20069#0#PHP" expanded="false" />
+            <element signature="e#20075#20180#0#PHP" expanded="false" />
+            <element signature="e#20185#21378#0#PHP" expanded="false" />
+            <element signature="e#21384#21507#0#PHP" expanded="false" />
+            <element signature="e#21512#23331#0#PHP" expanded="false" />
+            <element signature="e#23337#23467#0#PHP" expanded="false" />
+            <element signature="e#23472#25620#0#PHP" expanded="false" />
+            <element signature="e#25626#25726#0#PHP" expanded="false" />
+            <element signature="e#25731#26237#0#PHP" expanded="false" />
+            <element signature="e#26243#26371#0#PHP" expanded="false" />
+            <element signature="e#26376#35271#0#PHP" expanded="false" />
+            <element signature="e#35277#35392#0#PHP" expanded="false" />
+            <element signature="e#35397#54681#0#PHP" expanded="false" />
+            <element signature="e#54687#54784#0#PHP" expanded="false" />
+            <element signature="e#54789#66980#0#PHP" expanded="false" />
+            <element signature="e#70008#72491#0#PHP" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+>>>>>>> 1eb7e7b59ea5d4fcaa2b5b2ae0a83317de4496d9
 </project>

@@ -58,5 +58,4 @@ class AttentionTweetsTransformer extends Transformer
         ];
     }
 
-
 }

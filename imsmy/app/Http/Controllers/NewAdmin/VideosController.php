@@ -245,6 +245,18 @@ class VideosController extends Controller
 //dd(($hot_replys->count()==0)?'':$this->tweetHotReplyTransformer->transformCollection($hot_replys->all()));
             // 返回数据
 //dd($tweets_data);
+            if($active == 2){
+                $behavior = [
+                    'delete'=>'删除',
+                    'cancelshield' => '取消屏蔽',
+                ];
+            }else{
+                $behavior = [
+                    'dotype'=>'推荐',
+                    'pass' => '待定',
+                    'doshield' => '屏蔽',
+                ];
+            }
             return [
 
                 // 该动态详情与发表用户详情
@@ -276,11 +288,7 @@ class VideosController extends Controller
                 'prev_id'      => $prev_tweet ? $prev_tweet -> id : '',
 
                 // 操作
-                'behavior' => [
-                    'dotype'=>'推荐',
-                    'pass' => '待定',
-                    'stop' => '屏蔽',
-                ]
+                'behavior' => $behavior
             ];
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'], 404);

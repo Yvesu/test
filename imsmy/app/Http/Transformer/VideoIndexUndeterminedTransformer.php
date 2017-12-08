@@ -49,9 +49,9 @@ class VideoIndexUndeterminedTransformer extends Transformer
             'undetermined_time'  =>  $tweet -> belongsToCheck->first() -> pivot -> time_add,    // 待定审批时间
             'undetermined_user'  =>  $tweet -> belongsToCheck->first()->name,    // 审批人员
             'behavior'      => [
-                'dotype'=>'推荐',
-                'stop'  =>'屏蔽',
-                'dohot' =>'热门'
+                'dotype'=>'分类',
+                'doshield'  =>'屏蔽',
+                'hot' =>'热门'
             ],
         ];
     }

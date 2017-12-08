@@ -103,15 +103,15 @@ class FilterController extends Controller
                     if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
                             'recomment' => '推荐',
-                            'ishot' => '热门',
-                            'isshield' => '屏蔽',
+                            'hot' => '热门',
+                            'doshield' => '屏蔽',
                             'dotype' => '分类'
                         ];
                     }else{
                         $tempdata['behavior'] = [
                             'recomment' => '推荐',
-                            'ishot' => '取消热门',
-                            'isshield' => '屏蔽',
+                            'cancelhot' => '取消热门',
+                            'doshield' => '屏蔽',
                             'dotype' => '分类'
                         ];
                     }
@@ -119,16 +119,16 @@ class FilterController extends Controller
                 }else{
                     if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
-                            'recomment' => '取消推荐',
-                            'ishot' => '热门',
-                            'isshield' => '屏蔽',
+                            'cancelrecomment' => '取消推荐',
+                            'hot' => '热门',
+                            'doshield' => '屏蔽',
                             'dotype' => '分类'
                         ];
                     }else{
                         $tempdata['behavior'] = [
-                            'recomment' => '取消推荐',
-                            'ishot' => '取消热门',
-                            'isshield' => '屏蔽',
+                            'cancelrecomment' => '取消推荐',
+                            'cancelhot' => '取消热门',
+                            'doshield' => '屏蔽',
                             'dotype' => '分类'
                         ];
                     }
@@ -514,15 +514,15 @@ class FilterController extends Controller
 
                     if($tempdata['ishot'] == 0){
                         $tempdata['behavior'] = [
-                            'recomment' => '取消推荐',
-                            'ishot' => '热门',
-                            'isshield' => '屏蔽',
+                            'cancelrecomment' => '取消推荐',
+                            'hot' => '热门',
+                            'doshield' => '屏蔽',
                         ];
                     }else{
                         $tempdata['behavior'] = [
-                            'recomment' => '取消推荐',
-                            'ishot' => '取消热门',
-                            'isshield' => '屏蔽',
+                            'cancelrecomment' => '取消推荐',
+                            'cancelhot' => '取消热门',
+                            'doshield' => '屏蔽',
                         ];
                     }
 
@@ -584,18 +584,18 @@ class FilterController extends Controller
                     {
                         $tempdata['behavior'] = [
                             'down' => '向下',
-                            'active' => '停用',
+                            'stop' => '停用',
                         ];
                     }else if($value->sort == $maxsort){
                         $tempdata['behavior'] = [
                             'up' => '向上',
-                            'active' => '停用',
+                            'stop' => '停用',
                         ];
                     }else{
                         $tempdata['behavior'] = [
                             'up' => '向上',
                             'down' => '向下',
-                            'active' => '停用'
+                            'stop' => '停用'
                         ];
                     }
                 }else if($value->active == 3 ){
@@ -603,18 +603,18 @@ class FilterController extends Controller
                     {
                         $tempdata['behavior'] = [
                             'down' => '向下',
-                            'active' => '取消停用',
+                            'start' => '启用',
                         ];
                     }else if($value->sort == $maxsort){
                         $tempdata['behavior'] = [
                             'up' => '向上',
-                            'active' => '取消停用',
+                            'start' => '启用',
                         ];
                     }else{
                         $tempdata['behavior'] = [
                             'up' => '向上',
                             'down' => '向下',
-                            'active' => '取消停用'
+                            'start' => '启用'
                         ];
                     }
                 }else{
@@ -652,19 +652,31 @@ class FilterController extends Controller
                 return response()->json(['message'=>'无数据'],200);
             }
             $active = $dataup->active;
-            if($active != 1){
+            $maxsort = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->max('sort');
+            $minsort = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->min('sort');
+            $allData = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->get();
+            foreach($allData as $k => $v)
+            {
+                if(($v->id)==$id){
+                    if($k==0){
+                        return response()->json(['message'=>'数据不合法'],200);
+                    }
+                    $datadown = $alldata[$k-1];
+                }
+            }
+            if(!$datadown){
                 return response()->json(['message'=>'数据不合法'],200);
             }
-            $maxsort = MakeFilterFolder::orderBy('sort')->max('sort');
-            $datadown = MakeFilterFolder::where('sort','=',($dataup->sort)-1)->first();
-            if($dataup->sort > 1 && $dataup->sort <= $maxsort)
+            if($dataup->sort > $minsort && $dataup->sort <= $maxsort)
             {
-                $dataup -> sort = ($dataup->sort)-1;
+                $a = $dataup->sort;
+                $b = $datadown->sort;
+                $dataup -> sort = $a;
                 $dataup -> time_update = time();
                 $dataup -> operator_id = $admin->id;
                 $dataup -> save();
 
-                $datadown -> sort = ($datadown->sort)+1;
+                $datadown -> sort = $b;
                 $datadown -> time_update = time();
                 $datadown -> operator_id = $admin->id;
                 $datadown ->save();
@@ -700,19 +712,31 @@ class FilterController extends Controller
                 return response()->json(['message'=>'无数据'],200);
             }
             $active = $datadown->active;
-            if($active != 1){
+            $maxsort = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->max('sort');
+            $minsort = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->min('sort');
+            $allData = MakeFilterFolder::orderBy('sort')->where('active','=',$active)->get();
+            foreach($allData as $k => $v)
+            {
+                if(($v->id)==$id){
+                    if($k==0){
+                        return response()->json(['message'=>'数据不合法'],200);
+                    }
+                    $dataup = $alldata[$k+1];
+                }
+            }
+            if(!$dataup){
                 return response()->json(['message'=>'数据不合法'],200);
             }
-            $maxsort = MakeFilterFolder::orderBy('sort')->max('sort');
-            if($datadown->sort >= 1 && $datadown->sort < $maxsort)
+            if($datadown->sort >= $minsort && $datadown->sort < $maxsort)
             {
-                $dataup = MakeFilterFolder::where('sort','=',($datadown->sort)+1)->first();
-                $dataup -> sort = ($dataup->sort)-1;
+                $a = $dataup->sort;
+                $b = $datadown->sort;
+                $dataup -> sort = $b;
                 $dataup -> time_update = time();
                 $dataup -> operator_id = $admin->id;
                 $dataup -> save();
 
-                $datadown -> sort = ($datadown->sort)+1;
+                $datadown -> sort = $a;
                 $datadown -> time_update = time();
                 $datadown -> operator_id = $admin->id;
                 $datadown ->save();
@@ -879,7 +903,7 @@ class FilterController extends Controller
                     'count' => $value->count,
                     'intrgral' => $value->integral,
                     'active' => $value->active,
-                    'behavior' => ['behavior1'=>'取消屏蔽','behavior2'=>'删除'],
+                    'behavior' => ['cancelshield'=>'取消屏蔽','delete'=>'删除'],
 
                 ];
 
