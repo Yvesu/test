@@ -40,12 +40,12 @@ class VideoIndexTransformer extends Transformer
 
         $behavior = [
             'dotype' => '推荐',
-            'stop' => '屏蔽',
+            'doshield' => '屏蔽',
         ];
 
         $a =$tweet->belongsToCheck->first()?$tweet -> belongsToCheck->first()->name:'';
         if(!is_null($tweet->hasOneTop()->first())){
-            $behavior['dohot']='热门';
+            $behavior['hot']='热门';
             if(!is_null($tweet->hasOneTop()->first()->belongstoToper->first())){
                 $b = $tweet->hasOneTop()->first()->belongstoToper->first()->name;
             }else{
@@ -96,6 +96,7 @@ class VideoIndexTransformer extends Transformer
         return [
             'id'            =>  $tweet->id,
             'browse_times'  =>  $tweet->browse_times,
+            'content'       =>  $tweet->hasOneContent()->first()?$tweet->hasOneContent()->first()->content:'',
             'screen_shot'   =>  CloudStorage::downloadUrl($tweet->screen_shot),
             'type'          =>  $official ? '官方发布' : ($activity ? '参赛作品' : ($verity ? '认证用户' : '')),   // 视频类型，参赛、官方和认证,注意优先级
             'video'         =>  CloudStorage::downloadUrl($tweet->video),

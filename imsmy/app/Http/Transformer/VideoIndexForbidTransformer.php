@@ -51,7 +51,7 @@ class VideoIndexForbidTransformer extends Transformer
             'forbid_user'   =>  $tweet -> belongsToReasonAdmin->first()->name,    // 审批人员
             'forbid_reason' =>  $tweet -> belongsToReason->first()->reason,    // 审批人员
             'behavior'      =>  [
-                'cs'    => '取消屏蔽',
+                'cancelshield'    => '取消屏蔽',
                 'delete'    => '删除',
             ],
         ];

@@ -3,6 +3,7 @@
 namespace App\Models\Make;
 
 use App\Models\Common;
+use function foo\func;
 
 /**
  * 视频制作 模板
@@ -47,6 +48,35 @@ class MakeTemplateFile extends Common
         return $this->belongsTo('App\Models\User','user_id','id');
     }
 
+    public function belongsToFolder()
+    {
+        return $this->belongsTo('App\Models\Make\MakeTemplateFolder','folder_id','id');
+    }
+
+    public function belongsToRecommender()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','dorecommend_id','id');
+    }
+
+    public function belongsToType()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','dotype_id','id');
+    }
+
+    public function belongsToShield()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','doshield_id','id');
+    }
+
+    public function belongsToChecker()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','checker_id','id');
+    }
+
+    public function belongsToHot()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','ishot_id','id');
+    }
     /**
      * 搜索
      *
@@ -122,6 +152,118 @@ class MakeTemplateFile extends Common
             default:
                 return $query;
         }
+    }
+
+    /**
+     * @param $query
+     * @param $name
+     * @return mixed
+     * 关键字搜索
+     */
+    public function scopeName($query,$name)
+    {
+        if($name == null){
+            return $query;
+        }else{
+            return $query->where('name','like',"%$name%")->orWhere('intro','like',"%$name%")->orWhereHas('belongsToUser',function ($q) use($name){
+                $q->where('nickname','like',"%$name%");
+            });
+        }
+    }
+
+
+    /**
+     * @param $query
+     * @param $type
+     * @return mixed
+     * 查询类别
+     */
+    public function scopeType($query,$type)
+    {
+        if($type==null){
+            return $query;
+        }else{
+            return $query->whereHas('belongsToFolder',function ($q) use($type){
+                $q->where('id','=',$type);
+            });
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $operator
+     * @param $status
+     * @param $recommend
+     * @param $ishot
+     * @return mixed
+     * 查询审核员
+     */
+    public function scopeOperator($query,$operator,$status,$recommend,$ishot)
+    {
+        if($operator==null){
+            return $query;
+        }else{
+            if($recommend==1){
+                return $query->whereHas('belongsToRecommender',function ($q) use($operator){
+                    $q->where('id','=',$operator);
+                });
+            }
+
+            if($status == 2){
+                return $query->whereHas('belongsToShield',function ($q) use($operator){
+                    $q->where('id','=',$operator);
+                });
+            }
+
+            if($ishot==1){
+                return $query->whereHas('belongsToHot',function ($q) use($operator){
+                    $q->where('id','=',$operator);
+                });
+            }
+
+            return $query->whereHas('belongsToChecker',function ($q) use($operator){
+                $q->where('id','=',$operator);
+            })->orWhereHas('belongsToHot',function ($q) use($operator){
+                $q->where('id','=',$operator);
+            })->orWhereHas('belongsToShield',function ($q) use($operator){
+                $q->where('id','=',$operator);
+            })->orWhereHas('belongsToRecommender',function ($q) use($operator){
+                $q->where('id','=',$operator);
+            });
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $time
+     * @return mixed
+     * 查询时间
+     */
+    public function scopeTime($query,$time)
+    {
+        return $query->where('time_add','>',$time);
+    }
+
+    /**
+     * @param $query
+     * @param $duration
+     * @return mixed
+     * 查询时长
+     */
+    public function scopeDuration($query,$duration)
+    {
+        return $query->where('duration','>=',$duration);
+    }
+
+    /**
+     * @param $query
+     * @param $count
+     * @return mixed
+     * 搜索下载量
+     */
+    public function scopeCounta($query,$count)
+    {
+        return $query->where('count','>',$count);
     }
 
 }
