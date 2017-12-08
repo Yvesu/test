@@ -27,6 +27,7 @@ class MakeTemplateFile extends Common
         'active',
         'status',
         'time_add',
+        'test_result',
         'time_update',
     ];
 

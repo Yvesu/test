@@ -45,6 +45,7 @@ class MakeEffectsController extends BaseController
                 $integral_ids = MakeEffectsFile::whereHas('hasManyDownload', function($q) use($user) {
                     $q -> where('user_id', $user->id);
                 }) -> where('integral', '<>', 0)
+                    -> where('test_result',1)
                     -> pluck('id')
                     -> all();
             }
@@ -56,7 +57,7 @@ class MakeEffectsController extends BaseController
                 if(!$user) return response()->json(['error'=>'bad_request'],403);
 
                 // 获取数据
-                $audio = MakeEffectsFile::scopeSelectListPageByWithAndWhereAndWhereHas([], [['hasManyUserFile',[['user_id',$user->id]]]], [['active',1]], [$page, $this->paginate]);
+                $audio = MakeEffectsFile::where('test_result',1)-> scopeSelectListPageByWithAndWhereAndWhereHas([], [['hasManyUserFile',[['user_id',$user->id]]]], [['active',1]], [$page, $this->paginate]);
 
                 // 调用内部函数，返回数据
                 return $this -> file($audio,1);
@@ -68,14 +69,14 @@ class MakeEffectsController extends BaseController
                     return response()->json(['error'=>'bad_request'],403);
 
                 // 获取数据
-                $audio = MakeEffectsFile::ofType($type,$folder_id)
+                $audio = MakeEffectsFile::where('test_result',1)->ofType($type,$folder_id)
                     ->selectListPageByWithAndWhereAndWhereHas([['belongsToUser',['nickname']]], [], [['folder_id', $folder_id],['active',1]], [], [$page, $this->paginate]);
 
             } else {
 
                 // 获取数据
                 $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
-                $audio = MakeEffectsFile::ofType($type)
+                $audio = MakeEffectsFile::where('test_result',1)->ofType($type)
                     -> ofSearch($search)
                     -> selectListPageByWithAndWhereAndWhereHas($with, [], [['active',1]], [], [$page, $this->paginate]);
             }
@@ -111,17 +112,22 @@ class MakeEffectsController extends BaseController
                     || 1 == $type
                     || in_array($value->id, $integral_ids)){
 
-                    $value -> address = CloudStorage::downloadUrl($value -> address);
+                    $value -> address = CloudStorage::privateUrl_zip($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
                 } else {
-                    $value -> address = '';
-                    $value -> high_address = '';
-                    $value -> super_address = '';
+                    $value -> address = CloudStorage::privateUrl_zip($value -> address);
+                    $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
+                    $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
+
+//                    $value -> address = '';
+//                    $value -> high_address = '';
+//                    $value -> super_address = '';
                 }
 
                 // 效果预览
+//                $value -> address = CloudStorage::privateUrl_zip($value -> address);
                 $value -> preview_address = CloudStorage::downloadUrl($value -> preview_address);
 
                 // 效果封面
@@ -172,7 +178,7 @@ class MakeEffectsController extends BaseController
             $file_id = Crypt::decrypt($request -> get('file_id'));
 
             // 获取详情
-            $file = MakeEffectsFile::active()->findOrFail($file_id);
+            $file = MakeEffectsFile::where('test_result',1)->active()->findOrFail($file_id);
 
             // 判断下载是否需要关注对方
             if($file -> attention) {
@@ -232,7 +238,7 @@ class MakeEffectsController extends BaseController
 
             return response() -> json([
                 'data' => [
-                    'address'       => CloudStorage::downloadUrl($file -> address),
+                    'address'       => CloudStorage::privateUrl_zip($file -> address),
                     'high_address'  => CloudStorage::downloadUrl($file -> high_address),
                     'super_address' => CloudStorage::downloadUrl($file -> super_address),
                 ]
@@ -252,4 +258,125 @@ class MakeEffectsController extends BaseController
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+                // 获取数据
+                $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
+                $audio = MakeEffectsFile::where('test_result',1)->ofType(1)
+                    -> selectListPageByWithAndWhereAndWhereHas($with, [], [['active',[0,1]]], [], [$page, $this->paginate]);
+
+                return $this -> file($audio, 2);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = MakeTemplateFile::find($id)->update(['test_result'=>$result]);
+
+                $res2 = DB::table('template_test_result')->insert([
+                    'template_id'   => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = MakeTemplateFile::find($v)->update(['test_result'=>$result]);
+
+                    $ress =  DB::table('template_test_result')->insert([
+                        'template_id'   => $id,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
+
+
+
 }

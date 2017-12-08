@@ -436,9 +436,11 @@ class FragmentController extends BaseController
     public function nearby(Request $request)
     {
         try{
-        /**
-         * 获取用户目前所在的地址
-         */
+
+         if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+         }
+
         //街道
         $address_street = $request->get('address_street');
 
@@ -462,6 +464,7 @@ class FragmentController extends BaseController
             ->where('active','!=','2')
             ->where('test_results',1)
             ->orderBy('count', 'desc')
+            ->forPage($page,$this->paginate)
             ->get();
 
         //按区搜索
@@ -472,6 +475,7 @@ class FragmentController extends BaseController
             ->where('active','!=','2')
             ->where('test_results',1)
             ->orderBy('count', 'desc')
+            ->forPage($page,$this->paginate)
             ->get();
 
         //如果搜索街道有内容
@@ -487,6 +491,7 @@ class FragmentController extends BaseController
                 ->where('active','!=','2')
                 ->where('test_results',1)
                 ->orderBy('count', 'desc')
+                ->forPage($page,$this->paginate)
                 ->get();
 
             $fragment_data = $address_county_fragments->toArray();
@@ -500,6 +505,7 @@ class FragmentController extends BaseController
                     ->where('active','!=','2')
                     ->where('test_results',1)
                     ->orderBy('count', 'desc')
+                    ->forPage($page,$this->paginate)
                     ->get();
 
                 $fragment_data = $address_province_fragments->toArray();
@@ -513,6 +519,7 @@ class FragmentController extends BaseController
                         ->where('active','!=','2')
                         ->where('test_results',1)
                         ->orderBy('count', 'desc')
+                        ->forPage($page,$this->paginate)
                         ->get();
 
                     $fragment_data = $address_country_fragments->toArray();
@@ -526,15 +533,16 @@ class FragmentController extends BaseController
 
         if ($fragment_data){
             return response() -> json([
-                'count' => $this->paginate,
                 'fragment_data' => $this->fragCollectTransformer->transform($fragment_data),
             ], 200);
         }else{
-		return response() -> json(['error'=>'not_found'], 404);
+            return response() -> json([
+                'fragment_data' => [],
+            ], 200);
         }
 
          }catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], $e->getCode());
+             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
 
     }
@@ -550,6 +558,10 @@ class FragmentController extends BaseController
             // 判断用户是否为登录状态
             $users = J_Auth::guard('api')->user();
 
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
             if (!$users){
                 return resoponse()->json(['error'=>'Please log in']);
             }
@@ -557,6 +569,7 @@ class FragmentController extends BaseController
             $ids = DB::table('fragment_user_collect')
                 ->where('user_id','=',$users->id)
                 ->where('way','=','1')
+                ->forPage($page,$this->paginate)
                 ->get();
 
             $id = [];
@@ -568,6 +581,7 @@ class FragmentController extends BaseController
             foreach ($id as $v){
                 $collect[] = Fragment::with(['belongsToManyFragmentType','belongsToUser'])
                     ->where('test_results','=',1)
+                    ->forPage($page,$this->paginate)
                     ->find($v)
                     ->toArray();
             }
@@ -577,7 +591,9 @@ class FragmentController extends BaseController
                     'data'=>$this->fragCollectTransformer->collecttransform($collect)
                   ], 200);
             }else{
-                return [];
+                return response() -> json([
+                    'data'=>[],
+                ], 200);
             }
         }catch(\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
@@ -1952,4 +1968,23 @@ class FragmentController extends BaseController
 
     }
 
+    /**
+     * 取消收藏
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteCollect($id)
+    {
+        try{
+            $result = DB::table('fragment_user_collect')->where('fragment_id',$id)->delete();
+
+            if($result){
+                return response()->json(['messgae'=>'success'],200);
+            }else{
+                return response()->json(['message'=>'failed'],500);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
 }

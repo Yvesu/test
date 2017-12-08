@@ -59,7 +59,7 @@ class MakeFilterController extends BaseController
                 // 获取数据
                 $whereHas = [['hasManyUserFile',[['user_id',$user->id]]]];
 
-                $audio = MakeFilterFile::selectListPageByWithAndWhereAndWhereHas([], $whereHas, $where, [], $page, $select);
+                $audio = MakeFilterFile::where('test_result',1)->selectListPageByWithAndWhereAndWhereHas([], $whereHas, $where, [], $page, $select);
 
                 // 获取指定目录下的滤镜
             } elseif (2 === $type){
@@ -86,7 +86,8 @@ class MakeFilterController extends BaseController
                     }])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
-                    ->get(['id','user_id','name','cover','content','count','integral','time_add']);
+                    ->where('test_result',1)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
 
             } else {
 
@@ -107,6 +108,7 @@ class MakeFilterController extends BaseController
                     }])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
+                    ->where('test_result',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
             }
 
@@ -142,5 +144,179 @@ class MakeFilterController extends BaseController
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function recommend(Request $request)
+    {
+        try{
+            $filter = MakeFilterFile::with(['belongsToManyFolder','belongsToUser'=>function($q){
+                    $q->select(['id','nickname']);
+                },'belongsToManyFolder'=>function($q){
+                    $q->select(['name']);
+                }])
+                ->where('recommend',1)
+                ->where('active',1)
+                ->where('test_result',1)
+                ->forpage($request->get('page',1),$this->paginate)
+                ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+
+            return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($filter->toArray())],200);
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 滤镜压缩包地址
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function filterurl($id)
+    {
+        try{
+            $filter = MakeFilterFile::find($id);
+
+            return response() -> json([
+                'content'=> CloudStorage::privateUrl_zip($filter->content),
+            ],200);
+
+        }catch(\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+                //  2017 11 27 修改
+                $audio = MakeFilterFile::with(['belongsToUser'=>function($q){
+                        $q->select(['id','nickname']);
+                    },'belongsToManyFolder'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->forpage($request->get('page',1),$this->paginate)
+                    ->where('test_result',0)
+                    ->where('active','!=',2)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+
+
+            foreach($audio as $value){
+                $value -> cover = $value -> cover;
+            }
+
+            // 调用内部函数，返回数据
+            return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = MakeFilterFile::find($id)->update(['test_result'=>$result]);
+
+                $res2 = DB::table('filter_test_result')->insert([
+                    'filter_id'   => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = MakeFilterFile::find($v)->update(['test_result'=>$result]);
+
+                    $ress =  DB::table('filter_test_result')->insert([
+                        'filter_id'   => $id,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
 
 }

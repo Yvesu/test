@@ -1000,10 +1000,15 @@ $api->version(['v1'],function($api){
                     $api->post('/addcollect/{id}','FragmentController@addCollect')
                     ->where('id','[0-9]+');
 
+                    //删除收藏
+                    $api->post('deletecollect/{id}','FragmentController@deleteCollect')
+                    ->where('id','[0-9]+');
+
                     //测试专列
                     $api->post('/tester','FragmentController@tester');
 
                     $api->post('/testresult','FragmentController@testResult');
+
                 });
             });
 
@@ -1057,20 +1062,55 @@ $api->version(['v1'],function($api){
             $api->post('/tweets/correlation/{id}','TweetController@correlation')
                 ->where('id','[0-9]+');
 
-            //模板测试
-            $api->post('/template/tester','MakeTemplateController@tester');
-
         });
 
+        //测试专区
+            $api->group(['middleware' => ['app.user','jwt.auth']],function ($api) {
 
+                //模板测试页面
+                $api->post('/template/tester','MakeTemplateController@tester');
 
+                //模板测试操作
+                $api->post('/template/testresult','MakeTemplateController@testResult');
 
+                //音乐测试
+                $api->post('/audio/tester','MakeAudioController@tester');
 
+                //音乐测试操作
+                $api->post('/audio/testresult','MakeAudioController@testResult');
 
+                //音频测试
+                $api->post('/audioeffect/tester','MakeAudioEffectController@tester');
 
+                //音频测试操作
+                $api->post('/audioeffect/testresult','MakeAudioEffectController@testResult');
 
+                //混合测试
+                $api->post('/effect/tester','MakeTemplateController@tester');
 
+                //混合测试操作
+                $api->post('/effect/testresult','MakeTemplateController@testResult');
 
+                //滤镜测试
+                $api->post('/filter/tester','MakeFilterController@tester');
+
+                //滤镜测试操作
+                $api->post('/filter/testresult','MakeFilterController@testResult');
+
+                //字体测试
+                $api->post('/font/tester','MakeFontController@tester');
+
+                //滤镜测试操作
+                $api->post('/font/testresult','MakeFontController@testResult');
+
+            });
+
+        //滤镜推荐
+        $api->get('/filter/recommend','MakeFilterController@recommend');
+
+        //滤镜压缩包
+        $api->post('/filterurl/{id}','MakeFilterController@filterurl')
+            ->where('id','[0-9]+');
 
     });
 });

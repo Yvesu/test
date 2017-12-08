@@ -45,6 +45,7 @@ class MakeAudioEffectController extends BaseController
                 $integral_ids = MakeAudioEffectFile::whereHas('hasManyDownload', function($q) use($user) {
                     $q -> where('user_id', $user->id);
                 }) -> where('integral', '<>', 0)
+                    ->where('test_result',1)
                     -> pluck('id')
                     -> all();
             }
@@ -54,6 +55,7 @@ class MakeAudioEffectController extends BaseController
                 $q -> where('id', $folder_id);
             })
                 -> active()
+                ->where('test_result',1)
                 -> ofSearch($search)
                 -> forPage($page, $this->paginate)
                 -> get(['id','name','intro','count','audition_address','address','integral','duration']);
@@ -83,12 +85,12 @@ class MakeAudioEffectController extends BaseController
 
                 // 对id进行加密
                 $value -> file_id = Crypt::encrypt($value->id);
-                $value -> audition_address = CloudStorage::downloadUrl($value -> audition_address);
+                $value -> audition_address = CloudStorage::privateUrl_zip($value -> audition_address);
 
                 // 免费的文件和自己已经下载过的会有下载地址，收费的下载地址为空
                 if(0 == $value->integral || in_array($value->id, $integral_ids)){
 
-                    $value -> address = CloudStorage::downloadUrl($value -> address);
+                    $value -> address = CloudStorage::privateUrl_zip($value -> address);
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
                 } else {
                     $value -> address = '';
@@ -138,7 +140,7 @@ class MakeAudioEffectController extends BaseController
             // 获取音效的id
             $file_id = Crypt::decrypt($request -> get('file_id'));
 
-            $file = MakeAudioEffectFile::active()->findOrFail($file_id);
+            $file = MakeAudioEffectFile::active()->where('test_result',1)->findOrFail($file_id);
 
             $time = getTime();
 
@@ -175,7 +177,7 @@ class MakeAudioEffectController extends BaseController
             DB::commit();
 
             return response() -> json([
-                'data'=>CloudStorage::downloadUrl($file -> address)
+                'data'=>CloudStorage::privateUrl_zip($file -> address)
             ],200);
 
         } catch (DecryptException $e) {
@@ -192,4 +194,126 @@ class MakeAudioEffectController extends BaseController
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+                // 获取数据
+                $audio = MakeAudioEffectFile::with(['belongsToFolder'])
+                    ->where('test_result',0)
+                    -> forPage($page, $this->paginate)
+                    -> where('active','!=',2)
+                    -> get(['id','name','intro','count','audition_address','address','integral','duration']);
+
+                // 调用内部函数，返回数据
+                return $this -> handle($audio);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = MakeAudioEffectFile::find($id)->update(['test_result'=>$result]);
+
+                $res2 = DB::table('audioeffect_test_result')->insert([
+                    'audioeffect_id' => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = MakeAudioEffectFile::find($v)->update(['test_result'=>$result]);
+
+                    $ress =  DB::table('audioeffect_test_result')->insert([
+                        'audioeffect_id'   => $id,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
+
 }

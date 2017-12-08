@@ -771,7 +771,7 @@ class TweetController extends BaseController
         try{
 
             // 接收全部信息
-            $input = $request -> all();
+            $input = $request -> all();   //2017-12-06 16:27:46
 
             $time = getTime();
 
@@ -806,9 +806,9 @@ class TweetController extends BaseController
                 'visible'       =>  (int)$request->get('visible') ?: 0,
                 'visible_range' =>  $request->get('visible_range'),
                 'is_download'   =>  $request->get('is_download',1),
-                'fragment_id'       =>  $request->get('category_id') ?: '',
-                'filter_id'       =>  $request->get('category_id') ?: '',
-                'template_id'       =>  $request->get('category_id') ?: '',
+                'fragment_id'       =>  $request->get('category_id') ?: 0,
+                'filter_id'       =>  $request->get('category_id') ?: 0,
+                'template_id'       =>  $request->get('category_id') ?:0,
             ];
 
             // 内容 过滤内容
@@ -818,7 +818,7 @@ class TweetController extends BaseController
             if($newTweet['video']){
 
                 // 判断是否为数字
-                if(!$newTweet['duration']) return response()->json(['error'=>'bad_request'],403);
+                if(!$newTweet['duration']) return response()->json(['error'=>'badrequest'],403);
             }
 
             // 通过自定义函数，获取内容中是否包含所@的用户的id
@@ -867,8 +867,8 @@ class TweetController extends BaseController
             }
 
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
-            //TODO 发布动态的手机系统
-          if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
+//            //TODO 发布动态的手机系统
+         if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
               //手机类型
               $phone_type = $request->get('phone_type', '');
 
@@ -897,10 +897,10 @@ class TweetController extends BaseController
               $newTweet['phone_id'] = $phone_id;
           }
 
-            //TODO 应该加判断，//后不做正则匹配
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);
 
+            //移动至定时任务
  /*       if($request->get('screen_shot') != null ) {
               // 图片鉴黄
               $url = CloudStorage::ImageCheck($request->get('screen_shot'));
@@ -1011,7 +1011,6 @@ class TweetController extends BaseController
                 }
             }
 
-
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
             // 动态内容 zx_tweet_content 表
             $a = TweetContent::create([
@@ -1059,17 +1058,23 @@ class TweetController extends BaseController
             // 转发 数量+1
             if($tweet->retweet){
 
+                $time = User::find($id)->last_token;
                 // 转发总量加1
                 User::findOrfail($id) -> increment('retweet_count');
 
                 // 更新被转发动态的 retweet 字段的值 加1
                 Tweet::findOrFail($newTweet['retweet']) -> increment('retweet_count');
 
+                User::where('id',$id)->update(['last_token'=>$time]);
+
             // 原创
             }else{
 
+                $time = User::find($id)->last_token;
                 // 作品总量加1
                 User::findOrfail($id) -> increment('work_count');
+
+                User::where('id',$id)->update(['last_token'=>$time]);
 
             }
 
@@ -1088,16 +1093,23 @@ class TweetController extends BaseController
 
             DB::commit();
 
+            //写入待检测
+
+            DB::table('tweet_to_qiniu')->insert([
+                'tweet_id'    => $tweet->id,
+                'create_time' => time(),
+            ]);
+
             return response()->json($this->tweetsTransformer->transform($tweet),201);
 
         }catch(ModelNotFoundException $e){
 
             DB::rollback();
-            return response()->json(['error'=>'bad_request'],400);
+            return response()->json(['error'=>'badrequest'],400);
         }catch(\Exception $e){
 
             DB::rollback();
-            return response()->json(['error'=>'bad_request'],400);
+            return response()->json(['error'=>'bad___request'],400);
         }
     }
 

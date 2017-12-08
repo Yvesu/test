@@ -136,6 +136,7 @@ class MakeTemplateController extends BaseController
                 -> ofHasDownload($user)
                 -> ofNormal()
                 -> active()
+                -> where('test_result',1)
                 -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
 
             // 调用内部函数，返回数据
@@ -176,6 +177,7 @@ class MakeTemplateController extends BaseController
                 -> ofFolder($folder)
                 -> active()
                 -> orderBy('sort')
+                -> where('test_result',1)
                 -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
 
             // 调用内部函数，返回数据
@@ -220,6 +222,7 @@ class MakeTemplateController extends BaseController
             }])
                 -> ofNormal()
                 -> active()
+                -> where('test_result',1)
                 -> findOrFail($id, ['id', 'user_id', 'name','intro','preview_address', 'integral','cover','count','time_add']);
 
             // 调用内部函数，返回数据
@@ -242,13 +245,14 @@ class MakeTemplateController extends BaseController
     private function related($id, $page)
     {
         try{
-            $folder = MakeTemplateFile::ofNormal() -> active() -> findOrFail($id, ['folder_id']);
+            $folder = MakeTemplateFile::ofNormal()-> where('test_result',1) -> active() -> find($id, ['folder_id']);
 
             // 获取数据集合
             $data = MakeTemplateFile::ofNormal()
                 -> where('folder_id', $folder->folder_id)
                 -> active()
                 -> orderBy('sort')
+                -> where('test_result',1)
                 -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
 
             // 返回数据
@@ -276,9 +280,10 @@ class MakeTemplateController extends BaseController
             if($user) {
                 $file = MakeTemplateFile::ofDownloadLog($user -> id)
                     -> active()
+                    -> where('test_result',1)
                     -> findOrFail($file_id);
             } else {
-                $file = MakeTemplateFile::active()-> findOrFail($file_id);
+                $file = MakeTemplateFile::active() -> where('test_result',1)-> findOrFail($file_id);
 
                 // 非登录状态下如果需要积分则返回错误
                 if($file -> integral) return response()->json(['error'=>'bad_request'], 403);
@@ -387,13 +392,110 @@ class MakeTemplateController extends BaseController
 
             if($user->tester === 1){
 
-            $a = MakeTemplateFile::get();
+                $details = MakeTemplateFile::with(['belongsToUser' => function($q){
+                    $q -> select('id', 'nickname', 'avatar');
+                }])
+                    -> where('test_result',0)
+                    -> where('active','!=',2)
+                    -> get( ['id', 'user_id', 'name','intro','preview_address', 'integral','cover','count','time_add']);
 
-            dd($a);
+                // 调用内部函数，返回数据
+                return response() -> json([
+                    'data'  => $this -> makeTemplateFileDetailsTransformer -> transformCollection($details->all()),
+                ], 200);
             }
         }catch (\Exception $e){
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = MakeTemplateFile::find($id)->update(['test_result'=>$result]);
+
+                $res2 = DB::table('effect_test_result')->insert([
+                    'effect_id'   => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = MakeTemplateFile::find($v)->update(['test_result'=>$result]);
+
+                    $ress =  DB::table('effect_test_result')->insert([
+                        'effect_id'   => $id,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
     }
 
 }

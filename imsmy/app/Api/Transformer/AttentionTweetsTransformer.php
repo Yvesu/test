@@ -46,10 +46,10 @@ class AttentionTweetsTransformer extends Transformer
             'reply_count'   => $tweet->reply_count,
             'already_like'  => $user ? (TweetLike::where('user_id',$user->id)->where('tweet_id',$tweet->id)->first() ? 1 : 0) : 0,
             'reply'         => $tweet->hasManyTweetReply ? $this->tweetSimplyRepliesTransformer->transformCollection($tweet->hasManyTweetReply->take(3)->all()) : [],
-            // 视频截图
+//            // 视频截图
             'screen_shot'   => $tweet->screen_shot === null ? '' : CloudStorage::downloadUrl($tweet->screen_shot),
-            // 相册
-            'photo'         => $tweet->photo == null ? [] : CloudStorage::download(json_decode($tweet->photo,true)),
+//            // 相册
+//            'photo'         => $tweet->photo == null ? [] : CloudStorage::download(json_decode($tweet->photo,true)),
             'user'          => $this->usersTransformer->transform($tweet->belongsToUser),
             'shot_width_height' => $tweet->shot_width_height,
             'location'      => $tweet->location,
@@ -57,4 +57,6 @@ class AttentionTweetsTransformer extends Transformer
             'created_at'     => strtotime($tweet->created_at),
         ];
     }
+
+
 }

@@ -29,6 +29,7 @@ class MakeFilterFile extends Common
         'operator_id',
         'texture_id',
         'ishot',
+        'test_result',
     ];
 
     public $timestamps = false;

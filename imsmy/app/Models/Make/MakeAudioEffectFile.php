@@ -26,6 +26,7 @@ class MakeAudioEffectFile extends Common
         'active',
         'time_add',
         'time_update',
+        'test_result',
     ];
 
     public $timestamps = false;

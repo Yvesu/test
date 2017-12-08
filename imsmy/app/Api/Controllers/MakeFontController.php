@@ -37,6 +37,7 @@ class MakeFontController extends BaseController
                 // 获取系统自带的系统字体文件
                 $files = MakeFontFile::active()
                     -> orderBy('sort')
+                    -> where('test_result',1)
                     -> forPage($page,$this->paginate)
                     -> get(['name','cover','address']);
 
@@ -61,6 +62,7 @@ class MakeFontController extends BaseController
                     // 获取系统自带的系统字体文件
                     $files = MakeFontFile::active()
                         -> orderBy('sort')
+                        -> where('test_result',1)
                         -> get(['name','cover','address'])
                         -> slice($slice_from,$this->paginate)
                         -> values();
@@ -80,6 +82,7 @@ class MakeFontController extends BaseController
                         // 获取系统自带的系统字体文件
                         $files = MakeFontFile::active()
                             -> orderBy('sort')
+                            -> where('test_result',1)
                             -> get(['name','cover','address'])
                             -> slice(0,$slice_count)
                             -> values();
@@ -96,7 +99,7 @@ class MakeFontController extends BaseController
                 $data[] = [
                     'name' => $value['name'],
                     'cover' => isset($value['cover']) ? CloudStorage::downloadUrl($value['cover']) : '',
-                    'address' => CloudStorage::downloadUrl($value['address'])
+                    'address' => CloudStorage::privateUrl_zip($value['address'])
                 ];
             }
 
@@ -108,4 +111,139 @@ class MakeFontController extends BaseController
             return response()->json(['error'=>'not_found',404]);
         }
     }
+
+    /**
+     * 测试专列
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tester(Request $request)
+    {
+        try {
+            if (!is_numeric($page = $request->get('page', 1))) {
+                return response()->json(['error' => 'bad_request'], 403);
+            }
+
+            $user = Auth::guard('api')->user();
+
+            if($user->tester === 1){
+
+
+                // 获取系统自带的系统字体文件
+                $files = MakeFontFile::where('test_result',0)
+                    -> orderBy('sort')
+                    -> where('active','!=',2)
+                    -> forPage($page,$this->paginate)
+                    -> get(['name','cover','address']);
+
+                $files = $files->toArray();
+
+                $data = [];
+
+                foreach($files as $value){
+
+                    $data[] = [
+                        'name' => $value['name'],
+                        'cover' => isset($value['cover']) ? CloudStorage::downloadUrl($value['cover']) : '',
+                        'address' => CloudStorage::privateUrl_zip($value['address'])
+                    ];
+                }
+
+                return response()->json(['data'=>$data],200);
+            }
+        }catch (\Exception $e){
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * 测试操作
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function testResult(Request $request)
+    {
+        try {
+            $user = Auth::guard('api')->user();
+
+            $result = $request ->get('result');
+
+            $id = $request->get('id');
+
+            \DB::beginTransaction();
+
+            //0 待检测  1检测通过   2 检测未通过
+            if(is_numeric($id)){
+                $res1 = MakeFontFile::find($id)->update(['test_result'=>$result]);
+
+                $res2 = \DB::table('font_test_result')->insert([
+                    'font_id'   => $id,
+                    'fail_reason'   => $request->get('reason',''),
+                    'tester_id'     => $user->id,
+                    'create_time'   => time(),
+                    'update_time'   => time(),
+                ]);
+
+            }else{
+                $obj =  objectToArray(json_decode($id));
+
+                $res_1= [];
+                $res_2= [];
+                foreach ($obj as $v){
+
+                    $res = MakeFontFile::find($v)->update(['test_result'=>$result]);
+
+                    $ress =  \DB::table('font_test_result')->insert([
+                        'font_id'   => $id,
+                        'fail_reason'   => $request->get('reason',''),
+                        'tester_id'     => $user->id,
+                        'create_time'   => time(),
+                        'update_time'   => time(),
+                    ]);
+
+                    if($res){
+                        $res_1[] = 1;
+                    }else{
+                        $res_1[] = 2;
+                    }
+
+                    if ($ress){
+                        $res_2[] = 1;
+                    }else{
+                        $res_2[] = 2;
+                    }
+
+                }
+
+                if(in_array(2,$res_1)){
+                    $res1 = 0;
+                }else{
+                    $res1 = 1;
+                }
+
+                if(in_array(2,$res_2)){
+                    $res2 = 0;
+                }else{
+                    $res2 = 1;
+                }
+
+            }
+
+            if($res1 && $res2){
+                \DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                \DB::rollBack();
+                return response()->json(['message'=>'failed'],500);
+            }
+
+        }catch (\Exception $e){
+            \DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+
+    }
+
+
 }

@@ -392,4 +392,14 @@ class CloudStorage
         return $url;
     }
 
+    public function signAgain($data)
+    {
+        $http = \Config::get('constants.HTTP');
+        $ak = \Config::get('constants.AK');
+        $sk = \Config::get('constants.SK');
+        $qi =  new \Qiniu\Auth($ak , $sk);
+
+        return $qi->sign($data);
+    }
+
 }
