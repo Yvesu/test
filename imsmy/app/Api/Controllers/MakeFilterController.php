@@ -59,6 +59,7 @@ class MakeFilterController extends BaseController
                 // 获取数据
                 $whereHas = [['hasManyUserFile',[['user_id',$user->id]]]];
 
+
                 $audio = MakeFilterFile::where('test_result',1)->selectListPageByWithAndWhereAndWhereHas([], $whereHas, $where, [], $page, $select);
 
                 // 获取指定目录下的滤镜
@@ -108,7 +109,6 @@ class MakeFilterController extends BaseController
                     }])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
-                    ->where('test_result',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
             }
 
@@ -144,6 +144,7 @@ class MakeFilterController extends BaseController
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
 
     /**
      * @param Request $request
@@ -317,6 +318,5 @@ class MakeFilterController extends BaseController
         }
 
     }
-
 
 }

@@ -3,7 +3,6 @@
 namespace App\Models\Make;
 
 use App\Models\Common;
-use function foo\func;
 
 /**
  * 视频制作 模板
@@ -48,6 +47,7 @@ class MakeTemplateFile extends Common
         return $this->belongsTo('App\Models\User','user_id','id');
     }
 
+
     public function belongsToFolder()
     {
         return $this->belongsTo('App\Models\Make\MakeTemplateFolder','folder_id','id');
@@ -77,6 +77,7 @@ class MakeTemplateFile extends Common
     {
         return $this->belongsTo('App\Models\Admin\Administrator','ishot_id','id');
     }
+
     /**
      * 搜索
      *
@@ -153,6 +154,7 @@ class MakeTemplateFile extends Common
                 return $query;
         }
     }
+
 
     /**
      * @param $query
@@ -265,5 +267,6 @@ class MakeTemplateFile extends Common
     {
         return $query->where('count','>',$count);
     }
+
 
 }

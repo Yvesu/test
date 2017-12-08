@@ -80,12 +80,16 @@ class MakeAudioController extends BaseController
 
                 // 对id进行加密
                 $value -> file_id = Crypt::encrypt($value->id);
+
                 $value -> audition_address = CloudStorage::privateUrl_zip($value -> audition_address);
+
 
                 // 免费的文件和自己已经下载过的会有下载地址，收费的下载地址为空
                 if(0 == $value->integral || in_array($value->id, $integral_ids)){
 
+
                     $value -> address = CloudStorage::privateUrl_zip($value -> address);
+
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
                 } else {
                     $value -> address = '';
@@ -172,7 +176,9 @@ class MakeAudioController extends BaseController
             DB::commit();
 
             return response() -> json([
+
                 'data'=>CloudStorage::privateUrl_zip($file -> address)
+
             ],200);
 
         } catch (DecryptException $e) {
@@ -309,6 +315,5 @@ class MakeAudioController extends BaseController
         }
 
     }
-
 
 }

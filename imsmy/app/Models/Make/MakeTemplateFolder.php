@@ -48,6 +48,7 @@ class MakeTemplateFolder extends Common
         }
     }
 
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * 与创建人关系
@@ -56,5 +57,6 @@ class MakeTemplateFolder extends Common
     {
         return $this->belongsTo('App\Models\Admin\Administrator','create_id','id');
     }
+
 
 }
