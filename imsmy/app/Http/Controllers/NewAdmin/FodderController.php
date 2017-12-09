@@ -272,9 +272,9 @@ class FodderController extends Controller
                         'address_county' => $olddata->address_county,
                         'address_street' => $olddata->address_street,
                         'vipfree' => $olddata->vipfree,
-                        'net_address' => $this->protocol.'viedo.ects.cdn.hivideo.com/'.$olddata->net_address,
-                        'zip_address' =>  $this->protocol.'file.ects.cdn.hivideo.com/'.$olddata->zip_address,
-                        'cover' => $this->protocol.'img.ects.cdn.hivideo.com/'.$olddata->cover,
+                        'net_address' => $olddata->net_address?$this->protocol.'viedo.ects.cdn.hivideo.com/'.$olddata->net_address:null,
+                        'zip_address' => $olddata->zip_address?$this->protocol.'file.ects.cdn.hivideo.com/'.$olddata->zip_address:null,
+                        'cover' => $olddata->cover?$this->protocol.'img.ects.cdn.hivideo.com/'.$olddata->cover:null,
                         'size' => $olddata->size,
                         'storyboard_count'=>$olddata->storyboard,
 
@@ -608,6 +608,31 @@ class FodderController extends Controller
             FragmentTypeFragment::where('fragment_temporary_id',$id)->delete();
             DB::commit();
             return response()->json(['message'=>'取消成功'],200);
+        }catch (ModelNotFoundException $e){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 清空发布
+     */
+    public function clear(Request $request)
+    {
+        try{
+            $id = $request->get('id');
+            DB::beginTransaction();
+            FragmentTemporary::find($id)->update(['aspect_radio'=>null,'duration'=>null,
+                'net_address'=>null,'cover'=>null,'name'=>null,'bgm'=>null,'volume'=>null,'address_province'=>null,
+                'address_city'=>null,'address_county'=>null,'address_street'=>null,'intergral'=>0,'address_country'=>null,'vipfree'=>0,'size'=>0,'zip_address'=>null
+                ]);
+            KeywordFragment::where('fragment_temporary_id',$id)->delete();
+            FragmentTypeFragment::where('fragment_temporary_id',$id)->delete();
+            DB::commit();
+            return response()->json(['message'=>'清空成功'],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
