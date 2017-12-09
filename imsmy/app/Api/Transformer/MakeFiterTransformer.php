@@ -31,7 +31,7 @@ class MakeFiterTransformer extends Transformer
 
     public  function transform($item)
     {
-        return [
+        return [  
             'id'            =>  $item['id'],
             'user_id'       => $item['user_id'],
             'name'          => $item['name'],
