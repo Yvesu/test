@@ -40,30 +40,35 @@ class MixResourceController extends Controller
                     'id'=>$oldData->id,
                     'user_id'=>$oldData->user_id,
                     'name'=>$oldData->name,
-                    'address'=>$oldData->address?$this->protocol.$oldData->address:null,
-                    'cover'=>$oldData->cover?$this->protocol.$oldData->cover:null,
+                    'address'=>$oldData->address?$this->protocol.'video.ects.cdn.hivideo.com/'.$oldData->address:null,
+                    'cover'=>$oldData->cover?$this->protocol.'img.ects.cdn.hivideo.com/'.$oldData->cover:null,
                     'folder_id'=>$oldData->folder_id,
                     'duration'=>floor(($oldData->duration)/60).':'.(($oldData->duration)%60),
                     'size'=>$oldData->size,
                     'integral'=>$oldData->integral,
                     'vipfree'=>$oldData->vipfree,
+                    'isalpha'=>$oldData->isalpha,
                     'distinguishability_x'=>$oldData->distinguishability_x,
                     'distinguishability_y'=>$oldData->distinguishability_y,
-                    'preview_address'=>$oldData->preview_address?$this->protocol.$oldData->preview_address:null,
+                    'preview_address'=>$oldData->preview_address?$this->protocol.'viedo.ects.cdn.hivideo.com/'.$oldData->preview_address:null,
                 ];
 
 
-                foreach( $oldData->keyWord as $k => $keyWord)
-                {
-                    $data['keyword']['keyword'.$k]=$keyWord->keyword;
+                if($oldData->keyWord()->first()){
+                    foreach( $oldData->keyWord as $k => $keyWord)
+                    {
+                        $data['keyword']['keyword'.$k]=$keyWord->keyword;
+                    }
                 }
+
             }else{
                 $newData = new MakeEffectsFileTemporary;
                 $newData->user_id = $user_id;
                 $newData->save();
                 $data = [
                     'id'=>$newData->id,
-                    'user_id'=>$newData->user_id
+                    'user_id'=>$newData->user_id,
+                    'duration'=>'00:00',
                 ];
             }
             DB::commit();
@@ -91,7 +96,8 @@ class MixResourceController extends Controller
             $size = $request->get('size',null);
             $keywords = $request->get('keywords',null);
             $vipfree = $request->get('vipfree',1);
-            if(is_null($name)||is_null($duration)||is_null($folder)||is_null($distinguishability_x)||is_null($distinguishability_y)||is_null($cover)||is_null($preview_address)||is_null($address)||is_null($keywords)||is_null($size)){
+            $isalpha = $request->get('isalpha',1);
+            if(is_null($name)||is_null($duration)||is_null($folder)||is_null($distinguishability_x)||is_null($distinguishability_y)||is_null($cover)||is_null($preview_address)||is_null($address)||is_null($size)){
                 return response()->json(['message'=>'数据不合法'],200);
             }
             $duration = explode(':',$duration);
@@ -99,7 +105,9 @@ class MixResourceController extends Controller
             DB::beginTransaction();
             $effect = MakeEffectsFileTemporary::find($id);
             $effect->integral = $integral;
-            $effect->folder = $folder;
+            $effect->name = $name;
+            $effect->integral = $integral;
+            $effect->folder_id = $folder;
             $effect->duration = $duration;
             $effect->distinguishability_x = $distinguishability_x;
             $effect->distinguishability_y = $distinguishability_y;
@@ -107,13 +115,14 @@ class MixResourceController extends Controller
             $effect->preview_address = $preview_address;
             $effect->address = $address;
             $effect->size = $size;
+            $effect->isalpha = $isalpha;
             $effect->vipfree = $vipfree;
             $effect->save();
             $label = '';
             if(!is_null($keywords)){
                 $keywords = explode('|',$keywords);
                 $keywords = array_unique($keywords);
-                KeywordEffects::where('fragmentTemporary_id','=',$effect->id)->delete();
+                KeywordEffects::where('effectsTemporary_id','=',$effect->id)->delete();
                 foreach($keywords as $k => $v)
                 {
                     $keyword = Keywords::where('keyword',$v)->first();
@@ -129,7 +138,7 @@ class MixResourceController extends Controller
                     }
                     $keywordFragment = new KeywordEffects;
                     $keywordFragment -> keyword_id = $keyword_id;
-                    $keywordFragment -> fragmentTemporary_id = $effect->id;
+                    $keywordFragment -> effectsTemporary_id = $effect->id;
                     $keywordFragment -> time_add = time();
                     $keywordFragment -> time_update = time();
                     $keywordFragment ->save();
@@ -144,13 +153,13 @@ class MixResourceController extends Controller
                 'cover' => $this->protocol.'img.ects.cdn.hivideo.com/'.$effect->cover,
                 'description' => $effect->name,
                 'duration' => floor(($effect->duration)/60).':'.(($effect->duration)%60),
-                'integral' => $effect->intergral,'label' => $label,
+                'integral' => $effect->integral,
+                'label' => $label,
                 'play' => $this->protocol.'video.ects.cdn.hivideo.com/'.$effect->preview_address,
                 'size' => round((($effect->size)/1024)/1024,2),
-                'distinguishability'=>$effect->distinguishability_x.$effect->distinguishability_y,
+                'distinguishability'=>$effect->distinguishability_x.'*'.$effect->distinguishability_y,
                 'type'=> $effect->belongsToFolder->name,
                 'vipfree'=>($effect->vipfree)==1?'vip免费':'vip不免费',
-                'label' =>$label,
             ];
             DB::commit();
             return response()->json(['data'=>$content],200);
@@ -162,6 +171,11 @@ class MixResourceController extends Controller
         }
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 执行发布页面
+     */
     public function doIssue(Request $request)
     {
         try{
@@ -174,21 +188,22 @@ class MixResourceController extends Controller
             $effect = new MakeEffectsFile;
             $effect->name = $data->name;
             $effect->user_id = $data->user_id;
-            $effect->address = 'zip.cdn.hivideo.com/'.$data->address;
+            $effect->address = 'v.cdn.hivideo.com/'.$data->address;
             $effect->preview_address = 'v.cdn.hivideo.com/'.$data->preview_address;
             $effect->cover = 'img.cdn.hivideo.com/'.$data->cover;
-            $effect->folder = $data->folder;
+            $effect->folder_id = $data->folder_id;
             $effect->resolution = $data->distinguishability_x.'*'.$data->distinguishability_y;
             $effect->duration = $data->duration;
             $effect->size = $data->size;
             $effect->integral = $data->integral;
+            $effect->isalpha = $data->isalpha;
             $effect->time_add = time();
             $effect->time_update = time();
             $effect->vipfree = $data->vipfree;
             $effect->save();
-            array_push($keys2,$data1->preview_address);
-            array_push($keys1,$data1->cover);
-            array_push($keys3,$data1->address);
+            array_push($keys2,$data->preview_address);
+            array_push($keys1,$data->cover);
+            array_push($keys3,$data->address);
             $effect_id = $effect->id;
             KeywordEffects::where('effectsTemporary_id',$id)->update(['effects_id'=>$effect_id,'effectsTemporary_id'=>null]);
             $keyPairs1 = array();
@@ -208,11 +223,11 @@ class MixResourceController extends Controller
             }
 
             $srcbucket1 = 'hivideo-video-ects';
-            $srcbucket2 = 'hivideo-file-ects';
+            $srcbucket2 = 'hivideo-video-ects';
             $srcbucket3 = 'hivideo-img-ects';
             $destbucket1 = 'hivideo-img';
             $destbucket2 = 'hivideo-video';
-            $destbucket3 = 'hivideo-zip';
+            $destbucket3 = 'hivideo-video';
             $message1 = CloudStorage::copyfile($keyPairs1,$srcbucket3,$destbucket1);
             $message2 = CloudStorage::copyfile($keyPairs2,$srcbucket1,$destbucket2);
             $message3 = CloudStorage::copyfile($keyPairs3,$srcbucket2,$destbucket3);
@@ -225,4 +240,127 @@ class MixResourceController extends Controller
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 取消发布
+     */
+    public function clear(Request $request)
+    {
+        try{
+            $id = $request->get('id');
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            DB::beginTransaction();
+            MakeEffectsFileTemporary::where('id',$id)->update(['name'=>null,'intro'=>null,'address'=>null,'cover'=>null,'folder_id'=>null,'duration'=>null,'size'=>0,'integral'=>0,'vipfree'=>1,'distinguishability_x'=>0,'distinguishability_y'=>0,'preview_address'=>null]);
+            KeywordEffects::where('effectsTemporary_id',$id)->delete();
+            DB::commit();
+            return response()->json(['message'=>'清空成功']);
+        }catch (ModelNotFoundException $q){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 取消发布
+     */
+    public function cancelIssue(Request $request)
+    {
+        try{
+            $id = $request->get('id');
+            if(is_null($id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            DB::beginTransaction();
+            MakeEffectsFileTemporary::where('id',$id)->delete();
+            KeywordEffects::where('effectsTemporary_id',$id)->delete();
+            DB::commit();
+            return response()->json(['message'=>'取消成功']);
+        }catch (ModelNotFoundException $q){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 全部
+     */
+    public function index(Request $request)
+    {
+        try {
+            $name = $request->get('name', null);
+            $type = $request->get('type_id', null);
+            $integral = $request->get('integral', null);
+            $time = $request->get('time', 0);
+            $duration = $request->get('duration', 0);
+            $count = $request->get('count', 0);
+            $page = $request->get('page', 1);
+            $active = 1;
+            DB::beginTransaction();
+            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count);
+            $data = $this->finallyData($mainData, 1);
+            DB::commit();
+            return $data;
+        } catch (ModelNotFoundException $q) {
+            DB::rollBack();
+            return response()->json(['error' => 'not_found']);
+        }
+    }
+
+
+    private function mainData($active,$page,$name=null,$type=null,$integral=0,$time=0,$duration=0,$count=0,$recommend=null)
+    {
+        try{
+            switch ($time){
+                case 0:
+                    $time = 0;
+                    break;
+                case 1:
+                    $time = strtotime(date('Y-m-d',time()));
+                    break;
+                case 2:
+                    $time = mktime(23,59,59,date('m'),date('d')-date('w')+7-7,date('Y'));
+                    break;
+                case 3:
+                    $time = mktime(0,0,0,date('m'),1,date('Y'));
+                    break;
+                default:
+                    $time = 0;
+            }
+            // 播放时长变形
+            switch ($duration){
+                case 0:
+                    $duration = 0;
+                    break;
+                case 1:
+                    $duration = 10*60;
+                    break;
+                case 2:
+                    $duration = 30*60;
+                    break;
+                case 3:
+                    $duration = 60*60;
+                    break;
+                default:
+                    $duration = 0;
+            }
+
+            $allData = MakeEffectsFile::where('active','=',$active);
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
 }

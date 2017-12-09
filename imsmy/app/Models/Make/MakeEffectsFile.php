@@ -136,4 +136,13 @@ class MakeEffectsFile extends Common
     }
 
 
+
+
+
+    public function scopeType($query,$type)
+    {
+        return $query->where('folder_id','=',$type);
+    }
+
+
 }
