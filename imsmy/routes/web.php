@@ -296,6 +296,11 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                     $api->post('/issue/fragment/cancel','FodderController@cancel');
 
                     /**
+                     * 清空发布
+                     */
+                    $api->post('/issue/fragment/cancel','FodderController@clear');
+
+                    /**
                      * 片段   未写接口文档
                      */
                     $api->group(['prefix'=>'fragment'],function ($api){
@@ -555,6 +560,20 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         * 执行发布
                         */
                        $api->post('doissue','MixResource\MixResourceController@doIssue');
+
+                       /**
+                        * 取消发布
+                        */
+                       $api->post('/cancelissue','MixResource\MixResourceController@cancelIssue');
+                       /**
+                        * 清空发布
+                        */
+                       $api->post('/clear','MixResource\MixResourceController@clear');
+
+                       /**
+                        * 混合主页
+                        */
+                       $api->post('/index','MixResource\MixResourceController@index');
 
                        /**
                         * 公共功能与操作
