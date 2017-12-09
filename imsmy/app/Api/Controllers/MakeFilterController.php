@@ -145,7 +145,7 @@ class MakeFilterController extends BaseController
                     $q->select(['id','nickname']);
                 },'belongsToManyFolder'=>function($q){
                     $q->select(['name']);
-                }])
+                },'belongsToTextureMixType'])
                 ->where('recommend',1)
                 ->where('active',1)
                 ->where('test_result',1)
