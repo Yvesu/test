@@ -29,6 +29,7 @@ class MakeTemplateFile extends Common
         'time_add',
         'test_result',
         'time_update',
+        'vipfree',
     ];
 
     public $timestamps = false;

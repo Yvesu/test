@@ -27,6 +27,7 @@ class MakeAudioFile extends Common
         'time_add',
         'time_update',
         'test_result',
+        'vipfree',
     ];
 
     public $timestamps = false;

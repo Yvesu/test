@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         // Commands\Inspire::class,
         Commands\Statistics::class,
         Commands\CountUser::class,
+        Commands\Qicheck::class,
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
 //        Commands\CacheSave::class,
@@ -65,6 +66,9 @@ class Kernel extends ConsoleKernel
         //  统计每年月登录用户量
 
         $schedule->command('CountUser')->everyMinute();
+
+
+        $schedule->command('Qicheck')->everyFiveMinutes();
 
     }
 }

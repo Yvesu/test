@@ -1104,7 +1104,7 @@ $api->version(['v1'],function($api){
                 $api->post('/font/testresult','MakeFontController@testResult');
 
                 //各种支付
-                $api->post('/pay', 'MakeFilterController@pay');
+                $api->post('/pay', 'PayTypeController@pay');
 
             });
 
@@ -1114,11 +1114,6 @@ $api->version(['v1'],function($api){
         //滤镜压缩包
         $api->post('/filterurl/{id}','MakeFilterController@filterurl')
             ->where('id','[0-9]+');
-
-
-
-
-
 
     });
 });
