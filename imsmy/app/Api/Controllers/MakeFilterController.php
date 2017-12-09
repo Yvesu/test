@@ -54,7 +54,7 @@ class MakeFilterController extends BaseController
 
                 // 获取用户信息
                 if(!$user = Auth::guard('api') -> user())
-                 //   return response()->json(['error'=>'bad_request'],403);
+                    return response()->json(['error'=>'bad_request'],403);
 
                 // 获取数据
                 $whereHas = [['hasManyUserFile',[['user_id',$user->id]]]];
@@ -69,12 +69,6 @@ class MakeFilterController extends BaseController
                 if(!$folder_id = (int)$request -> get('folder_id'))
                     return response()->json(['error'=>'bad_request'],403);
 
-                $with = [['belongsToUser',['nickname']]];
-
-                // 获取数据
-//                $audio = MakeFilterFile::ofType($type,$folder_id)
-//                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);
-
                 // yy  修改
                 $audio = MakeFilterFile::WhereHas('belongsToManyFolder',function ($q) use ($folder_id){
                     $q->where('folder_id','=',$folder_id);
@@ -84,20 +78,13 @@ class MakeFilterController extends BaseController
                         $q->select(['id','nickname']);
                     },'belongsToManyFolder'=>function($q){
                         $q->select(['name']);
-                    }])
+                    },'belongsToTextureMixType'])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
                     ->where('test_result',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
 
             } else {
-
-                $with = [['belongsToUser',['nickname']],['belongsToManyFolder',['name']]];
-
-                //原始
-              /*  $audio = MakeFilterFile::ofType($type)
-                    -> ofSearch($search)
-                    -> selectListPageByWithAndWhereAndWhereHas($with, [], $where, [], $page, $select);*/
 
               //  2017 11 27 修改
                 $audio = MakeFilterFile::ofType($type)
@@ -106,11 +93,12 @@ class MakeFilterController extends BaseController
                         $q->select(['id','nickname']);
                     },'belongsToManyFolder'=>function($q){
                         $q->select(['name']);
-                    }])
+                    },'belongsToTextureMixType'])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
             }
+
 
             foreach($audio as $value){
                 $value -> cover = $value -> cover;
@@ -211,7 +199,7 @@ class MakeFilterController extends BaseController
                         $q->select(['id','nickname']);
                     },'belongsToManyFolder'=>function($q){
                         $q->select(['name']);
-                    }])
+                    },'belongsToTextureMixType'])
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('test_result',0)
                     ->where('active','!=',2)
@@ -317,6 +305,21 @@ class MakeFilterController extends BaseController
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
 
+    }
+
+    public function pay(Request $request)
+    {
+        //支付的类型
+        $type = $request->get('type');
+
+        if(empty($type)) return response()->json(['error'=>'bad_request'],403);
+
+        //获取用户信息
+        $user = Auth::guard('api')->user();
+
+        if($type === 'mixture') {
+            dd(1);
+        }
     }
 
 }

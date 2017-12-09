@@ -54,14 +54,14 @@ class MakeEffectsController extends BaseController
             if(1 === $type){
 
                 // 获取用户信息
-                if(!$user) return response()->json(['error'=>'bad_request'],403);
-
+//                if(!$user) return response()->json(['error'=>'bad_request'],403);
+//
                 // 获取数据
 
-                $audio = MakeEffectsFile::where('test_result',1)-> scopeSelectListPageByWithAndWhereAndWhereHas([], [['hasManyUserFile',[['user_id',$user->id]]]], [['active',1]], [$page, $this->paginate]);
+//                $audio = MakeEffectsFile::SelectListPageByWithAndWhereAndWhereHas([], [['hasManyUserFile',[['user_id',$user->id]]]], [['active',1]], [$page, $this->paginate]);
 
                 // 调用内部函数，返回数据
-                return $this -> file($audio,1);
+//                return $this -> file($audio,1);
 
             } elseif (2 === $type){
 
@@ -117,13 +117,13 @@ class MakeEffectsController extends BaseController
                     || in_array($value->id, $integral_ids)){
 
 
-                    $value -> address = CloudStorage::privateUrl_zip($value -> address);
+                    $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
                 } else {
 
-                    $value -> address = CloudStorage::privateUrl_zip($value -> address);
+                    $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
 
@@ -246,7 +246,7 @@ class MakeEffectsController extends BaseController
 
             return response() -> json([
                 'data' => [
-                    'address'       => CloudStorage::privateUrl_zip($file -> address),
+                    'address'       => CloudStorage::downloadUrl($file -> address),
                     'high_address'  => CloudStorage::downloadUrl($file -> high_address),
                     'super_address' => CloudStorage::downloadUrl($file -> super_address),
                 ]
@@ -286,8 +286,8 @@ class MakeEffectsController extends BaseController
 
                 // 获取数据
                 $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
-                $audio = MakeEffectsFile::where('test_result',1)->ofType(1)
-                    -> selectListPageByWithAndWhereAndWhereHas($with, [], [['active',[0,1]]], [], [$page, $this->paginate]);
+                $audio = MakeEffectsFile::where('test_result',0)
+                    -> selectListPageByWithAndWhereAndWhereHas($with, [], [], [], [$page, $this->paginate]);
 
                 return $this -> file($audio, 2);
             }
@@ -384,5 +384,7 @@ class MakeEffectsController extends BaseController
         }
 
     }
+
+
 
 }

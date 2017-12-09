@@ -807,9 +807,9 @@ class TweetController extends BaseController
                 'visible'       =>  (int)$request->get('visible') ?: 0,
                 'visible_range' =>  $request->get('visible_range'),
                 'is_download'   =>  $request->get('is_download',1),
-                'fragment_id'       =>  $request->get('category_id') ?: 0,
-                'filter_id'       =>  $request->get('category_id') ?: 0,
-                'template_id'       =>  $request->get('category_id') ?:0,
+                'fragment_id'       =>  $request->get('fragment_id') ?: 0,
+                'filter_id'       =>  $request->get('filter_id') ?: 0,
+                'template_id'       =>  $request->get('template_id') ?:0,
             ];
 
             // 内容 过滤内容

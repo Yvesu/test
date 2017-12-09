@@ -1086,10 +1086,10 @@ $api->version(['v1'],function($api){
                 $api->post('/audioeffect/testresult','MakeAudioEffectController@testResult');
 
                 //混合测试
-                $api->post('/effect/tester','MakeTemplateController@tester');
+                $api->post('/effect/tester','MakeEffectsController@tester');
 
                 //混合测试操作
-                $api->post('/effect/testresult','MakeTemplateController@testResult');
+                $api->post('/effect/testresult','MakeEffectsController@testResult');
 
                 //滤镜测试
                 $api->post('/filter/tester','MakeFilterController@tester');
@@ -1103,6 +1103,9 @@ $api->version(['v1'],function($api){
                 //滤镜测试操作
                 $api->post('/font/testresult','MakeFontController@testResult');
 
+                //各种支付
+                $api->post('/pay', 'MakeFilterController@pay');
+
             });
 
         //滤镜推荐
@@ -1111,6 +1114,11 @@ $api->version(['v1'],function($api){
         //滤镜压缩包
         $api->post('/filterurl/{id}','MakeFilterController@filterurl')
             ->where('id','[0-9]+');
+
+
+
+
+
 
     });
 });
