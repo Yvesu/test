@@ -366,7 +366,7 @@ class PayTypeController extends BaseController
             if(!$vip_free && $is_vip) return response()->json(['message'=>'success'],200);
 
             //混合素材的积分
-            $mixture_integral = $mixture_info -> integral;
+            $mixture_integral = $mixture_info -> intergral;
 
             //获取用户积分
             $user_integral = User\UserIntegral::where('user_id',$user_Id)->first();
@@ -412,7 +412,7 @@ class PayTypeController extends BaseController
         //判断是否下载过
         $is_download = \DB::table('user_integral_expend_log')->where('user_id',$user_Id)->where('type',$type)->where('type_id',$id)->first();
 
-        if (!is_null($is_download)) return response()->json(['message' => 'success'], 200);
+        if (!is_null($is_download)) return response()->json(['message' => 'The user has already downloaded'], 202);
 
         //扣除积分
         $deduct_result = User\UserIntegral::where('user_id', $user_Id)->decrement('integral_count', $deduct_integral);
@@ -424,8 +424,9 @@ class PayTypeController extends BaseController
         $time = time();
 
         //记录消费
-        $record_result = \DB::table('user_integral_expend_log')->insert([
-            'user_id'       => $user_Id,
+
+       $arr = [
+           'user_id'       => $user_Id,
             'pay_number'    => $order_number,
             'pay_count'     => $deduct_integral,
             'type'          => $type,
@@ -433,7 +434,9 @@ class PayTypeController extends BaseController
             'pay_reason'    => $pay_reason,
             'status'        => 1,
             'create_at'     => $time,
-        ]);
+           ];
+
+        $record_result = User\UserIntegralExpend::create($arr);
 
         if ($deduct_result && $record_result) {
             //确认操作
@@ -442,16 +445,18 @@ class PayTypeController extends BaseController
             return response()->json(['message' => 'success'], 200);
         }else{
 
-            \DB::table('user_integral_expend_log')->insert([
+            $arr = [
                 'user_id'       => $user_Id,
                 'pay_number'    => $order_number,
                 'pay_count'     => $deduct_integral,
                 'type'          => $type,
                 'type_id'       => $id,
                 'pay_reason'    => $pay_reason,
-                'status'        => 0,
+                'status'        => 1,
                 'create_at'     => $time,
-            ]);
+            ];
+
+             User\UserIntegralExpend::create($arr);
 
             //回滚
             \DB::rollBack();
