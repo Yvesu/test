@@ -48,4 +48,18 @@ class MakeEffectsFolder extends Common
         }
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与创建人关系
+     */
+    public function belongsToAdministrator()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','create_id','id');
+    }
+
+    public function belongsToAdministratorOperator()
+    {
+        return $this->belongsTo('App\Models\Admin\Administrator','operator_id','id');
+    }
+
 }

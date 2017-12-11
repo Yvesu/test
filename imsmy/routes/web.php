@@ -424,7 +424,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                    $api->group(['prefix' => 'template'],function ($api){
 
                        /**
-                        * 分类-添加分类
+                        * 分类-添加片段分类
                         */
                         $api->post('/add/type','TemplageController@addType');
 
@@ -454,7 +454,7 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                         $api->post('/type','Template\TemplateController@type');
 
                         /**
-                         * 添加分类
+                         * 添加新分类
                          */
                         $api->post('/addtype','Template\TemplateController@addType');
 
@@ -533,6 +533,11 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                              */
                             $api->post('/start','Template\TemplateCommonController@start');
 
+                            /**
+                             * 进行分类
+                             */
+                            $api->post('/dotype','Template\TemplateCommonController@doType');
+
 
                         });
 
@@ -576,6 +581,26 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                        $api->post('/index','MixResource\MixResourceController@index');
 
                        /**
+                        * 混合推荐页
+                        */
+                       $api->post('/recommend','MixResource\MixResourceController@recommend');
+
+                       /**
+                        * 屏蔽仓
+                        */
+                       $api->post('/shield','MixResource\MixResourceController@shield');
+
+                       /**
+                        * 分类
+                        */
+                       $api->post('/type','MixResource\MixResourceController@type');
+
+                       /**
+                        * 添加分类
+                        */
+                       $api->post('/addtype','MixResource\MixResourceController@addType');
+
+                       /**
                         * 公共功能与操作
                         */
                        $api->group(['prefix'=>'common'],function ($api){
@@ -589,6 +614,77 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                             * 获取资费
                             */
                            $api->post('/downloadcost','MixResource\CommonController@downloadCost');
+
+                           /**
+                            * 时间条件
+                            */
+                           $api->post('/time','MixResource\CommonController@time');
+
+                           /**
+                            * 时长条件
+                            */
+                           $api->post('/duration','MixResource\CommonController@duration');
+
+                           /**
+                            * 下载量条件
+                            */
+                           $api->post('/count','MixResource\CommonController@count');
+
+                           /**
+                            * 推荐
+                            */
+                           $api->post('/dorecommend','MixResource\CommonController@doRecommend');
+
+                           /**
+                            * 取消推荐
+                            */
+                           $api->post('/cancelrecommend','MixResource\CommonController@cancelRecommend');
+
+                           /**
+                            * 进行分类
+                            */
+                           $api->post('/dotype','MixResource\CommonController@doType');
+
+                           /**
+                            * 屏蔽
+                            */
+                           $api->post('/doshield','MixResource\CommonController@doShield');
+
+                           /**
+                            * 取消屏蔽
+                            */
+                           $api->post('/cancelshiled','MixResource\CommonController@cancelShield');
+
+                           /**
+                            * 向上
+                            */
+                           $api->post('/up','MixResource\CommonController@up');
+
+                           /**
+                            * 向下
+                            */
+                           $api->post('/down','MixResource\CommonController@down');
+
+                           /**
+                            * 启用
+                            */
+                           $api->post('/start','MixResource\CommonController@start');
+
+                           /**
+                            * 停用
+                            */
+                           $api->post('/stop','MixResource\CommonController@stop');
+
+                           /**
+                            * 删除类别
+                            */
+                           $api->post('/type/delete','MixResource\CommonController@typeDelete');
+
+                           /**
+                            * 删除资源
+                            */
+                           $api->post('/resource/delete','MixResource\CommonController@resourceDelete');
+
                        });
                    });
 

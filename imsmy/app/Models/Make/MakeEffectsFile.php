@@ -66,6 +66,25 @@ class MakeEffectsFile extends Common
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 审核者
+     */
+    public function belongsToChecker()
+    {
+        return $this -> belongsTo('App\Models\User','checker_id','id');
+    }
+
+    public function belongsToRecommend()
+    {
+        return $this -> belongsTo('App\Models\User','dorecommend_id','id');
+    }
+
+    public function belongsToShield()
+    {
+        return $this -> belongsTo('App\Models\User','doshield_id','id');
+    }
+
+    /**
      * 下载记录
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -136,13 +155,72 @@ class MakeEffectsFile extends Common
     }
 
 
-
-
-
+    /**
+     * @param $query
+     * @param $type
+     * @return mixed
+     * 搜索类别
+     */
     public function scopeType($query,$type)
     {
-        return $query->where('folder_id','=',$type);
+        if($type == null){
+            return $query;
+        }else{
+            return $query->where('folder_id','=',$type);
+        }
     }
 
+    /**
+     * @param $query
+     * @param $name
+     * @return mixed
+     * 搜索关键字
+     */
+    public function scopeName($query,$name)
+    {
+        return $query->where('name','like',"%$name%")->orWhereHas('belongsToUser',function ($q) use($name){
+            $q->orWhere('nickname','like',"%$name%")->orWhere('id','like',"%$name%");
+        });
+    }
+
+    /**
+     * @param $query
+     * @param $integreal
+     * @return mixed
+     * 搜索下载费用
+     */
+
+    /**
+     * @param $query
+     * @param $time
+     * @return mixed
+     * 搜索发布时间
+     */
+    public function scopeTime($query,$time)
+    {
+        return $query->where('time_add','>=',$time);
+    }
+
+    /**
+     * @param $query
+     * @param $duration
+     * @return mixed
+     * 搜索时长
+     */
+    public function scopeDuration($query,$duration)
+    {
+        return $query->where('duration','>=',$duration);
+    }
+
+    /**
+     * @param $query
+     * @param $count
+     * @return mixed
+     * 搜索下载量
+     */
+    public function scopeCounta($query,$count)
+    {
+        return $query->where('count','>=',$count);
+    }
 
 }
