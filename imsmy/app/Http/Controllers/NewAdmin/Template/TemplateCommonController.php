@@ -585,4 +585,35 @@ class TemplateCommonController extends Controller
     }
 
 
+    public function doType(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+            $admin = Auth::guard('api')->user();
+            $id = $request->get('id',null);
+            $folder = $request->get('type',null);
+            if(is_null($id)||is_null($folder)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $id = explode('|',$id);
+            foreach($id as $k => $v)
+            {
+                $data = MakeTemplateFile::find($v);
+                if($data){
+                    $data->folder_id = $folder;
+                    $data->dotype_id = $admin->id;
+                    $data->time_update = time();
+                    $data->save();
+                }else{
+                    return response()->json(['message'=>'无数据'],200);
+                }
+            }
+            DB::commit();
+            return response()->json(['message'=>'取消成功'],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found']);
+        }
+    }
+
+
 }

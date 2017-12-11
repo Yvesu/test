@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\NewAdmin\MixResource;
 
+use App\Models\Make\MakeEffectsFolder;
 use CloudStorage;
 use App\Models\Admin\Administrator;
 use App\Models\KeywordEffects;
@@ -80,6 +81,11 @@ class MixResourceController extends Controller
     }
 
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 发布预览页面
+     */
     public function issuePlay(Request $request)
     {
         try{
@@ -245,7 +251,7 @@ class MixResourceController extends Controller
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
-     * 取消发布
+     * 清空
      */
     public function clear(Request $request)
     {
@@ -300,7 +306,7 @@ class MixResourceController extends Controller
         try {
             $name = $request->get('name', null);
             $type = $request->get('type_id', null);
-            $integral = $request->get('integral', null);
+            $integral = $request->get('integral', 0);
             $time = $request->get('time', 0);
             $duration = $request->get('duration', 0);
             $count = $request->get('count', 0);
@@ -309,6 +315,63 @@ class MixResourceController extends Controller
             DB::beginTransaction();
             $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count);
             $data = $this->finallyData($mainData, 1);
+            DB::commit();
+            return $data;
+        } catch (ModelNotFoundException $q) {
+            DB::rollBack();
+            return response()->json(['error' => 'not_found']);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 推荐页
+     */
+    public function recommend(Request $request)
+    {
+        try {
+            $name = $request->get('name', null);
+            $type = $request->get('type_id', null);
+            $integral = $request->get('integral', 0);
+            $time = $request->get('time', 0);
+            $duration = $request->get('duration', 0);
+            $count = $request->get('count', 0);
+            $page = $request->get('page', 1);
+            $active = 1;
+            $recommend  = 1;
+            DB::beginTransaction();
+            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count,$recommend);
+            $data = $this->finallyData($mainData, 2);
+            DB::commit();
+            return $data;
+        } catch (ModelNotFoundException $q) {
+            DB::rollBack();
+            return response()->json(['error' => 'not_found']);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 屏蔽仓
+     */
+    public function shield(Request $request)
+    {
+        try {
+            $name = $request->get('name', null);
+            $type = $request->get('type_id', null);
+            $integral = $request->get('integral', 0);
+            $time = $request->get('time', 0);
+            $duration = $request->get('duration', 0);
+            $count = $request->get('count', 0);
+            $page = $request->get('page', 1);
+            $active = 3;
+            DB::beginTransaction();
+            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count);
+            $data = $this->finallyData($mainData, 3);
             DB::commit();
             return $data;
         } catch (ModelNotFoundException $q) {
@@ -354,13 +417,283 @@ class MixResourceController extends Controller
                 default:
                     $duration = 0;
             }
-
-            $allData = MakeEffectsFile::where('active','=',$active);
-
+            $allData = MakeEffectsFile::where('active','=',$active)
+            ->where('test_result','=',1)->Name($name)->Type($type)->where('integral','>=',$integral)->Duration($duration)
+            ->Counta($count);
+            if($recommend == 1){
+                $mainData = $allData->where('recommend','=',1)->forPage($page,$this->paginate)->get();
+            }else{
+                $mainData = $allData->forPage($page,$this->paginate)->get();
+            }
+            return $mainData;
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
         }
     }
 
+
+    private function finallyData($mainData,$classify)
+    {
+        if($classify == 1){
+            $batchBehavior = [
+                'dotype' => '分类',
+                'recommend'=>'推荐',
+                'cancelrecommend'=>'取消推荐',
+                'dosheild'=>'屏蔽'
+            ];
+        }elseif($classify == 2){
+            $batchBehavior = [
+                'dotype' => '分类',
+                'cancelrecommend'=>'取消推荐',
+                'dosheild'=>'屏蔽'
+            ];
+        }elseif ($classify == 3){
+            $batchBehavior = [
+                'cancelshield'=>'取消屏蔽',
+                'delete'=>'删除',
+            ];
+        }
+
+        $data = [];
+
+        foreach($mainData as $k => $v)
+        {
+            $folder = $v->belongsToFolder()->first()?$v->belongsToFolder->name:'';
+            $userName = $v->belongsToUser->nickname;
+            $cover = $this->protocol.$v->cover;
+            $des = $v->name;
+            $duration = (($v->duration)/60).':'.(($v->duration)%60);
+            $time = date('Y-m-d H:i:s',$v->time_add);
+            $count = $v->count;
+            $integral = $v->integral;
+            if($classify == 1){
+                if($v->checker_id) {
+                    if ($v->dorecommend_id) {
+                        $people = $v->belongsToChecker->name . ',' . $v->belongsToRecommend->name;
+                    } else {
+                        $people = $v->belongsToChecker->name;
+                    }
+                }else{
+                    $people = '';
+                }
+
+                if($v->recommend == 0){
+                    $behavior = [
+                        'dotype' => '分类',
+                        'recommend'=>'推荐',
+                        'dosheild'=>'屏蔽'
+                    ];
+                }elseif($v->recommend == 1){
+                    $behavior = [
+                        'dotype' => '分类',
+                        'cancelrecommend'=>'取消推荐',
+                        'dosheild'=>'屏蔽'
+                    ];
+                }
+            }elseif($classify == 2){
+                if($v->dorecommend_id){
+                    $people = $v->belongsToRecommend->name;
+                }else{
+                    $people = '';
+                }
+                $behavior = [
+                    'dotype' => '分类',
+                    'cancelrecommend'=>'取消推荐',
+                    'dosheild'=>'屏蔽'
+                ];
+
+
+            }elseif($classify == 3){
+                if($v->doshield_id){
+                    $people = $v->belongsToShield->name;
+                }else{
+                    $people = '';
+                }
+
+                $batchBehavior = [
+                    'cancelshield'=>'取消屏蔽',
+                    'delete'=>'删除',
+                ];
+            }
+
+            $tempData = [
+                'type'=>$folder,
+                'Name'=>$userName,
+                'cover'=>$cover,
+                'duration' => $duration,
+                'time_add' => $time,
+                'count' => $count,
+                'integral' => $integral,
+                'operator' => $people,
+                'behavior' => $behavior,
+            ];
+
+            array_push($data,$tempData);
+
+        }
+
+        $sumnum = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->get()->count();
+        $todaynew = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+        return response()->json(['data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 混合滤镜分类页面
+     */
+    public function type(Request $request)
+    {
+        try{
+            $active = $request->get('active',1);
+            $page = $request->get('page',1);
+            DB::beginTransaction();
+            $mainData = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
+            $data = [];
+            $space = MakeEffectsFile::get()->sum('size');
+            $max = $mainData->max('sort');
+            $min = $mainData->min('sort');
+            $num = $mainData->count();
+            foreach($mainData as $k => $v)
+            {
+                $operator = $v->operator?$v->belongsToAdministratorOperator->name:'';
+                $cover = $v->cover?$this->protocol.$v->cover:'';
+                $name = $v->name;
+                $time = $v->time_add;
+                $creater = $v->belongsToAdministrator->name;
+                $count = $v->count;
+                $downloadNum = $v->hasManyFiles->count();
+                $usageSpace = (int)$v->hasManyFiles->sum('size');
+                $stopReason = $v->stop_reason?$v->reason:'';
+                if($space == 0){
+                    $usageSpaceProportion = 0;
+                }else{
+                    $usageSpaceProportion = (round($usageSpace/$space,2)*100).'%';
+                }
+                if($active == 1){
+                    if($v->sort == $min && $v->sort == $max){
+                        $behavior = [
+                            'stop'=>'停用'
+                        ];
+                    }elseif ($v->sort == $min){
+                        $behavior = [
+                            'down'=>'向下',
+                            'stop'=>'停用'
+                        ];
+                    }elseif($v->sort == $max){
+                        $behavior = [
+                            'up'=>'向上',
+                            'stop'=>'停用'
+                        ];
+                    }else{
+                        $behavior = [
+                            'up' => '向上',
+                            'down'=> '向下',
+                            'stop'=> '停用',
+                        ];
+                    }
+                    $batchBehavior = [
+                        'stop' => '停用',
+                    ];
+
+                    $tempData = [
+                        'cover' => $cover,
+                        'time' => $time,
+                        'name' => $name,
+                        'creater' => $creater,
+                        'count' => $count,
+                        'downloadNum' => $downloadNum,
+                        'usageSpaceAndProportion' => $usageSpace.'/'.$usageSpaceProportion,
+                        'behavior' => $behavior
+                    ];
+
+                    array_push($data,$tempData);
+                }else{
+                        $behavior = [
+                            'stop'=>'启用',
+                            'delete' => '删除',
+                        ];
+
+                    $batchBehavior = [
+                        'stop'=> '启用',
+                        'delete' => '删除',
+                    ];
+
+                    $stopTime = $v->stop_time;
+                    $tempData = [
+                        'cover' => $cover,
+                        'time' => $stopTime,
+                        'name' => $name,
+                        'operator' => $operator,
+                        'reason' => $stopReason,
+                        'behavior' => $behavior
+                    ];
+
+                    array_push($data,$tempData);
+                }
+
+
+
+
+            }
+
+            DB::commit();
+            return response()->json(['data'=>$data,'num'=>$num,'batchBehavior'=>$batchBehavior]);
+        }catch (ModelNotFoundException $q){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 添加新分类
+     */
+    public function addType(Request $request)
+    {
+        try{
+            $cover = $request->get('cover',null);
+            $name = $request->get('name',null);
+            $active = $request->get('active',0);
+            DB::beginTransaction();
+            $admin = Auth::guard('api')->user();
+            if(is_null($cover)||is_null($name)){
+                return response()->json(['message'=>'名称或图像不能为空']);
+            }
+            array_push($keys1,$cover);
+            $keyPairs1 = array();
+            foreach($keys1 as $key)
+            {
+                $keyPairs1[$key] = $key;
+            }
+            $srcbucket1 = 'hivideo-img-ects';
+            $destbucket1 = 'hivideo-img';
+            $message = CloudStorage::copyfile($keyPairs1,$srcbucket1,$destbucket1);
+            if($message == 200){
+                $folder = new MakeEffectsFolder;
+                $folder -> name = $name;
+                if($active == 1){
+                    $folder -> active = 1;
+                }else{
+                    $folder -> active = 0;
+                }
+                $folder ->sort = (MakeEffectsFolder::max('sort'))+1;
+                $folder ->time_add = time();
+                $folder ->time_update = time();
+                $folder ->create_id = $admin->id;
+                $folder ->save();
+            }else{
+                return response()->json(['message'=>'上传图片失败','status'=>$message],200);
+            }
+            DB::commit();
+            return response()->json(['message'=>'修改成功'],200);
+        }catch (ModelNotFoundException $q){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
 
 }

@@ -76,6 +76,7 @@ class FilterController extends Controller
             foreach($maindata as $item => $value)
             {
 
+                $type = [];
                 $admin = Administrator::where('id',$value->operator_id)->first();
 //                $type = $value->belongsToFolder()->first();
                 foreach ($value->belongsToManyFolder as $k=>$folder)
@@ -491,6 +492,7 @@ class FilterController extends Controller
             //  取出操作员 并和其余数据存入到数组中
             foreach($maindata as $item => $value)
             {
+                $type = [];
 
                 $admin = Administrator::where('id',$value->operator_id)->first();
                 foreach ($value->belongsToManyFolder as $k=>$folder)
@@ -886,6 +888,7 @@ class FilterController extends Controller
             foreach($maindata as $item => $value)
             {
 
+                $type = [];
                 $admin = Administrator::where('id',$value->operator_id)->first();
     //                $type = $value->belongsToFolder()->first();
                 foreach ($value->belongsToManyFolder as $k=>$folder)
@@ -1122,7 +1125,6 @@ class FilterController extends Controller
             $integral = $request->get('integral',null);
             $cover = $request->get('cover',null);
             $content = $request->get('content',null);
-            $texture = $request->get('texture',null);
             $textureMixType = $request->get('textMixType',null);
 
             $vipfree = $request->get('vipfree',null);
@@ -1138,10 +1140,6 @@ class FilterController extends Controller
             $filter->integral = $integral;
             $filter->cover = 'img.cdn.hivideo.com/'.$cover;
             $filter->content = 'file.cdn.hivideo.com/'.$content;
-            if($texture != 'undefined'){
-                $filter->texture = 'img.cdn.hivideo.com/'.$texture;
-                array_push($keys1,$texture);
-            }
             if($textureMixType != 'undefined'){
                 $filter->texture_mix_type_id = $textureMixType;
             }

@@ -141,8 +141,9 @@ class TemplateController extends Controller
     {
         try{
             $active = $request->get('active',1);
+            $page = $request->get('page',1);
             DB::beginTransaction();
-            $mainData = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->get();
+            $mainData = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
             $data = [];
             $space = MakeTemplateFile::get()->sum('size');
             $max = $mainData->max('sort');
@@ -156,7 +157,11 @@ class TemplateController extends Controller
                 $count = $v->count;
                 $downloadNum = $v->hasManyFiles->count();
                 $usageSpace = (int)$v->hasManyFiles->sum('size');
-                $usageSpaceProportion = (round($usageSpace/$space,2)*100).'%';
+                if($space == 0){
+                    $usageSpaceProportion = 0;
+                }else{
+                    $usageSpaceProportion = (round($usageSpace/$space,2)*100).'%';
+                }
                 if($active == 1){
                     if($v->sort == $min && $v->sort == $max){
                         $behavior = [
