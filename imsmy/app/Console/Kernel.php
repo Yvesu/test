@@ -31,6 +31,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+
+        $schedule->command('Qicheck')->everyMinute();
+
         // $schedule->command('inspire')
         //          ->hourly();
 //        $schedule->command('statistics')
@@ -67,8 +70,6 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('CountUser')->everyMinute();
 
-
-        $schedule->command('Qicheck')->everyFiveMinutes();
 
     }
 }

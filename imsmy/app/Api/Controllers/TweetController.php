@@ -197,7 +197,7 @@ class TweetController extends BaseController
             if ($user && Friend::ofIsFriend($id, $user->id)->first()) {
 
                 // 查询可以查看的好友的动态
-                $tweets = Tweet::ofFriendTweets($user->id);
+                $tweets = Tweet::ofFriendTweets($user->id)->whereNotIn('active',[2,5]);
 
                 // 自己
             } else if ($user && $user->id == $id) {
@@ -206,7 +206,7 @@ class TweetController extends BaseController
             } else {
 
                 // 非好友关系，只能看对方设置为公开的
-                $tweets = Tweet::where('visible', 0);
+                $tweets = Tweet::where('visible', 0)->whereNotIn('active',[2,5]);
             }
 
             // 按类型查找并获取数据
@@ -407,6 +407,7 @@ class TweetController extends BaseController
                     $q -> select('id', 'advertisement','nickname','avatar','hash_avatar','verify');
                 }])
                 -> able()
+                ->whereNotIn('active',[2,5])
                 -> findOrFail($id);
 
             // 判断用户是否为登录状态
@@ -592,7 +593,7 @@ class TweetController extends BaseController
     {
         try {
             // 获取要查询的动态详情
-            $tweets_data = Tweet::with('hasOneContent','belongsToUser')->able()->findOrFail($id);
+            $tweets_data = Tweet::with('hasOneContent','belongsToUser')->whereNotIn('active',[2,5])->able()->findOrFail($id);
 
             // 判断用户是否为登录状态
             $user = Auth::guard('api')->user();
@@ -723,6 +724,7 @@ class TweetController extends BaseController
             -> orderBy('like_count', 'DESC')
             -> able()
             -> take(100)
+            ->whereNotIn('active',[2,5])
             -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at','browse_times','video']);
 
         // 相关不足20个，则从普通取  TODO 上线前开启
@@ -736,6 +738,7 @@ class TweetController extends BaseController
                 -> orderBy('like_count', 'DESC')
                 -> able()
                 -> take(100)
+                ->whereNotIn('active',[2,5])
                 -> get(['id', 'type', 'duration', 'user_id', 'screen_shot', 'photo', 'created_at','browse_times','video']);
         }
 
@@ -1307,6 +1310,7 @@ class TweetController extends BaseController
                 ->orderBy('id','DESC')
                 ->able()
                 ->forPage($page,$this->paginate)
+                ->whereNotIn('active',[2,5])
                 ->get();
 
             // 获取所有被关注者的id
@@ -1416,6 +1420,7 @@ class TweetController extends BaseController
             ->orderBy('created_at','desc')
             ->able()
             ->take($limit)
+            ->whereNotIn('active',[2,5])
             ->get();
 
         // 获取所有所取数据的用户及话题的id，及subscription 表中的to字段的值
@@ -1469,6 +1474,7 @@ class TweetController extends BaseController
             ->take($limit)
             ->able()
             ->orderBy('created_at','desc')
+            ->whereNotIn('active',[2,5])
             ->get();
         $count = $tweets->count();
         return [
@@ -1647,6 +1653,7 @@ class TweetController extends BaseController
                 -> whereHas('hasManyChannelTweet',function($query)use($id){
                     $query->where('channel_id',$id);
                 })
+                ->whereNotIn('active',[2,5])
                 -> orderBy($field_order, 'DESC')
                 -> get();
 
@@ -2065,7 +2072,9 @@ class TweetController extends BaseController
                 }
             }
 
-            $tweets = Tweet::whereType(0) -> with(['belongsToManyChannel' => function($q){
+            $time = time();
+            $tweets = Tweet::whereType(0)->whereNotIn('active',[2,5])
+                -> with(['belongsToManyChannel' => function($q){
                 $q -> select('name');
             }]) -> selectListPageByWithAndWhereAndhas(
                 [['hasOneContent',['content','tweet_id']],['belongsToUser',['id','nickname','avatar','cover','verify','signature','verify_info']]],
@@ -2077,6 +2086,7 @@ class TweetController extends BaseController
 
             // 过滤
             $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
+
 
             // 如果为第一次请求
             if (1 === $page) {
@@ -2107,6 +2117,7 @@ class TweetController extends BaseController
 
                     // 获取相关热门动态的数据
                     $special_tweets = Tweet::whereType(0)
+                        ->whereNotIn('active',[2,5])
                         -> whereIn('id',$special_ids)
                         -> active()
                         -> get(['id','type','screen_shot','location','photo','video','shot_width_height','user_id']);
@@ -2116,7 +2127,8 @@ class TweetController extends BaseController
                 }
 
                 // 合并总数据
-                $tweets_data = array_merge($special_data,$tweets_data);
+                $tweets_data =array_merge($special_data,$tweets_data);
+
             }
 
             // 返回数据
@@ -2238,6 +2250,7 @@ class TweetController extends BaseController
             }) -> with('hasOneContent')
                -> able()
                -> visible()
+                ->whereNotIn('active',[2,5])
                -> forPage($page, $this->paginate)
                -> orderBy('id','desc')
                -> get();
@@ -2250,6 +2263,7 @@ class TweetController extends BaseController
                 })  -> with('hasOneContent')
                     -> able()
                     -> visible()
+                    -> whereNotIn('active',[2,5])
                     -> forPage($page, $this->paginate)
                     -> orderBy('id','desc')
                     -> get();
@@ -2507,6 +2521,7 @@ class TweetController extends BaseController
                 -> whereHas('belongsToManyTopic',function($query)use($id){
                     $query->where('topic_id',$id);
                 })
+                ->whereNotIn('active',[2,5])
                 -> orderBy($field_order, 'DESC')
                 -> get();
 
@@ -2517,6 +2532,7 @@ class TweetController extends BaseController
                 $topic_top = Tweet::whereHas('belongsToTopicTop', function($q)use($id){
                     $q -> where('topic_id',$id);
                 })
+                    ->whereNotIn('active',[2,5])
                     -> first();
 
             // 返回数据
@@ -2563,6 +2579,7 @@ class TweetController extends BaseController
             $tweets= Tweet::with('hasOneContent','belongsToUser')
                 -> able()
                 -> where('location', $location)
+                ->whereNotIn('active',[2,5])
                 -> orderBy($field_order, 'DESC')
                 -> get();
 
@@ -2967,6 +2984,7 @@ class TweetController extends BaseController
                 ->visible()
                 ->where('type',$type)
                 ->able()
+                ->whereNotIn('active',[2,5])
                 ->orderBy('created_at','desc')
                 ->take($limit)->get();
         }else{
@@ -2977,6 +2995,7 @@ class TweetController extends BaseController
                 ->visible()
                 ->where('type',$type)
                 ->able()
+                ->whereNotIn('active',[2,5])
                 ->orderBy('created_at','desc')
                 ->take($limit)->get();
         }
@@ -3044,6 +3063,7 @@ class TweetController extends BaseController
         $tweets = Tweet::with('belongsToLabel','belongsToUser')
             ->ofDate($date)
             ->where('type',$type)
+            ->whereNotIn('active',[2,5])
             ->orderBy('created_at','desc')
             ->take($limit)->get();
 
@@ -3139,6 +3159,7 @@ class TweetController extends BaseController
             ->where('type',0)
             ->orderBy('id','desc')
             ->active()
+            ->whereNotIn('active',[2,5])
             ->get();
 
         return $tweets;
@@ -3397,6 +3418,7 @@ class TweetController extends BaseController
             ->where('visible',0)
             ->where('id','!=',$id)
             ->where('active',1)
+            ->whereNotIn('active',[2,5])
             ->orderBy('browse_times','DESC')
             ->forPage($page,$this->paginate)
             ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
@@ -3430,6 +3452,7 @@ class TweetController extends BaseController
                         }])
                         ->where('id', '!=', $id)
                         ->where('visible', 1)
+                        ->whereNotIn('active',[2,5])
                         ->orderBy('created_at', 'desc')
                         ->forPage($page, $this->paginate)
                         ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
@@ -3453,6 +3476,7 @@ class TweetController extends BaseController
                     ->where('visible', 2)
                     ->orderBy('created_at', 'desc')
                     ->forPage($page, $this->paginate)
+                    ->whereNotIn('active',[2,5])
                     ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
             }
         }

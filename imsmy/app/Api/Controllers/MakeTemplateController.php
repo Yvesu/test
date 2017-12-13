@@ -131,13 +131,18 @@ class MakeTemplateController extends BaseController
                 return response()->json(['error'=>'bad_request'],403);
 
             // 获取数据
-            $data = MakeTemplateFile::ofType($type, $folder_id)
+            $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+            },'belongsToFolder'=>function($q){
+                $q->select(['id','name']);
+            }])
+                ->ofType($type, $folder_id)
                 -> ofSearch($search)
                 -> ofHasDownload($user)
                 -> ofNormal()
                 -> active()
                 -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
+                -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
             // 调用内部函数，返回数据
             return response() -> json([
@@ -171,14 +176,20 @@ class MakeTemplateController extends BaseController
             $user = Auth::guard('api') -> user();
 
             // 获取数据集合
-            $data = MakeTemplateFile::ofSearch($search, 2)
+
+            $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+            },'belongsToFolder'=>function($q){
+                $q->select(['id','name']);
+            }])
+                ->ofSearch($search, 2)
                 -> ofHasDownload($user)
                 -> ofNormal()
                 -> ofFolder($folder)
                 -> active()
                 -> orderBy('sort')
                 -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
+                -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
             // 调用内部函数，返回数据
             return response() -> json([
@@ -249,12 +260,17 @@ class MakeTemplateController extends BaseController
             $folder = MakeTemplateFile::ofNormal()-> where('test_result',1) -> active() -> find($id, ['folder_id']);
 
             // 获取数据集合
-            $data = MakeTemplateFile::ofNormal()
+            $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+            },'belongsToFolder'=>function($q){
+                $q->select(['id','name']);
+            }])
+                -> ofNormal()
                 -> where('folder_id', $folder->folder_id)
                 -> active()
                 -> orderBy('sort')
                 -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','name','integral','cover','count'], 'page', $page);
+                -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
             // 返回数据
             return $data;
@@ -279,12 +295,18 @@ class MakeTemplateController extends BaseController
 
             // 判断用户是否登录
             if($user) {
-                $file = MakeTemplateFile::ofDownloadLog($user -> id)
+                $file = MakeTemplateFile::with(['belongsToUser' => function($q){
+                    $q -> select('id', 'nickname', 'avatar');
+                }])
+                    -> ofDownloadLog($user -> id)
                     -> active()
                     -> where('test_result',1)
                     -> findOrFail($file_id);
             } else {
-                $file = MakeTemplateFile::active() -> where('test_result',1)-> findOrFail($file_id);
+                $file = MakeTemplateFile::with(['belongsToUser' => function($q){
+                    $q -> select('id', 'nickname', 'avatar');
+                }])
+                    -> active() -> where('test_result',1)-> findOrFail($file_id);
 
                 // 非登录状态下如果需要积分则返回错误
                 if($file -> integral) return response()->json(['error'=>'bad_request'], 403);
@@ -494,6 +516,21 @@ class MakeTemplateController extends BaseController
 
         }catch (\Exception $e){
             DB::rollBack();
+            return response()->json(['error'=>$e->getMessage()],$e->getCode());
+        }
+    }
+
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function zip_template($id)
+    {
+        try{
+            $addr = MakeTemplateFile::find($id)->address;
+
+            return response()->json(['data'=>CloudStorage::privateUrl_zip($addr)],200);
+        }catch (\Exception $e){
             return response()->json(['error'=>$e->getMessage()],$e->getCode());
         }
     }

@@ -15,7 +15,7 @@ class FeaturedMediaTransformer extends Transformer
     {
 
         return [
-            'user_id'     => $data -> user_id,
+            'user_id'     => $data -> id,
             'nickname'    => $data -> nickname,
             'verify'      => $data -> verify,
             'verify_info' => $data ->verify_info,

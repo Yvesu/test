@@ -84,6 +84,21 @@ class MakeFilterController extends BaseController
                     ->where('test_result',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
 
+                $count = MakeFilterFile::WhereHas('belongsToManyFolder',function ($q) use ($folder_id){
+                    $q->where('folder_id','=',$folder_id);
+                })
+                    ->ofSearch($search)
+                    ->with(['belongsToUser'=>function($q){
+                        $q->select(['id','nickname']);
+                    },'belongsToManyFolder'=>function($q){
+                        $q->select(['name']);
+                    },'belongsToTextureMixType'])
+                    ->where('active',1)
+                    ->where('test_result',1)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+
+
+
             } else {
 
               //  2017 11 27 修改
@@ -97,6 +112,17 @@ class MakeFilterController extends BaseController
                     ->forpage($request->get('page',1),$this->paginate)
                     ->where('active',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+
+                $count =  MakeFilterFile::ofType($type)
+                    -> ofSearch($search)
+                    ->with(['belongsToUser'=>function($q){
+                        $q->select(['id','nickname']);
+                    },'belongsToManyFolder'=>function($q){
+                        $q->select(['name']);
+                    },'belongsToTextureMixType'])
+                    ->where('active',1)
+                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+
             }
 
 
@@ -104,8 +130,19 @@ class MakeFilterController extends BaseController
                 $value -> cover = $value -> cover;
             }
 
+           $data = $this ->makeFiterTransformer->transformCollection($audio->toArray());
+
             // 调用内部函数，返回数据
-            return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
+           if($page[0]==1) {
+               return response()->json([
+                   'data' => $data,
+                   'page_count' => ceil ($count->count()/$this->paginate),
+            ], 200);
+           }
+
+           return response()->json([
+                'data' => $data,
+            ], 200);
 
         } catch (ModelNotFoundException $e) {
             return response()->json(['error'=>'not_found'],404);

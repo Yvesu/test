@@ -1106,14 +1106,24 @@ $api->version(['v1'],function($api){
                 //各种支付
                 $api->post('/pay', 'PayTypeController@pay');
 
+                //创建收藏
+                $api->post('/user/collect','UserCollectController@createCollect');
+
+                //取消收藏
+                $api->post('/user/deletecollect','UserCollectController@deleteCollect');
+
+                //查看收藏
+                $api->post('/user/showcollect','UserCollectController@showCollect');
             });
 
         //滤镜推荐
-        $api->get('/filter/recommend','MakeFilterController@recommend');
+        $api->post('/filter/recommend','MakeFilterController@recommend');
 
         //滤镜压缩包
         $api->post('/filterurl/{id}','MakeFilterController@filterurl')
             ->where('id','[0-9]+');
 
+        //模板压缩包
+        $api->post('/zip/template/{id}','MakeTemplateController@zip_template');
     });
 });

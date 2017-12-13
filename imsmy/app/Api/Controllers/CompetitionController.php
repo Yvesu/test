@@ -64,71 +64,51 @@ class CompetitionController extends BaseController
             // 验证接收数据格式是否正确
             $validator = Validator::make($request->all(), [
                 'comment'  => 'required|max:255',
-                'theme'    => 'required|max:255',
                 'bonus'    => 'required',
                 'expires'  => 'required|numeric',
-//                'icon'     => 'required',
+
             ]);
 
             // 获取所有信息
-            $input = $request -> only(['comment','bonus','expires','theme']);
+            $input = $request -> only(['comment','expires','icon','location']);
 
-            if ($validator->fails() || !is_int($input['bonus']) || $input['bonus'] < 20) {
+            $bonus = (int)$request->get('bonus');
+
+            if ($validator->fails() || !is_int($bonus) || $bonus < 20) {
                 return response()->json(['error'=>'bad_request'],403);
             }
 
             $time = getTime();
 
             // 判断该赛事是否已经存在
-            $competition = Activity::create([
-//                'icon'         => $input['icon'],
+            $arr = [
+                'icon'         => $input['icon']?:'',
                 'user_id'      => $id,
-                'theme'        => removeXSS($request -> get('theme')),
                 'comment'      => removeXSS($request -> get('intro')),
-                'bonus'        => $input['bonus'],
+                'bonus'        => $bonus,
+                'location'     => $input['location']===null ?:'',
                 'expires'      => $input['expires'],
                 'time_add'     => $time,
                 'time_update'  => $time,
-            ]);
+            ];
 
-            // 封面
-//            $arr = explode('/',$input['icon']);
-//            $new_key = 'competition/' . $competition->id . '/' . $arr[sizeof($arr) - 1];
-//            $data[$competition->icon] = $new_key;
-//            $competition->icon = $new_key;
-//
-//            // 宣传视频
-//            if(isset($input['video']) && isset($input['screen_shot'])){
-//
-//                // video
-//                $video = explode('/',$input['video']);
-//                $new_key_video = 'competition/' . $competition->id . '/' . $video[sizeof($video) - 1];
-//                $data[$input['video']] = $new_key_video;
-//
-//                // screen_shot
-//                $screen_shot = explode('/',$input['screen_shot']);
-//                $new_key_shot = 'competition/' . $competition->id . '/' . $screen_shot[sizeof($screen_shot) - 1];
-//                $data[$input['screen_shot']] = $new_key_shot;
-//
-//                // 保存视频信息
-//                ActivityExtension::create([
-//                    'activity_id'   => $competition->id,
-//                    'screen_shot'   => $new_key_shot,
-//                    'video'         => $new_key_video,
-//                    'time_add'      => $time,
-//                    'time_update'   => $time
-//                ]);
-//            }
-//
-//            // 将存在七牛云上的内容进行重命名
-//            CloudStorage::batchRename($data);
-//            $competition->save();
+            \DB::beginTransaction();
 
-            return response()->json(['status'=>'ok'],201);
+            $competition = Activity::create($arr);
+
+            if ($competition){
+                \DB::commit();
+                return response()->json(['message'=>'success'],201);
+            }else{
+                \DB::rollBack();
+                return response()->json(['message'=>'failed'],403);
+            }
 
         }catch(ModelNotFoundException $e){
+            \DB::rollBack();
             return response()->json(['error'=>'bad_request'],403);
         }catch(\Exception $e){
+            \DB::rollBack();
             return response()->json(['error'=>'bad_request'],403);
         }
     }

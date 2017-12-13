@@ -40,9 +40,9 @@ class Qicheck extends Command
      */
     public function handle()
     {
-        set_time_limit(0);
+//        set_time_limit(0);
 
-        $ids = \DB::table('tweet_to_qiniu')->pluck('tweet_id');
+        $ids = \DB::table('tweet_to_qiniu')->take(2)->pluck('tweet_id');
 
         foreach ($ids as $id) {
 

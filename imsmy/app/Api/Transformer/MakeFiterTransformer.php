@@ -40,7 +40,7 @@ class MakeFiterTransformer extends Transformer
             'count'         => $item['count'],
             'integral'      => $item['integral'],
             'texture'       => CloudStorage::downloadUrl( $item['texture']),
-            'texture_mix_type' => $item['belongs_to_texture_mix_type']['name'],
+            'texture_mix_type' => $item['belongs_to_texture_mix_type']['code'],
             'time_add'      => $item['time_add'],
             'user'          => $this ->userTransformer->filetransformer( $item['belongs_to_user']),
             'folder'        => $this->floderTransformer->transformCollection($item['belongs_to_many_folder']),

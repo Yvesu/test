@@ -525,7 +525,7 @@ class CommonController extends Controller
     }
 
 
-    public function resourceDelete()
+    public function resourceDelete(Request $request)
     {
         try{
             DB::beginTransaction();
