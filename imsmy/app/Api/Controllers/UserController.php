@@ -178,6 +178,8 @@ class UserController extends BaseController
             $sex        = (int)$request->get('sex');
             $xmpp       = (int)$request->get('xmpp');
             $advertisement    = (int)$request->get('advertisement');
+            $signature = removeXSS( $request ->get ('signature'));
+            $location = $request->get('location');
 
             $time = getTime();
 
@@ -196,13 +198,14 @@ class UserController extends BaseController
                 $user -> nickname = $nickname;
             }
 
+
             // 生日 正则匹配
             if($birthday && $birthday != $user -> birthday){
 
-                if(!preg_match($this->reg['ymd'], $birthday) || strtotime($birthday)>$time) throw new \Exception('bad_request', 400);
+                if( $birthday>$time) throw new \Exception('bad_request', 400);
 
                 // 存入集合
-                $user -> birthday = $birthday;
+                $user -> birthday = date('Y-m-d',$birthday);
             }
 
             // 性别
@@ -242,16 +245,21 @@ class UserController extends BaseController
                 $user -> advertisement = $advertisement;
             }
 
-            $user->signature   = $request->get('signature');
-            $user->location    = $request->get('location');
+
+            if (! empty($location) && $location != $user->location) {
+
+                $user->location =  $location;
+            }
 
             if (! empty($avatar) && $avatar != $user->avatar) {
-                $user->hash_avatar = $request->get('hash_avatar');
-                $arr = explode('/', $avatar);
-                $new_avatar = 'users/' . $id . '/avatar/' . $arr[sizeof($arr) - 1];
-                CloudStorage::rename($avatar, $new_avatar);
-                ! empty($user->avatar) ? CloudStorage::delete($user->avatar) : null;
-                $user->avatar = $new_avatar;
+
+                $user->avatar =  $avatar;
+            }
+
+            if (! empty($signature) && $signature != $user->signature) {
+
+                $user->signature =  $signature;
+
             }
 
             // 暂时没有背景图设置，后期需要再修改

@@ -728,7 +728,6 @@ $api->version(['v1'],function($api){
                 $api->get('/{id}','UserController@show')
                     ->where('id','[0-9]+');
 
-
                 // 获取某个用户的动态
                 $api->get('/{id}/tweets','TweetController@index')
                     ->where('id','[0-9]+');
@@ -1062,6 +1061,9 @@ $api->version(['v1'],function($api){
             $api->post('/tweets/correlation/{id}','TweetController@correlation')
                 ->where('id','[0-9]+');
 
+            //搜索
+            $api->get('/search/list','AllSearchController@search');
+
         });
 
         //测试专区
@@ -1125,5 +1127,6 @@ $api->version(['v1'],function($api){
 
         //模板压缩包
         $api->post('/zip/template/{id}','MakeTemplateController@zip_template');
+
     });
 });

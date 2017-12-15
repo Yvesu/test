@@ -3452,7 +3452,7 @@ class TweetController extends BaseController
                         }])
                         ->where('id', '!=', $id)
                         ->where('visible', 1)
-                        ->whereNotIn('active',[2,5])
+                        ->whereIn('active',[0,1])
                         ->orderBy('created_at', 'desc')
                         ->forPage($page, $this->paginate)
                         ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
@@ -3476,7 +3476,7 @@ class TweetController extends BaseController
                     ->where('visible', 2)
                     ->orderBy('created_at', 'desc')
                     ->forPage($page, $this->paginate)
-                    ->whereNotIn('active',[2,5])
+                    ->whereIn('active',[0,1])
                     ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
             }
         }

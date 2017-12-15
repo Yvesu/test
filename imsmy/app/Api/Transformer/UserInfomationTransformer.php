@@ -27,6 +27,7 @@ class UserInfomationTransformer extends Transformer
             'level'                 =>  $user -> level,
             'honor'                 =>  $user -> honor,
             'cover'                 =>  CloudStorage::downloadUrl($user -> cover),
+            'birthday'              =>  $user -> birthday,
         ];
     }
 }

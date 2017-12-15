@@ -823,10 +823,6 @@ class Tweet extends Common
             $ids[] = $v['belongs_to_user']['id'];
      }
 
-
-
-
-
     }
 
 

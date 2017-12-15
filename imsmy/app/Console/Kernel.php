@@ -17,6 +17,9 @@ class Kernel extends ConsoleKernel
         Commands\Statistics::class,
         Commands\CountUser::class,
         Commands\Qicheck::class,
+        Commands\CacheSensitiveWord::class,
+        Commands\CacheKeywords::class,
+        Commands\NoExitWord::class,
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
 //        Commands\CacheSave::class,
@@ -31,8 +34,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
+        //鉴黄检测
         $schedule->command('Qicheck')->everyMinute();
+
+        //敏感词
+        $schedule->command('CacheSensitiveWord')->daily();
+
+        //关键词
+        $schedule->command('CacheKeywords')->daily();
+
+        //生词
+        $schedule->command('NoExitWord')->hourly();
 
         // $schedule->command('inspire')
         //          ->hourly();
