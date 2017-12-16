@@ -16,6 +16,7 @@ use App\Models\StatisticsUsers;
 use App\Models\Tigase\TigUsers;
 use App\Models\Tigase\UserJid;
 use App\Models\Tigase\TigNodes;
+use App\Models\UserToken;
 use App\Services\SMSVerify;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -216,6 +217,12 @@ class AuthController extends BaseController
 
             // 保存token
             $auth->token = $token;
+
+            UserToken::create([
+                'user_id'       =>    $auth->id,
+                'token'         =>    $auth->token,
+                'create_time'   =>     time(),
+            ]);
 
             // 获取用户关注人数
             $auth -> attention = Subscription::where('from',$auth->id)->count();

@@ -6,6 +6,8 @@ use App\Api\Transformer\ActivityTransformer;
 use App\Api\Transformer\FragCollectTransformer;
 use App\Api\Transformer\MakeFiterTransformer;
 use App\Api\Transformer\MakeTemplateFileDetailsTransformer;
+use App\Api\Transformer\NewFragmentSearchTransformer;
+use App\Api\Transformer\NewTemplateSearchTransformer;
 use App\Api\Transformer\NewTweetChannelTransformer;
 use App\Api\Transformer\NewTweetSearchTransformer;
 use App\Api\Transformer\NewUserSearchTransformer;
@@ -42,34 +44,34 @@ class AllSearchController extends Controller
 
     private $makeFiterTransformer;
 
-    private $makeTemplateFileDetailsTransformer;
-
     private $activityTransformer;
-
-    private $fragCollectTransformer;
 
     private $newTweetsSearchTransformer;
 
     private $searchTopicsTransformer;
 
+    private $newTemplateSearchTransformer;
+
+    private $newFragmentSearchTransformer;
+
     public function __construct
     (
         NewUserSearchTransformer $newUserSearchTransformer,
         MakeFiterTransformer $makeFiterTransformer,
-        MakeTemplateFileDetailsTransformer $makeTemplateFileDetailsTransformer,
         ActivityTransformer $activityTransformer,
-        FragCollectTransformer $fragCollectTransformer,
         NewTweetSearchTransformer $newTweetSearchTransformer,
-        SearchTopicsTransformer$searchTopicsTransformer
+        SearchTopicsTransformer $searchTopicsTransformer,
+        NewTemplateSearchTransformer $newTemplateSearchTransformer,
+        NewFragmentSearchTransformer $newFragmentSearchTransformer
     )
     {
-        $this -> newUserSearchTransformer   =   $newUserSearchTransformer;
-        $this -> makeFiterTransformer       =   $makeFiterTransformer;
-        $this -> makeTemplateFileDetailsTransformer = $makeTemplateFileDetailsTransformer;
-        $this -> activityTransformer        =   $activityTransformer;
-        $this -> fragCollectTransformer     =   $fragCollectTransformer;
-        $this -> newTweetsSearchTransformer =   $newTweetSearchTransformer;
-        $this -> searchTopicsTransformer    =   $searchTopicsTransformer;
+        $this -> newUserSearchTransformer       =   $newUserSearchTransformer;
+        $this -> makeFiterTransformer           =   $makeFiterTransformer;
+        $this -> activityTransformer            =   $activityTransformer;
+        $this -> newTweetsSearchTransformer     =   $newTweetSearchTransformer;
+        $this -> searchTopicsTransformer        =   $searchTopicsTransformer;
+        $this -> newTemplateSearchTransformer   =   $newTemplateSearchTransformer;
+        $this -> newFragmentSearchTransformer   =   $newFragmentSearchTransformer;
     }
 
     public function search(Request $request)
@@ -90,7 +92,7 @@ class AllSearchController extends Controller
             //过滤
             if(empty($keyword) && strlen($keyword)<1 && $keyword!=0) return response()->json(['message'=>'keyword is empty'],403);
 
-            //1用户  2动态   3话题  4赛事  5混合  6 滤镜  7模板  8音乐  9音频  10片段  11
+            //1用户  2动态   3话题  4赛事  5混合  6 滤镜  7模板  8音乐  9音频  10片段  11全部
             switch ($type){
                 case 1 :
                     return $this->user($page,$keyword);
@@ -385,19 +387,19 @@ class AllSearchController extends Controller
         $template = \Cache::remember('template:'.$keyword,'5',function() use ($keyword,$page){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
-                    $details = MakeTemplateFile::with(['belongsToUser' => function($q){
-                        $q -> select('id', 'nickname', 'avatar');
+                    $details = MakeTemplateFile::with(['belongsToFolder'=>function($q){
+                        $q->select(['id','name']);
                     }])
-                        -> where('test_result',1)
+                        ->where('test_result',1)
                         -> where('active',1)
                         ->where('name','like','%'.$keyword.'%')
                         ->forpage($page,$this->paginate)
                         ->orderBy('count','DESC')
-                        -> get( ['id', 'user_id', 'name','intro','preview_address', 'integral','cover','count','time_add']);
+                        -> get( ['id','folder_id', 'name','preview_address','address','cover','duration','watch_count']);
 
                     // 调用内部函数，返回数据
                     return response() -> json([
-                        'data'  => $this -> makeTemplateFileDetailsTransformer -> transformCollection($details->all()),
+                        'data'  => $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
                     ], 200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
@@ -407,7 +409,6 @@ class AllSearchController extends Controller
                 return response()->json(['message'=>'bad_request'],500);
             }
         });
-
         return $template;
     }
 
@@ -604,20 +605,18 @@ class AllSearchController extends Controller
                     $fragment_info = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
                         $q->where('keyword', '=', $keyword);
                     })
-                        ->with([
-                            'belongsToUser' => function ($q) {
-                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'verify_info', 'signature']);
-                            }, 'belongsToManyFragmentType'
-                        ])
+                        ->with(['belongsToManyFragmentType'=>function($q){
+                            $q->select(['name']);
+                        }])
                         ->where('test_results',1)
-                        ->where('active', '=', 1)
+                        ->where('active', 1)
                         ->orWhere('name', 'like', '%' . $keyword . '%')
                         ->forPage($page, $this->paginate)
                         ->orderBy('watch_count', 'DESC')
-                        ->get();
+                        ->get(['id','name','cover','net_address','duration','watch_count']);
 
                     return response()->json([
-                        'data' => $this->fragCollectTransformer->searchtransform($fragment_info->toArray()),
+                        'data' => $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
                     ], 200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -823,11 +822,282 @@ class AllSearchController extends Controller
         return $topic;
     }
 
+    /**
+     * 全部内容
+     * @param $page
+     * @param $keyword
+     * @return \Illuminate\Http\JsonResponse
+     */
     private function allType($page,$keyword)
     {
+        try{
+            //用户
+            $user = Auth::guard('api')->user();
 
+            $res = preg_match("/^1[3,4,5,7,8][0-9]{9}$/",$keyword);
 
+            if (is_numeric($keyword) && strlen($keyword)==11 && $res){
 
+                if ($user) {        //手机号搜索  排除黑名单   且用户登录
+
+                    $user_id = $user->id;
+
+                    $blacklist  = Blacklist::where('from',$user_id)->pluck('to');
+
+                    $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
+                        $q->where('username', $keyword);
+                    })
+                        ->where('is_phonenumber', 1)
+                        ->where('search_phone', 1)
+                        ->where('id','!=',$user_id)
+                        ->whereIn('active', [1,2])
+                        ->orderBy('fans_count','DESC')
+                        ->whereNotIn('id',$blacklist)
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                }else{                  //手机号搜索   用户未登录
+
+                    $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
+                        $q->where('username', $keyword);
+                    })
+                        ->where('is_phonenumber', 1)
+                        ->where('search_phone', 1)
+                        ->whereIn('active', [1,2])
+                        ->orderBy('fans_count','DESC')
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+
+                }
+
+                if (!$user_info->count()){
+
+                    if($user){              //如果手机格式搜索不到  用户登录   排除黑名单
+                        $user_id = $user->id;
+
+                        $blacklist  = Blacklist::where('from',$user_id)->pluck('to');
+
+                        $user_info = User::where('id','!=',$user_id)
+                            ->orderBy('fans_count','DESC')
+                            ->where('nickname','like','%'.$keyword.'%')
+                            ->whereNotIn('id',$blacklist)
+                            ->take(3)
+                            ->whereIn('active', [1,2])
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+
+                    }else{          //如果搜索不到   用户未登录
+
+                        $user_info = User::where('nickname','like','%'.$keyword.'%')
+                            ->orderBy('fans_count','DESC')
+                            ->take(3)
+                            ->whereIn('active', [1,2])
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                    }
+                }
+
+            }else{
+
+                if($user){              //按昵称搜索   用户登录   排除黑名单
+                    $user_id = $user->id;
+
+                    $blacklist  = Blacklist::where('from',$user_id)->pluck('to');
+
+                    $user_info = User::where('id','!=',$user_id)
+                        ->orderBy('fans_count','DESC')
+                        ->where('nickname','like','%'.$keyword.'%')
+                        ->whereNotIn('id',$blacklist)
+                        ->take(3)
+                        ->whereIn('active', [1,2])
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+
+                }else{          //昵称搜索   用户未登录
+
+                    $user_info = User::where('nickname','like','%'.$keyword.'%')
+                        ->take(3)
+                        ->orderBy('fans_count','DESC')
+                        ->whereIn('active', [1,2])
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                }
+
+            }
+
+            //模板
+            $details = MakeTemplateFile::with(['belongsToFolder'=>function($q){
+                $q->select(['id','name']);
+            }])
+                ->where('test_result',1)
+                -> where('active',1)
+                ->where('name','like','%'.$keyword.'%')
+                ->take(3)
+                ->orderBy('count','DESC')
+                -> get( ['id','folder_id', 'name','preview_address','address','cover','duration','watch_count']);
+
+            //竞赛
+            $activity = Activity::with(['belongsToUser','hasManyTweets.belongsToUser' => function ($q){
+                $q -> select(['id','avatar']);
+            }])
+                -> active()
+                -> where('comment','like','%'.$keyword.'%')
+                ->take(3)
+                -> get(['id','user_id','bonus','comment','expires','time_add','icon','users_count']);
+
+            //片段
+            $fragment_info = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
+                $q->where('keyword', '=', $keyword);
+            })
+                ->with(['belongsToManyFragmentType'=>function($q){
+                    $q->select(['name']);
+                }])
+                ->where('test_results',1)
+                ->where('active', 1)
+                ->orWhere('name', 'like', '%' . $keyword . '%')
+                ->forPage($page, $this->paginate)
+                ->orderBy('watch_count', 'DESC')
+                ->get(['id','name','cover','net_address','duration','watch_count']);
+
+            //动态
+            $tweet_1 = Tweet::WhereHas('hasOneContent',function ($q) use ($keyword){
+                $q->where('content','like','%'.$keyword.'%');
+            })
+                ->with(['hasOneContent'=>function($q){
+                    $q->select(['tweet_id','content']);
+                },'belongsToManyChannel'=>function($q){
+                    $q->select(['name']);
+                }])
+                ->where('active',1)
+                ->where('visible',0)
+                ->take(3)
+                ->orderBy('browse_times','DESC')
+                ->get(['id','duration','screen_shot','browse_times']);
+
+            $number = 3 - $tweet_1->count();
+
+            $tweet_2 = Tweet::WhereHas('belongsToManyKeywords',function($q) use ($keyword){
+                $q->where('keyword',$keyword);
+            })
+                ->with(['hasOneContent'=>function($q){
+                    $q->select(['tweet_id','content']);
+                },'belongsToManyChannel'=>function($q){
+                    $q->select(['name']);
+                }])
+                ->where('active',1)
+                ->where('visible',0)
+                ->forPage($page,$number)
+                ->orderBy('browse_times','DESC')
+                ->get(['id','duration','screen_shot','browse_times']);
+
+            if ($user){     //用户已登录
+                //搜索好友
+                $res1 = Friend::where('from', $user->id)->pluck('to');
+                if ($res1->all()) {
+                    $friends = [];
+                    foreach ($res1->toArray() as $k => $v) {
+                        $res2 = Friend::where('from', $v)->first();
+
+                        if ($res2) {
+                            $friends[] = $v;
+                        }
+                    }
+                }
+                $number_1 = $number - $tweet_2->count();
+
+                //朋友可见的动态
+                $friends_tweets_1 = Tweet::WhereHas('belongsToUser', function ($q) use ($friends) {
+                    $q->whereIn('id', $friends);
+                })
+                    ->WhereHas('belongsToManyKeywords',function($q) use ($keyword){
+                        $q->where('keyword',$keyword);
+                    })
+                    ->with(['hasOneContent'=>function($q){
+                        $q->select(['tweet_id','content']);
+                    },'belongsToManyChannel'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->where('visible', 1)
+                    ->whereIn('active',[0,1])
+                    ->forPage($page, $number_1)
+                    ->orderBy('browse_times','DESC')
+                    ->get(['id','duration','screen_shot','browse_times']);
+
+                $number_2 = $number_1 - $friends_tweets_1->count();
+                $friends_tweets_2 = Tweet::WhereHas('belongsToUser', function ($q) use ($friends) {
+                    $q->whereIn('id', $friends);
+                })
+                    ->WhereHas('hasOneContent',function ($q) use ($keyword){
+                        $q->where('content','like','%'.$keyword.'%');
+                    })
+                    ->with(['hasOneContent'=>function($q){
+                        $q->select(['tweet_id','content']);
+                    },'belongsToManyChannel'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->where('active',1)
+                    ->where('visible',0)
+                    ->forPage($page,$number_2)
+                    ->orderBy('browse_times','DESC')
+                    ->get(['id','duration','screen_shot','browse_times']);
+
+                //仅自己可见的动态
+                $number_3 = $number_2 - $friends_tweets_2->count();
+
+                $self_tweets_1 = Tweet::WhereHas('belongsToUser', function ($q) use ($user) {
+                    $q->where('id', $user->id);
+                })
+                    ->WhereHas('belongsToManyKeywords',function($q) use ($keyword){
+                        $q->where('keyword',$keyword);
+                    })
+                    ->with(['hasOneContent'=>function($q){
+                        $q->select(['tweet_id','content']);
+                    },'belongsToManyChannel'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->where('visible', 2)
+                    ->orderBy('created_at', 'desc')
+                    ->forPage($page, $number_3)
+                    ->whereIn('active',[0,1])
+                    ->get(['id','duration','screen_shot','browse_times']);
+
+                $number_4 = $number_3 - $self_tweets_1->count();
+                $self_tweets_2 = Tweet::WhereHas('belongsToUser', function ($q) use ($user) {
+                    $q->where('id', $user->id);
+                })
+                    ->WhereHas('hasOneContent',function ($q) use ($keyword){
+                        $q->where('content','like','%'.$keyword.'%');
+                    })
+                    ->with(['hasOneContent'=>function($q){
+                        $q->select(['tweet_id','content']);
+                    },'belongsToManyChannel'=>function($q){
+                        $q->select(['name']);
+                    }])
+                    ->where('visible', 2)
+                    ->orderBy('created_at', 'desc')
+                    ->forPage($page, $number_4)
+                    ->whereIn('active',[0,1])
+                    ->get(['id','duration','screen_shot','browse_times']);
+
+                $tweets = array_merge($tweet_1->toArray(),$tweet_2->toArray(),$friends_tweets_1->toArray(),$friends_tweets_2->toArray(),$self_tweets_1->toArray(),$self_tweets_2->toArray());
+
+                $tweet = mult_unique($tweets);
+
+            }else{          //用户未登录
+                $tweet = array_merge($tweet_1->toArray(),$tweet_2->toArray());
+            }
+
+            //话题
+            $topics = Topic::ofSearch($keyword)
+                ->able()
+                ->orderBy('like_count','desc')
+                ->take(3)
+                ->get(['id','name','comment','icon']);
+
+            return response()->json([
+                'user'      =>   $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
+                'template'  =>   $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
+                'activity'  =>   $this -> activityTransformer -> transformCollection($activity->all()),
+                'fragment'  =>   $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
+                'tweet'     =>   $this->newTweetsSearchTransformer->transformCollection($tweet),
+                'topic'     =>   $this->searchTopicsTransformer->transformCollection($topics->all()) ,
+            ]);
+        }catch (\Exception $e){
+            return response()->json(['message'=>'bad_request'],500);
+        }
     }
     /**
      * 敏感过滤 -> 累计 -> 收录
