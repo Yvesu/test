@@ -1065,17 +1065,24 @@ class TweetController extends BaseController
             // 转发 数量+1
             if($tweet->retweet){
 
+                $time = User::find($id)->last_token;
                 // 转发总量加1
                 User::findOrfail($id) -> increment('retweet_count');
 
                 // 更新被转发动态的 retweet 字段的值 加1
                 Tweet::findOrFail($newTweet['retweet']) -> increment('retweet_count');
 
+
+                User::where('id',$id)->update(['last_token'=>$time]);
+
             // 原创
             }else{
 
+                $time = User::find($id)->last_token;
                 // 作品总量加1
                 User::findOrfail($id) -> increment('work_count');
+
+                User::where('id',$id)->update(['last_token'=>$time]);
 
             }
 

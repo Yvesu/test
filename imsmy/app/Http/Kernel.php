@@ -72,5 +72,9 @@ class Kernel extends HttpKernel
 
         // 跨域
         'cors' => \App\Http\Middleware\AccessControlAllowOrigin::class,
+
+        //  测试用户
+        'test.user.auth' => \App\Http\Middleware\JwtAuthWebUser::class,
+
     ];
 }

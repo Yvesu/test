@@ -27,4 +27,13 @@ class MakeEffectsFileTemporary extends Model
     {
         return $this->belongsToMany('App\Models\Keywords','keyword_effects','effectsTemporary_id','keyword_id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 混合类型  反向一对多
+     */
+    public function belongsToMixTexture()
+    {
+        return $this -> belongsTo('App\Models\Make\TextureMixType','mix_texture_id','id');
+    }
 }

@@ -10,6 +10,8 @@ namespace App\Services;
 
 use App\Models\Cloud\QiniuUrl;
 use Qiniu\Auth;
+use function Qiniu\base64_urlSafeDecode;
+use function Qiniu\base64_urlSafeEncode;
 use Qiniu\Processing\PersistentFop;
 use Qiniu\Storage\BucketManager;
 use Qiniu\Storage\UploadManager;
@@ -401,6 +403,55 @@ class CloudStorage
         $qi =  new \Qiniu\Auth($ak , $sk);
 
         return $qi->sign($data);
+    }
+
+    public function DRM($bucket,$key)
+    {
+        $config = new \Qiniu\Config();
+        $HLSkey = base64_urlSafeEncode('fk9215jslat359cx');
+        $key = base64_urlSafeEncode($key);
+        $str = rtrim($key,'.m3u8');
+        $fop = 'avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/';
+        $fop .= $HLSkey;
+        $fop .= '/hlsKeyUrl/';
+        $fop .= 'aaa';
+        $fop .= '/hlsMethod/qiniu-protection-10|saveas/';
+        $fop .= base64_urlSafeEncode("$bucket:$str");
+        $fops = base64_urlSafeEncode($fop);
+        $pfop = new PersistentFop($this->auth,$config);
+        $pipeline = 'hivideo_drm';
+        list($id, $err) = $pfop->execute($bucket, $key, $fops, $pipeline,$force=1);
+        if ($err != null) {
+            return false;
+        } else {
+
+                return true;
+
+        }
+
+    }
+
+
+    public function transcoding($bucket,$key,$width,$hight)
+    {
+        $config = new \Qiniu\Config();
+        $pfop = new PersistentFop($this->auth,$config);
+        $fops ='adapt/m3u8/multiResolution/';
+        $fops .= floor($width/4).':'.floor($hight/4);
+        $fops .= floor($width/3).':'.floor($hight/3);
+        $fops .= floor($width/2).':'.floor($hight/2);
+        $fops .= $width.':'.$hight;
+        $fops .= '/envBandWidth/200000,800000,1700000,2400000/multiVb/200k,1200k,6500k,8500k/hlstime/10|saveas/';
+        $fop .= base64_urlSafeEncode("$bucket:$key");
+        $piepeline = 'hivideo_transcode';
+        list($id, $err) = $pfop->execute($bucket, $key, $fops, $pipeline,$force=1);
+        if ($err != null) {
+            return false;
+        } else {
+
+                return true;
+
+        }
     }
 
 }

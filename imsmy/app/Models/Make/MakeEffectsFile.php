@@ -57,6 +57,15 @@ class MakeEffectsFile extends Common
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 混合类型  反向一对多
+     */
+    public function belongsToMixTexture()
+    {
+        return $this -> belongsTo('App\Models\Make\TextureMixType','mix_texture_id','id');
+    }
+
+    /**
      * 一对多关系
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
