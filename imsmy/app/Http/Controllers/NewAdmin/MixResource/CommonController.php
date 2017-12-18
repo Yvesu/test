@@ -518,7 +518,7 @@ class CommonController extends Controller
             foreach ($id as $k=>$v){
                 MakeEffectsFolder::find($v)->delete();
             }
-            DB::commit(); 
+            DB::commit();
             return response()->json(['message'=>'删除成功'],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
