@@ -74,6 +74,86 @@ Route::group(['namespace' => 'Web'], function() {
     });
 });
 
+Route::group(['namespace'=>'NewWeb'],function (){
+
+    /**
+     * 首页
+     */
+    Route::get('/','TestIndexController@index');
+
+
+});
+
+
+$api -> version('v1',function($api) {
+
+    $api -> group(['namespace' => 'App\Http\controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
+
+        /**
+         * 测试页面登录
+         */
+        $api -> post('/testlogin','TestLoginController@login');
+
+        // 验证管理员的登录信息
+        $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
+            /**
+             * 网站前台测试页面
+             */
+            $api -> post('index','Test\ProductionController@index');
+
+            /**
+             * 作品页面
+             */
+            $api -> post('production','Test\ProductionController@Production');
+
+            /**
+             * 作品页面播放量接口
+             */
+            $api ->post('getcount','Test\ProductionController@getCount');
+
+            /**
+             * 作品页面状态接口
+             */
+            $api ->post('getstatus','Test\ProductionController@getStatus');
+
+            /**
+             * 电影节页面
+             */
+            $api -> post('filmfest','Test\FilmfestController@index');
+
+            /**
+             * 作品执行上传
+             */
+            $api -> post('doup','Test\ProductionController@doUp');
+
+            /**
+             * 进行复制
+             */
+            $api -> post('copy/{id}','Test\ProductionController@copy');
+
+            /**
+             * 进行转码
+             */
+            $api -> post('transcoding/{id}','Test\ProductionController@transcoding');
+
+            /**
+             * 加密
+             */
+            $api -> post('DRM/{id}','Test\ProductionController@DRM');
+
+            /**
+             * 删除作品
+             */
+            $api -> post('production/delete','Test\ProductionController@delete');
+
+
+
+        });
+    });
+
+});
+
+
 /**
  * 后端改成用react框架后的新接口路由 20170910
  */
@@ -684,6 +764,11 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                             * 删除资源
                             */
                            $api->post('/resource/delete','MixResource\CommonController@resourceDelete');
+
+                           /**
+                            * 混合纹理类别
+                            */
+                           $api->post('/mixtexture','MixResource\CommonController@mixTexture');
 
                        });
                    });

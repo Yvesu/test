@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\NewAdmin\User;
 
 use App\Models\Admin\Administrator;
+use App\Models\Tweet;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -325,11 +326,25 @@ class UserCommonTypeController extends Controller
             {
                 $data = User::find($v);
                 if($data){
-                    $data->active = 0;
-                    $data->stop_id = $admin->id;
-                    $data->stop_cause = $request->get('cause',null);
-                    $data->stop_time = time();
-                    $data->save();
+                    if($data->active !=0 && $data->active !=5){
+                        $data->active = 0;
+                        $data->stop_id = $admin->id;
+                        $data->stop_cause = $request->get('cause',null);
+                        $data->stop_time = time();
+                        $data->save();
+                        $tweet = $data->hasManyTweet()->get();
+                        if($tweet->count()>0){
+                            foreach($tweet as $kk => $vv)
+                            {
+                                $tweet_id = $vv->id;
+                                $shieldTweet = Tweet::find($tweet_id);
+                                $shieldTweet -> active = 2;
+                                $shieldTweet -> save();
+
+                            }
+                        }
+                    }
+
                 }
             }
             DB::commit();
@@ -399,6 +414,17 @@ class UserCommonTypeController extends Controller
                     {
                         $data->active = 1;
                         $data->save();
+                        $tweet = $data->hasManyTweet()->get();
+                        if($tweet->count()>0){
+                            foreach($tweet as $kk => $vv)
+                            {
+                                $tweet_id = $vv->id;
+                                $shieldTweet = Tweet::find($tweet_id);
+                                $shieldTweet -> active = 1;
+                                $shieldTweet -> save();
+
+                            }
+                        }
                     }
                 }
             }
@@ -434,6 +460,17 @@ class UserCommonTypeController extends Controller
                     {
                         $data->active = 5;
                         $data->save();
+                        $tweet = $data->hasManyTweet()->get();
+                        if($tweet->count()>0){
+                            foreach($tweet as $kk => $vv)
+                            {
+                                $tweet_id = $vv->id;
+                                $shieldTweet = Tweet::find($tweet_id);
+                                $shieldTweet -> active = 5;
+                                $shieldTweet -> save();
+
+                            }
+                        }
                     }
                 }
             }

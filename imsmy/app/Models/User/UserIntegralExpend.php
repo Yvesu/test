@@ -12,8 +12,6 @@ class UserIntegralExpend extends Model
         'user_id',
         'pay_number',
         'pay_count',
-        'pay_cost',
-        'type',
         'type_id',
         'pay_reason',
         'status',

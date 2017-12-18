@@ -49,6 +49,7 @@ class MixResourceController extends Controller
                     'integral'=>$oldData->integral,
                     'vipfree'=>$oldData->vipfree,
                     'isalpha'=>$oldData->isalpha,
+                    'mix_texture' => $oldData->mix_texture_id?$oldData->belongsToMixTexture->name:'',
                     'distinguishability_x'=>$oldData->distinguishability_x,
                     'distinguishability_y'=>$oldData->distinguishability_y,
                     'preview_address'=>$oldData->preview_address?$this->protocol.'viedo.ects.cdn.hivideo.com/'.$oldData->preview_address:null,
@@ -103,6 +104,7 @@ class MixResourceController extends Controller
             $keywords = $request->get('keywords',null);
             $vipfree = $request->get('vipfree',1);
             $isalpha = $request->get('isalpha',1);
+            $mix_texture = $request->get('mix_texture_id',null);
             if(is_null($name)||is_null($duration)||is_null($folder)||is_null($distinguishability_x)||is_null($distinguishability_y)||is_null($cover)||is_null($preview_address)||is_null($address)||is_null($size)){
                 return response()->json(['message'=>'数据不合法'],200);
             }
@@ -121,6 +123,7 @@ class MixResourceController extends Controller
             $effect->preview_address = $preview_address;
             $effect->address = $address;
             $effect->size = $size;
+            $effect->mix_texture_id = $mix_texture;
             $effect->isalpha = $isalpha;
             $effect->vipfree = $vipfree;
             $effect->save();
@@ -163,6 +166,7 @@ class MixResourceController extends Controller
                 'label' => $label,
                 'play' => $this->protocol.'video.ects.cdn.hivideo.com/'.$effect->preview_address,
                 'size' => round((($effect->size)/1024)/1024,2),
+                'mix_texture' => $oldData->mix_texture_id?$oldData->belongsToMixTexture->name:'',
                 'distinguishability'=>$effect->distinguishability_x.'*'.$effect->distinguishability_y,
                 'type'=> $effect->belongsToFolder->name,
                 'vipfree'=>($effect->vipfree)==1?'vip免费':'vip不免费',
@@ -201,6 +205,7 @@ class MixResourceController extends Controller
             $effect->resolution = $data->distinguishability_x.'*'.$data->distinguishability_y;
             $effect->duration = $data->duration;
             $effect->size = $data->size;
+            $effect->mix_texture_id  = $data->mix_texture_id;
             $effect->integral = $data->integral;
             $effect->isalpha = $data->isalpha;
             $effect->time_add = time();

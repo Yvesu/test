@@ -13,6 +13,6 @@ class IndexController extends PremiseController
     {
 
         // 网站首页
-        return view('welcome');
+        return view('welcome1');
     }
 }

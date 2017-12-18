@@ -1106,7 +1106,7 @@ $api->version(['v1'],function($api){
                 $api->post('/font/testresult','MakeFontController@testResult');
 
                 //各种支付
-                $api->post('/pay', 'PayTypeController@pay');
+                $api->post('/pay', 'MakeFilterController@pay');
 
                 //创建收藏
                 $api->post('/user/collect','UserCollectController@createCollect');
@@ -1127,9 +1127,6 @@ $api->version(['v1'],function($api){
 
         //模板压缩包
         $api->post('/zip/template/{id}','MakeTemplateController@zip_template');
-
-
-
 
     });
 });

@@ -34,7 +34,6 @@ class SignController extends Controller
                 'id' => $auth->id,                          // 用户id
                 'password' => $request->get('password')     // 用户输入的密码
             ];
-
             // 验证用户登录信息，如果验证成功则生成唯一凭证token，否则返回错误
             if (! $token = JWTAuth::attempt($credentials)) {
                 return response()->json(['error' => 'invalid_credentials'], 401);

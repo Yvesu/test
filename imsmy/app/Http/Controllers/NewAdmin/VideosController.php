@@ -109,6 +109,17 @@ class VideosController extends Controller
         } elseif(1 == $active) {
 
             $tweets = Tweet::has('hasManyChannelTweet');
+        }else{
+            return response()->json(['tweets' => null,
+                'count'  => $count,
+                'today_count'  => $today_count,
+                'batchBehavior'=>   [
+                    'dotype' => '推荐',
+                    'dohot'  => '热门',
+                    'cancelhot' => '取消热门',
+                    'cs'=> '取消屏蔽',
+                    'delete' => '删除',]
+            ],200);
         }
 
         $tweets = $tweets -> where('original',0)->where('type','=',0)

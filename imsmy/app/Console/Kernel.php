@@ -20,6 +20,7 @@ class Kernel extends ConsoleKernel
         Commands\CacheSensitiveWord::class,
         Commands\CacheKeywords::class,
         Commands\NoExitWord::class,
+
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
 //        Commands\CacheSave::class,
@@ -81,7 +82,6 @@ class Kernel extends ConsoleKernel
         //  统计每年月登录用户量
 
         $schedule->command('CountUser')->everyMinute();
-
 
     }
 }

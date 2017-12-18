@@ -13,7 +13,6 @@ class FeaturedMediaTransformer extends Transformer
 {
     public function transform($data)
     {
-
         return [
             'user_id'     => $data -> id,
             'nickname'    => $data -> nickname,

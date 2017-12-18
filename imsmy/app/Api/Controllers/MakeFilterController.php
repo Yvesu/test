@@ -344,5 +344,19 @@ class MakeFilterController extends BaseController
 
     }
 
+    public function pay(Request $request)
+    {
+        //支付的类型
+        $type = $request->get('type');
+
+        if(empty($type)) return response()->json(['error'=>'bad_request'],403);
+
+        //获取用户信息
+        $user = Auth::guard('api')->user();
+
+        if($type === 'mixture') {
+            dd(1);
+        }
+    }
 
 }

@@ -68,4 +68,6 @@ class TemplageController extends Controller
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
     }
+
+
 }

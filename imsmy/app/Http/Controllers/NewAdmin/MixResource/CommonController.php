@@ -5,6 +5,7 @@ namespace App\Http\Controllers\NewAdmin\MixResource;
 use App\Models\DownloadCost;
 use App\Models\Make\MakeEffectsFile;
 use App\Models\Make\MakeEffectsFolder;
+use App\Models\Make\TextureMixType;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -525,6 +526,11 @@ class CommonController extends Controller
     }
 
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 删除资源文件
+     */
     public function resourceDelete(Request $request)
     {
         try{
@@ -536,6 +542,7 @@ class CommonController extends Controller
             }
             $id = explode('|',$id);
             foreach ($id as $k=>$v){
+
                 MakeEffectsFile::find($v)->delete();
             }
             DB::commit();
@@ -543,6 +550,30 @@ class CommonController extends Controller
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
         }
+    }
+
+
+    public function mixTexture()
+    {
+        try{
+            DB::beginTransaction();
+            $data = TextureMixType::get();
+            $texture = [];
+            foreach ($data as $k=>$v) {
+                $temp = [
+                        'id'=>$v->id,
+                        'name'=>$v->name,
+            ];
+            array_push($texture,$temp);
+        }
+            DB::commit();
+            return response()->json(['data'=>$texture],200);
+        }catch (ModelNotFoundException $q){
+            DB::rollBack();
+            return response()->json(['error'=>'not_found'],404);
+        }
+
+
     }
 
 }
