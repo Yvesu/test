@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\SensitiveWord;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class CacheSensitiveWord extends Command
 {

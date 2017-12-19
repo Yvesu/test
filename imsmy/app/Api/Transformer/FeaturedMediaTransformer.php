@@ -14,11 +14,11 @@ class FeaturedMediaTransformer extends Transformer
     public function transform($data)
     {
         return [
-            'user_id'     => $data -> id,
-            'nickname'    => $data -> nickname,
-            'verify'      => $data -> verify,
-            'verify_info' => $data ->verify_info,
-            'avatar'      => CloudStorage::downloadUrl($data -> avatar),
+            'user_id'     => $data->belongsToUser -> id,
+            'nickname'    => $data->belongsToUser -> nickname,
+            'verify'      => $data->belongsToUser -> verify,
+            'verify_info' => $data->belongsToUser ->verify_info,
+            'avatar'      => CloudStorage::downloadUrl($data->belongsToUser -> avatar),
         ];
     }
 }

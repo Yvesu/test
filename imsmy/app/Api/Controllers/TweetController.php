@@ -875,7 +875,7 @@ class TweetController extends BaseController
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
 //            //TODO 发布动态的手机系统
-         if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
+        if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
 
               //手机类型
               $phone_type = $request->get('phone_type', '');
@@ -903,8 +903,8 @@ class TweetController extends BaseController
 
               // 将手机信息存入tweet数组中
               $newTweet['phone_id'] = $phone_id;
-          }
-
+        }
+            dd($newTweet);
 
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);

@@ -29,7 +29,7 @@ class UsersSearchTransformer extends Transformer
             'nickname'     =>  $user->nickname,
             'avatar'       =>  CloudStorage::downloadUrl($user->avatar),
             'signature'    =>  $user->signature,
-            'num_attention'=>  $user->num_attention,
+            'num_attention'=>  $user->num_attention ?: 0,
             'already_like' =>  $already_follow ?  ($already_fans ?  '2' : '1') : '0',
             'verify'       =>  $user->verify,
             'verify_info'  =>  $user->verify_info,

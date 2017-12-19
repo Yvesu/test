@@ -72,6 +72,37 @@ class AllSearchController extends Controller
         $this -> searchTopicsTransformer        =   $searchTopicsTransformer;
         $this -> newTemplateSearchTransformer   =   $newTemplateSearchTransformer;
         $this -> newFragmentSearchTransformer   =   $newFragmentSearchTransformer;
+
+        if (!Cache::get('keywords')){
+            $keyword_obj = Keywords::distinct('keyword')->get(['keyword']);
+
+            $arr = $keyword_obj->toArray();
+
+            $keyword_arr = array_column($arr, 'keyword');
+
+            Cache::put('keywords',$keyword_arr,'1450');
+        }
+
+        if (!Cache::get('sensitivewords')){
+            $sensitiveword = SensitiveWord::distinct('sensitive_word')->get(['sensitive_word']);
+
+            $arr = $sensitiveword->toArray();
+
+            $sensitivewords = array_column($arr, 'sensitive_word');
+
+            Cache::put('sensitivewords',$sensitivewords,'1450');
+        }
+
+        if(!Cache::get('noExitWord')){
+            $noExitWord_obj =  NoExitWord::distinct('keyword')->get(['keyword']);
+
+            $arr = $noExitWord_obj->toArray();
+
+            $noExitWord_arr = array_column($arr, 'keyword');
+
+            Cache::put('noExitWord',$noExitWord_arr,'60');
+        }
+
     }
 
     public function search(Request $request)
@@ -79,7 +110,7 @@ class AllSearchController extends Controller
         try{
             //过滤数据
             if(!is_numeric($request->get('page',1)) || !is_numeric($request->get('type'))) return response()->json(['message'=>'bad_request'],403);
-
+//dd($request->get('keyword'));
             //页数
             $page = $request->get('page',1);
 

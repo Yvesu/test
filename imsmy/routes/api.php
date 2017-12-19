@@ -1064,6 +1064,9 @@ $api->version(['v1'],function($api){
             //搜索
             $api->get('/search/list','AllSearchController@search');
 
+            //个人动态
+            $api->get('/person/tweets','PersonController@tweet');
+
         });
 
         //测试专区
@@ -1128,5 +1131,6 @@ $api->version(['v1'],function($api){
         //模板压缩包
         $api->post('/zip/template/{id}','MakeTemplateController@zip_template');
 
+        $api->post('/notification','QiNiuNotificationController@notification');
     });
 });

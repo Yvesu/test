@@ -842,7 +842,7 @@ class Tweet extends Common
 
     public function belongsToManyKeywords()
     {
-        return $this->belongsToMany('App\Models\keywords','keywords_tweet','tweet_id','keyword_id');
+        return $this->belongsToMany('App\Models\Keywords','keywords_tweet','tweet_id','keyword_id');
     }
 
 

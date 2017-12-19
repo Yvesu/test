@@ -2,25 +2,23 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Keywords;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
-class CacheKeywords extends Command
+class WaterMark extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'CacheKeywords:make';
+    protected $signature = 'waterMark:make';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'CacheKeywords';
+    protected $description = 'Command description';
 
     /**
      * Create a new command instance.
@@ -39,12 +37,6 @@ class CacheKeywords extends Command
      */
     public function handle()
     {
-        $keyword_obj = Keywords::distinct('keyword')->get(['keyword']);
 
-        $arr = $keyword_obj->toArray();
-
-        $keyword_arr = array_column($arr, 'keyword');
-
-        Cache::put('keywords',$keyword_arr,'1450');
     }
 }

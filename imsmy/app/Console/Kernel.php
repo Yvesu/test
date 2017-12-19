@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Cache;
 
 class Kernel extends ConsoleKernel
 {
@@ -13,13 +14,14 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        // Commands\Inspire::class,
+         Commands\Inspire::class,
         Commands\Statistics::class,
         Commands\CountUser::class,
-        Commands\Qicheck::class,
-        Commands\CacheSensitiveWord::class,
-        Commands\CacheKeywords::class,
-        Commands\NoExitWord::class,
+
+        \App\Console\Commands\Qicheck::class,
+        \App\Console\Commands\CacheSensitiveWord::class,
+        \App\Console\Commands\CacheKeywords::class,
+        \App\Console\Commands\NoExitWord::class,
 
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
@@ -39,13 +41,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('Qicheck')->everyMinute();
 
         //敏感词
-        $schedule->command('CacheSensitiveWord')->daily();
+        $schedule->command('CacheSensitiveWord')->everyMinute();//->daily();
 
         //关键词
-        $schedule->command('CacheKeywords')->daily();
+        $schedule->command('CacheKeywords:make')->everyMinute();//->daily();
 
         //生词
-        $schedule->command('NoExitWord')->hourly();
+        $schedule->command('NoExitWord')->everyMinute(); //->hourly();
 
         // $schedule->command('inspire')
         //          ->hourly();

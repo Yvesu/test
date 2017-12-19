@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class NoExitWord extends Command
 {
@@ -37,12 +38,14 @@ class NoExitWord extends Command
      */
     public function handle()
     {
-            $noExitWord_obj =  NoExitWord::distinct('keyword')->get(['keyword']);
+
+            $noExitWord_obj =  \App\Models\NoExitWord::distinct('keyword')->get(['keyword']);
 
             $arr = $noExitWord_obj->toArray();
 
             $noExitWord_arr = array_column($arr, 'keyword');
 
-            \Cache::put('noExitWord',$noExitWord_arr,'60');
+            Cache::put('noExitWord',$noExitWord_arr,'60');
+
     }
 }
