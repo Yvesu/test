@@ -30,6 +30,7 @@ use App\Models\HotSearch;
 use App\Models\Keywords;
 use App\Models\KeywordTweets;
 use App\Models\Make\MakeTemplateFile;
+use App\Models\Mark;
 use App\Models\TweetActivity;
 use App\Models\TweetContent;
 use App\Models\TweetHot;
@@ -42,6 +43,7 @@ use App\Models\Tweet;
 use App\Models\TweetAt;
 use App\Models\TweetLike;
 use App\Models\ChannelTweet;
+use App\Models\TweetMark;
 use App\Models\TweetPhone;
 use App\Models\TweetQiniuCheck;
 use App\Models\TweetTopic;
@@ -63,6 +65,7 @@ use Illuminate\Support\Facades\Cache;
 use DB;
 use Illuminate\Support\Collection;
 use App\Services\TweetService;
+use Qiniu\Processing\ImageUrlBuilder;
 
 /**
  * 动态相关接口 
@@ -816,7 +819,7 @@ class TweetController extends BaseController
             ];
 
             // 内容 过滤内容
-            $content = $request->get('content') ? removeXSS($request->get('content')) : null;
+            $content = $request->get('content') ? removeXSS($request->get('content')) : '';
 
             // 判断
             if($newTweet['video']){
@@ -904,7 +907,32 @@ class TweetController extends BaseController
               // 将手机信息存入tweet数组中
               $newTweet['phone_id'] = $phone_id;
         }
-            dd($newTweet);
+            //TODO  暂停使用  水印
+//            if ($request->get('screen_shot')){
+//
+//                $imageUrlBuilder = new ImageUrlBuilder();
+//                //获取图片地址
+//                $url = CloudStorage::downloadUrl($request->get('screen_shot'));
+//
+//                $mark = Mark::where('active',1)->first();
+//
+//                $mark_url = CloudStorage::downloadUrl($mark->mark_content);
+//
+//                $mark_url = 'http://www.hivideo.com/home/img/logo.png';
+//
+//                $waterLink = $imageUrlBuilder->waterImg($url, $mark_url,'100','SouthEast','228','0','0.05');
+//
+//                //获取用户名
+//                $username = User::find($id);
+//
+//                $textLink = $imageUrlBuilder->waterText($waterLink, ' @ '.$username->nickname, '微软雅黑', 500,'white','90','SouthEast','100','10');
+//
+//                $arr_url = parse_url($textLink);
+//
+//                $tweet_url = $arr_url['host'].$arr_url['path'].'?'.$arr_url['query'];
+//
+//                $newTweet['screen_shot'] = $tweet_url;
+//            }
 
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);
@@ -1111,6 +1139,20 @@ class TweetController extends BaseController
                 'tweet_id'    => $tweet->id,
                 'create_time' => time(),
             ]);
+
+            //是否添加水印
+            //if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);
+
+            //默认为添加
+//            $mark = $request->get('mark',2);
+//
+//            if($mark==2){
+//                TweetMark::create([
+//                    'tweet_id'      =>  $tweet->id,
+//                    'create_time'   =>  time(),
+//                ]);
+//
+//            }
 
             return response()->json($this->tweetsTransformer->transform($tweet),201);
 

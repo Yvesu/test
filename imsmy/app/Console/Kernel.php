@@ -19,9 +19,10 @@ class Kernel extends ConsoleKernel
         Commands\CountUser::class,
 
         \App\Console\Commands\Qicheck::class,
-        \App\Console\Commands\CacheSensitiveWord::class,
-        \App\Console\Commands\CacheKeywords::class,
-        \App\Console\Commands\NoExitWord::class,
+//        \App\Console\Commands\WaterMark::class,
+//        \App\Console\Commands\CacheSensitiveWord::class,
+//        \App\Console\Commands\CacheKeywords::class,
+//        \App\Console\Commands\NoExitWord::class,
 
 //        Commands\Ranking::class,
 //        Commands\XmppFile::class,
@@ -41,13 +42,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('Qicheck')->everyMinute();
 
         //敏感词
-        $schedule->command('CacheSensitiveWord')->everyMinute();//->daily();
+//        $schedule->command('CacheSensitiveWord')->everyMinute();//->daily();
 
         //关键词
-        $schedule->command('CacheKeywords:make')->everyMinute();//->daily();
+//        $schedule->command('CacheKeywords:make')->everyMinute();//->daily();
 
         //生词
-        $schedule->command('NoExitWord')->everyMinute(); //->hourly();
+//        $schedule->command('NoExitWord')->everyMinute(); //->hourly();
 
         // $schedule->command('inspire')
         //          ->hourly();
@@ -84,6 +85,8 @@ class Kernel extends ConsoleKernel
         //  统计每年月登录用户量
 
         $schedule->command('CountUser')->everyMinute();
+
+//        $schedule->command('waterMark:make')->everyMinute();
 
     }
 }

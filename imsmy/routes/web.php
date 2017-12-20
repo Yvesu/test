@@ -80,7 +80,10 @@ Route::group(['namespace'=>'NewWeb'],function (){
      * 首页
      */
     Route::get('/','TestIndexController@index');
-
+    //维护中
+    Route::get('/',function (){
+        return view('stick');
+    });
 
 });
 

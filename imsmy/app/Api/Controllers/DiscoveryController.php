@@ -399,40 +399,62 @@ class DiscoveryController extends BaseController
     public function featured(Request $request)
     {
         $page = (int)$request -> get('page', 1);
+//
+//        $top_count = 5;
+//
+//        $top_data = [];
+//
+//        // 第一次请求 有置顶
+//        if(1 == $page) {
+//
+//            $top = FeaturedMedia::with(['belongsToUser' => function($q){
+//                $q -> select('id', 'avatar', 'nickname', 'verify', 'verify_info');
+//            }])
+//                -> where('top', '<>', 0)
+//                -> orderBy('sort')
+//                -> take($top_count)
+//                -> get(['user_id']);
+//
+//            $top_data = $this -> featuredMediaTransformer -> transformCollection($top -> all());
+//        }
+//
+//        // 普通
+//        $media_count = FeaturedMedia::with(['belongsToUser' => function($q){
+//            $q -> select('id', 'avatar', 'nickname', 'verify', 'verify_info');
+//        }])
+//            -> where('top', 0)
+//            -> orderBy('sort');
+//
+//        $media = $media_count -> forpage($page, $this -> paginate)
+//            -> get(['user_id']);
+//
+//        return [
+//            'top'           => $top_data,
+//            'media'         => $this -> featuredMediaTransformer -> transformCollection($media -> all()),
+//            'page_count'    => ceil($media_count -> count()/$this -> paginate)
+//        ];
 
-        $top_count = 5;
 
-        $top_data = [];
+        //精选用户
 
-        // 第一次请求 有置顶
-        if(1 == $page) {
+        $top = Cache::remember('top', 5, function () use ($page){
 
-            $top = FeaturedMedia::with(['belongsToUser' => function($q){
-                $q -> select('id', 'avatar', 'nickname', 'verify', 'verify_info');
-            }])
-                -> where('top', '<>', 0)
-                -> orderBy('sort')
-                -> take($top_count)
-                -> get(['user_id']);
+            $top = User::where('active',2)
+                ->where('is_vip','!=',0)
+                ->where('verify','!=',0)
+                ->forPage($page,$this->paginate)
+                ->get(['id', 'avatar', 'nickname', 'verify', 'verify_info']);
 
-            $top_data = $this -> featuredMediaTransformer -> transformCollection($top -> all());
-        }
+            $top_data = $this -> featuredMediaTransformer -> ptransform($top);
 
-        // 普通
-        $media_count = FeaturedMedia::with(['belongsToUser' => function($q){
-            $q -> select('id', 'avatar', 'nickname', 'verify', 'verify_info');
-        }])
-            -> where('top', 0)
-            -> orderBy('sort');
+            return [
+                'top'           => $top_data,
+                'page_count'    => ceil($top -> count()/$this -> paginate)
+            ];
+        });
 
-        $media = $media_count -> forpage($page, $this -> paginate)
-            -> get(['user_id']);
+        return $top;
 
-        return [
-            'top'           => $top_data,
-            'media'         => $this -> featuredMediaTransformer -> transformCollection($media -> all()),
-            'page_count'    => ceil($media_count -> count()/$this -> paginate)
-        ];
     }
 
 }

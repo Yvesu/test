@@ -21,4 +21,22 @@ class FeaturedMediaTransformer extends Transformer
             'avatar'      => CloudStorage::downloadUrl($data->belongsToUser -> avatar),
         ];
     }
+
+    public function ptransform($item)
+    {
+        $data = $item -> toArray();
+
+        $a = [];
+        foreach ($data as $v){
+             $a[] = [
+                'user_id'     => $v['id'],
+                'nickname'    => $v['nickname'],
+                'verify'      => $v['verify'],
+                'verify_info' => $v['verify_info'],
+                'avatar'      => CloudStorage::downloadUrl($v['avatar']),
+            ];
+        }
+        return $a;
+    }
+
 }
