@@ -182,7 +182,9 @@ class NotificationController extends BaseController
                 }
             });
 
-            return response()->json($this->notificationsTransformer->transformCollection($notifications->all()));
+            return response()->json([
+                'data'=> $this->notificationsTransformer->transformCollection($notifications->all())
+            ],200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
         }

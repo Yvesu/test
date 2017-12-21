@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         Commands\CountUser::class,
 
         \App\Console\Commands\Qicheck::class,
-//        \App\Console\Commands\WaterMark::class,
+        \App\Console\Commands\MarkTweet::class,
 //        \App\Console\Commands\CacheSensitiveWord::class,
 //        \App\Console\Commands\CacheKeywords::class,
 //        \App\Console\Commands\NoExitWord::class,
@@ -40,6 +40,9 @@ class Kernel extends ConsoleKernel
     {
         //鉴黄检测
         $schedule->command('Qicheck')->everyMinute();
+
+        //视频水印
+        $schedule->command('mark:tweet')->everyMinute();
 
         //敏感词
 //        $schedule->command('CacheSensitiveWord')->everyMinute();//->daily();
@@ -85,8 +88,6 @@ class Kernel extends ConsoleKernel
         //  统计每年月登录用户量
 
         $schedule->command('CountUser')->everyMinute();
-
-//        $schedule->command('waterMark:make')->everyMinute();
 
     }
 }

@@ -138,11 +138,6 @@ class CloudStorage
         return  $this->bucketManager->delete($this->bucket,$key);
     }
 
-    public function deleteNew($bucket,$key)
-    {
-        return  $this->bucketManager->delete($bucket,$key);
-    }
-
     public function webDeleteVideo($key)
     {
 
@@ -410,114 +405,22 @@ class CloudStorage
         return $qi->sign($data);
     }
 
-
-    public function getWidthAndHeight($key)
-    {
-
-        $url = "http://video.ects.cdn.hivideo.com/".$key.'?avinfo';
-        $ex = pathinfo($key, PATHINFO_EXTENSION);
-        $html = file_get_contents($url);
-        $rule1 = "/\"width\":.*?,/";
-        $rule2 = "/\"height\":.*?,/";
-        preg_match($rule1,$html,$width);
-        preg_match($rule2,$html,$height);
-        $width =rtrim( explode(' ',$width[0])[1],',');
-        $height = rtrim(explode(' ',$height[0])[1],',');
-        return $width.'*'.$height;
-    }
-
-    public function reNameFile($srcbucket,$key,$destbucket,$destKey)
-    {
-        list($ret, $error) = $this->bucketManager->move($srcbucket,$key,$destbucket,$destKey,true);
-        if ($error !== null) {
-            throw new \Exception($error->message(),$error->code());
-        } else {
-            return true;
-        }
-    }
-
-
-    public function saveCover($key,$newAddress)
-    {
-        $bucket = 'hivideo-video';
-        $fileBucket = 'hivideo-img';
-        $config = new \Qiniu\Config();
-        $url = "http://video.ects.cdn.hivideo.com/".$key.'?avinfo';
-        $html = file_get_contents($url);
-        $rule1 = "/\"width\":.*?,/";
-        $rule2 = "/\"height\":.*?,/";
-        preg_match($rule1,$html,$width);
-        preg_match($rule2,$html,$height);
-        $width =rtrim( explode(' ',$width[0])[1],',');
-        $height = rtrim(explode(' ',$height[0])[1],',');
-        $pfop = new PersistentFop($this->auth,$bucket);
-        $pipeline = 'hivideo_drm';
-        $fileKey1 = $key.'vframe-001_'.$width.'*'.$height.'_.jpg';
-        $fileKey2 = $key.'vframe-002_'.$width.'*'.$height.'_.jpg';
-        $fileKey3 = $key.'vframe-003_'.$width.'*'.$height.'_.jpg';
-        $fops = 'vframe/jpg/offset/7/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops .= base64_urlSafeEncode("$fileBucket:$fileKey1");
-        list($id,$err) = $pfop->execute($newAddress,$fops,$pipeline,$force=true);
-
-        $fops2 = 'vframe/jpg/offset/14/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops2 .= base64_urlSafeEncode("$fileBucket:$fileKey2");
-        list($id,$err2) = $pfop->execute($newAddress,$fops2,$pipeline,$force=true);
-
-        $fops3 = 'vframe/jpg/offset/50/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops3 .= base64_urlSafeEncode("$fileBucket:$fileKey3");
-        list($id,$err3) = $pfop->execute($newAddress,$fops3,$pipeline,$force=true);
-        if ($err != null || $err2 != null || $err3 != null) {
-            return false;
-        } else {
-            return $width.'*'.$height;
-        }
-    }
-
-
-    public function userSaveCover($key,$time=0)
-    {
-        $bucket = 'hivideo-video';
-        $fileBucket = 'hivideo-img';
-        $config = new \Qiniu\Config();
-        $url = "http://video.ects.cdn.hivideo.com/".$key.'?avinfo';
-        $html = file_get_contents($url);
-        $rule1 = "/\"width\":.*?,/";
-        $rule2 = "/\"height\":.*?,/";
-        preg_match($rule1,$html,$width);
-        preg_match($rule2,$html,$height);
-        $width =rtrim( explode(' ',$width[0])[1],',');
-        $height = rtrim(explode(' ',$height[0])[1],',');
-        $pfop = new PersistentFop($this->auth,$bucket);
-        $pipeline = 'hivideo_drm';
-        $this->bucketManager->buildBatchDelete('hivideo-img',$key.'vframe-user-save_'.$width.'*'.$height.'_.jpg');
-        $fileKey1 = $key.'vframe-user-save_'.$width.'*'.$height.'_.jpg';
-        $fops = 'vframe/jpg/offset/'.$time.'/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops .= base64_urlSafeEncode("$fileBucket:$fileKey1");
-        list($id,$err) = $pfop->execute($key,$fops,$pipeline,$force=true);
-
-        if ($err != null || $err2 != null || $err3 != null) {
-            return false;
-        } else {
-            return $fileKey1;
-        }
-    }
-
-
     public function DRM($bucket,$key)
     {
         $config = new \Qiniu\Config();
-        $HLSkey = base64_urlSafeEncode('456daf8742acc485');
-        $key1 = base64_urlSafeEncode($key);
+        $HLSkey = base64_urlSafeEncode('fk9215jslat359cx');
+        $key = base64_urlSafeEncode($key);
+        $str = rtrim($key,'.m3u8');
         $fop = 'avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/';
         $fop .= $HLSkey;
         $fop .= '/hlsKeyUrl/';
         $fop .= 'aaa';
         $fop .= '/hlsMethod/qiniu-protection-10|saveas/';
-        $fop .= base64_urlSafeEncode("$bucket:$key");
+        $fop .= base64_urlSafeEncode("$bucket:$str");
         $fops = base64_urlSafeEncode($fop);
-        $pfop = new PersistentFop($this->auth,$bucket);
-        list($id, $err) = $pfop->execute($key1, $fops);
-        dd($err);
+        $pfop = new PersistentFop($this->auth,$config);
+        $pipeline = 'hivideo_drm';
+        list($id, $err) = $pfop->execute($bucket, $key, $fops, $pipeline,$force=1);
         if ($err != null) {
             return false;
         } else {
@@ -529,54 +432,29 @@ class CloudStorage
     }
 
 
-    public function transcoding($bucket,$key)
+    public function transcoding($bucket,$key,$width,$hight)
     {
-        $pipeline = 'hivideo_transcode';
-        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
-        $fileKey = $key.'.m3u8';
-//        $fops ='adapt/m3u8/multiResolution/';
-        $fops ='adapt/m3u8/multiResolution/320:240,640:480,1280:720,1920:1080/';
-//        $fops .= floor($width/4).':'.floor($hight/4).',';
-//        $fops .= floor($width/3).':'.floor($hight/3).',';
-//        $fops .= floor($width/2).':'.floor($hight/2).',';
-//        $fops .= $width.':'.$hight;
-        $fops .= 'envBandWidth/200000,800000,1700000,2400000/multiVb/200k,1200k,6500k,8500k/hlstime/10|saveas/';
-        $fops .= base64_urlSafeEncode("$bucket:$fileKey");
-        list($id, $err) = $pfop->execute($key, $fops);
+        $config = new \Qiniu\Config();
+        $pfop = new PersistentFop($this->auth,$config);
+        $fops ='adapt/m3u8/multiResolution/';
+        $fops .= floor($width/4).':'.floor($hight/4);
+        $fops .= floor($width/3).':'.floor($hight/3);
+        $fops .= floor($width/2).':'.floor($hight/2);
+        $fops .= $width.':'.$hight;
+        $fops .= '/envBandWidth/200000,800000,1700000,2400000/multiVb/200k,1200k,6500k,8500k/hlstime/10|saveas/';
+        $fop .= base64_urlSafeEncode("$bucket:$key");
+        $piepeline = 'hivideo_transcode';
+        list($id, $err) = $pfop->execute($bucket, $key, $fops, $pipeline,$force=1);
         if ($err != null) {
             return false;
         } else {
-            return $id;
+
+                return true;
+
         }
     }
 
-    public function searchStatus($key)
-    {
-        $bucket = 'hivideo-video';
-        $pfop = new PersistentFop($this->auth,$bucket);
-        list($ret, $err1) = $pfop->status($key);
-        if ($err1 != null) {
-            return $err1;
-        } else {
-            return $ret;
-        }
-    }
-
-    public function listenTranscoding($id,$bucket)
-    {
-        $pfop = new PersistentFop($this->auth,$bucket);
-        list($ret, $err1) = $pfop->status($id);
-        if($ret['code']==0 && $ret['des']=="The fop was completed successfully" && isset($ret['items'][0]['key'])){
-            return true;
-        }elseif ($ret['code']==3 && $ret['des']=='The fop is failed'){
-            return false;
-        }elseif ($ret['code']==1 || $ret['code']==2){
-            $this->listenTranscoding($id,$bucket);
-        }
-    }
-
-
-     public function Mark($file,$mark_url,$id)
+    public function Mark($file,$mark_url,$id)
     {
         $accessKey = 'NVsOLitxzARKF2ZFcTdmqfPc82I3dRQYN3-CYqJY';
         $secretKey = 'i_Jq4G9ijLS-YWsVJI3Gdfydn372pzgLZTHJ5ZTm';
@@ -589,8 +467,40 @@ class CloudStorage
         $pfop = new PersistentFop($auth, $bucket, $pipeline,$notifyUrl);
 //        $mark_uri= $this->downloadUrl($mark_url);
         $waterImg = base64_urlSafeEncode('http://101.200.75.163/home/img/logo.png');
-        $save = base64_urlSafeEncode($bucket.":&".$id.'&&'.$file_url);
+        $save = base64_urlSafeEncode($bucket.":__".$id.'___'.$file_url);
         $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
+
         list($id, $err) = $pfop->execute($file_url, $fops);
+        echo "\n====> pfop avthumb result: \n";
+        if ($err != null) {
+            var_dump($err);
+        } else {
+            echo "PersistentFop Id: $id\n";
+        }
+
+
+//        $accessKey = 'u0TMXtQ2hI2QXAIwIsI9Qtwq8XDI4NX4lQSK5TJd';
+//        $secretKey = 'e0glri6LdL341PcItVSxsrKHttFoA--wujcQj_dC';
+//        $auth = new Auth($accessKey, $secretKey);
+//        $bucket = 'image';
+////        $url = $this->downloadUrl($file);
+////        $file_url = ltrim(parse_url($url)['path'],'/') ;
+//        $pipeline = 'chijiu';
+//        $notifyUrl = 'http://www.goobird.com/api/notification';
+//        $pfop = new PersistentFop($auth, $bucket, $pipeline,$notifyUrl);
+////        $mark_uri= $this->downloadUrl($mark_url);
+//        $waterImg = base64_urlSafeEncode('http://101.200.75.163/home/img/logo.png');
+//        $save = base64_urlSafeEncode($bucket.":_".$id.'__test.mp4');
+//        $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
+//
+//        list($id, $err) = $pfop->execute('test.mp4', $fops);
+//        echo "\n====> pfop avthumb result: \n";
+//        if ($err != null) {
+//            var_dump($err);
+//        } else {
+//            echo "PersistentFop Id: $id\n";
+//        }
+
     }
+
 }

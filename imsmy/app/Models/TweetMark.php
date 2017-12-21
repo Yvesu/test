@@ -12,6 +12,7 @@ class TweetMark extends Model
         'tweet_id',
         'active',
         'create_time',
+        'mark_id',
     ];
 
     public $timestamps=false;

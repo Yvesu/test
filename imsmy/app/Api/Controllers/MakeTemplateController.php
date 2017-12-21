@@ -189,11 +189,11 @@ class MakeTemplateController extends BaseController
                 -> active()
                 -> orderBy('sort')
                 -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
+                -> paginate($this -> paginate, ['id','user_id','vipfree','storyboard_count','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
             // 调用内部函数，返回数据
             return response() -> json([
-                'data'  => $this -> makeFileTransformer -> transformCollection($data -> all()),
+                'data'  => $this -> makeFileTransformer -> ptransform($data -> all()),
                 'page_count' => $data -> toArray()['last_page']
             ], 200);
 

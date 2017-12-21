@@ -746,6 +746,17 @@ function getRandomN($arr,$n=3){
     return $new_arr;
 }
 
+function getNeedBetween($kw1,$mark1,$mark2){
+    $kw=$kw1;
+    $kw='123 '.$kw.'123';
+    $st =stripos($kw,$mark1);
+    $ed =stripos($kw,$mark2);
+    if(($st==false||$ed==false)||$st>=$ed)
+        return 0;
+    $kw=substr($kw,($st+1),($ed-$st-1));
+    return $kw;
+}
+
 
 
 

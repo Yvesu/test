@@ -1131,6 +1131,11 @@ $api->version(['v1'],function($api){
         //模板压缩包
         $api->post('/zip/template/{id}','MakeTemplateController@zip_template');
 
-        $api->post('/notification','QiNiuNotificationController@notification');
+        //返回通知
+        $api->any('/notification','QiNiuNotificationController@notification');
+
+        //视频下载
+        $api->get('/download/tweet/{id}','DownloadTweetController@mark')
+            ->where('id','[0-9]+');
     });
 });

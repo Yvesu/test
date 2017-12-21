@@ -1134,25 +1134,30 @@ class TweetController extends BaseController
 
 
             //写入待检测
-
             DB::table('tweet_to_qiniu')->insert([
                 'tweet_id'    => $tweet->id,
                 'create_time' => time(),
             ]);
 
             //是否添加水印
-            //if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);
+            if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);
 
-            //默认为添加
-//            $mark = $request->get('mark',2);
-//
-//            if($mark==2){
-//                TweetMark::create([
-//                    'tweet_id'      =>  $tweet->id,
-//                    'create_time'   =>  time(),
-//                ]);
-//
-//            }
+            //默认为不添加
+            $mark = $request->get('mark',2);
+
+            if($mark==1){
+                //接收水印id
+                if ( !is_numeric($request->get('mark_id'))) return  response()->json(['message'=>'markId is error'],403);
+
+                //水印id
+                $mark_id = $request->get('mark_id');
+
+                TweetMark::create([
+                    'tweet_id'      =>  $tweet->id,
+                    'mark_id'       =>  $mark_id,
+                    'create_time'   =>  time(),
+                ]);
+            }
 
             return response()->json($this->tweetsTransformer->transform($tweet),201);
 

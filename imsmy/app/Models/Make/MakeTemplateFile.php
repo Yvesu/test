@@ -29,6 +29,15 @@ class MakeTemplateFile extends Common
         'time_add',
         'test_result',
         'time_update',
+        'storyboard_count',
+        'watch_count',
+        'vipfree',
+        'checker_id',
+        'duration',
+        'dorecommend_id',
+        'doshield_id',
+        'dotype_id',
+        'size',
     ];
 
     public $timestamps = false;
