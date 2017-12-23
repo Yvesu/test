@@ -88,7 +88,7 @@ Route::group(['namespace'=>'NewWeb'],function (){
         return view('web');
     });
 
-    
+
 });
 
 Route::get('index1','NewWeb\Test\ProductionController@index1');

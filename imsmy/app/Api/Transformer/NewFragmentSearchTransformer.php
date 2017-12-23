@@ -31,7 +31,7 @@ class NewFragmentSearchTransformer extends Transformer
             'name'          =>  $item['name'],
             'cover'         =>  CloudStorage::downloadUrl($item['cover']),
             'net_address'   =>  CloudStorage::downloadUrl($item['net_address']),
-            'duration'      =>  $item['duration'],
+            'duration'      =>   changeTimeType($item['duration']),
             'watch_count'   =>  $item['watch_count'],
             'type'          =>  $this->fragmentTypeTransformer->transformCollection($item['belongs_to_many_fragment_type']),
         ];

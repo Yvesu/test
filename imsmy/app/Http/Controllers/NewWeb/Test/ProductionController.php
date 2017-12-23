@@ -482,9 +482,16 @@ class ProductionController extends Controller
                         $data->active = 3;
                         $data->time_update = time();
                         $data->save();
-                        $data2 = $data->belongsToManyActivity()->first();
-                        $data2 ->count = ($data2->work_count)-1;
-                        $data2 ->save();
+                        if($data->belongsToManyActivity){
+                            foreach ($data->belongsToManyActivity as $kk => $vv)
+                            {
+                                $data2 = Activity::find($v->id);
+                                $data2 ->count = ($vv->work_count)-1;
+                                $data2 ->save();
+                            }
+
+                        }
+
 
                     }
                 }
