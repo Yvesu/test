@@ -106,6 +106,8 @@ class Tweet extends Common
         return $this -> belongsTo('App\Models\TweetActivity','id','tweet_id');
     }
 
+
+
     /**
      * 动态与 channel_tweet 表 一对多关系
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -843,6 +845,36 @@ class Tweet extends Common
     public function belongsToManyKeywords()
     {
         return $this->belongsToMany('App\Models\keywords','keywords_tweet','tweet_id','keyword_id');
+    }
+
+
+    public function scopeActiveProduction($query,$active2)
+    {
+        if(is_null($active2)){
+            return $query;
+        }elseif($active2 == 9){
+            return $query->where('active','>=',2)->where('active','<>',4)->where('active','<>',6);
+        }else{
+            return $query->where('active','=',$active2);
+        }
+    }
+
+    public function scopeStatusProduction($query,$status1)
+    {
+        if(is_null($status1)){
+            return $query;
+        }elseif($status1==9){
+            return $query->where('is_priviate','=',1);
+        }elseif($status1==3){
+            return $query->where('active','=',2)->orWhere('active','=','4')->orWhere('active','=',8);
+        }else{
+            return $query->where('active','=',$status1);
+        }
+    }
+
+    public function standbyCover()
+    {
+        return $this->hasMany('App\Models\TweetSandbtCover','tweet_id','id');
     }
 
 

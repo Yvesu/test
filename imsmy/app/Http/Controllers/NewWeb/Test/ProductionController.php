@@ -5,6 +5,9 @@ namespace App\Http\Controllers\NewWeb\Test;
 use App\Models\FilmfestsProductions;
 use App\Models\Productions;
 use App\Models\Test\TestUser;
+use App\Models\Tweet;
+use App\Models\TweetContent;
+use App\Models\TweetStandbyCover;
 use function GuzzleHttp\default_ca_bundle;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -17,7 +20,7 @@ class ProductionController extends Controller
 {
     private $protocol = 'http://';
 
-    private $paginate = 20;
+    private $paginate = 10;
 
     //
 
@@ -37,6 +40,8 @@ class ProductionController extends Controller
     }
 
 
+
+
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -49,12 +54,13 @@ class ProductionController extends Controller
             $active = $request->get('active',null);
             $page = $request->get('page',1);
             $type = $request->get('type',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             switch ($type){
                 case 1:
-                    $type = 'time_add';
+                    $type = 'created_at';
                     break;
                 case 2:
-                    $type = 'count';
+                    $type = 'browse_times';
                     break;
                 default:
                     $type = 1;
@@ -68,69 +74,93 @@ class ProductionController extends Controller
                 case 2:
                     $uod = 'asc';
                     break;
+                default:
+                    $uod = 'desc';
             }
             $count = $request->get('count',0);
             $status = $request->get('status',null);
-            $initialData = Productions::where('id','=',$user->id)->where('active','!=',4);
+            $dataNum = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+                ->where('type','=',3)
+                ->where('active','!=',3)->where('active','!=',5)->where('browse_times','>=',$count)->ActiveProduction($active)->
+                StatusProduction($status)->orderBy($type,$uod)->get()->count();
+            if($page==0){
+                $page =1;
+            }elseif ($page > ceil($dataNum/$everyPageNum)){
+                $page = ceil($dataNum/$everyPageNum);
+            }
+            $initialData = Tweet::where('user_id','=',$user->id)
+                ->where('type','=',3)
+                ->where('active','!=',3)->where('active','!=',5)->where('video','!=',null);
             $allProduction = $initialData->get()->count();
-            $failProduction = $initialData->Active(9)->get()->count();
-            $checkingProduction = $initialData->Active(1)->get()->count();
-            $mainData = $initialData->where('playnum','>=',$count)->Active($active)->
-                Status($status)->orderBy($type,$uod)->forPage($page,$this->paginate)->get();
+            $failProduction = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+                ->where('type','=',3)
+                ->where('active','!=',3)->where('active','!=',5)->ActiveProduction(9)->get()->count();
+            $checkingProduction = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+                ->where('type','=',3)
+                ->where('active','!=',3)->where('active','!=',5)->ActiveProduction(6)->get()->count();
+            $mainData = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+                ->where('type','=',3)
+                ->where('active','!=',3)->where('active','!=',5)->where('browse_times','>=',$count)->ActiveProduction($active)->
+            StatusProduction($status)->orderBy($type,$uod)->forPage($page,$everyPageNum)->get();
             $data = [];
             foreach ($mainData as $k => $v)
             {
-                $cover = $v->cover;
+                $cover = $v->screen_shot;
                 $name = $v->name;
-                $time = date('Y/m/d H:i',$v->time_up_over);
-                $playCount = $v->playnum;
+                $time = $v->created_at;
+                $playCount = $v->browse_times;
                 if($v->is_priviate == 1){
                     $is_priviate = '、私有';
                 }else{
                     $is_priviate = '';
                 }
+                $status2 = '';
                 switch ($v->active){
                     case 0:
-                        $status = '未审核'.$is_priviate;
+                        $status2 = '未审核'.$is_priviate;
                         break;
                     case 1:
-                        $status = '审核中'.$is_priviate;
+                        $status2 = '参赛中'.$is_priviate;
                         break;
                     case 2:
-                        $status = '参赛中'.$is_priviate;
-                        break;
-                    case 3:
-                        $status = '未通过'.$is_priviate;
+                        $status2 = '未通过'.$is_priviate;
                         break;
                     case 4:
-                        $status = '删除'.$is_priviate;
+                        $status2 = '待定'.$is_priviate;
                         break;
-                    case 5:
-                        $status = '处理中'.$is_priviate;
+                    case 6:
+                        $status2 = '审核中'.$is_priviate;
                         break;
                     case 7:
-                        $status = '异常'.$is_priviate;
+                        $status2 = '处理中'.$is_priviate;
+                        break;
+                    case 8:
+                        $status2 = '异常'.$is_priviate;
                         break;
                 }
 
-                if($active == 2){
+                if($v->active == 1){
                     $behavior =0;
                 }else{
                     $behavior =1;
                 }
-
+                $duration = floor(($v->duration)/60).':'.($v->duration)%60;
                 $tempData = [
-                    'cover'=>$this->protocol.$cover,
+                    'id'=>$v->id,
+                    'cover'=>is_null($cover)?'':$this->protocol.$cover,
                     'name'=>$name,
                     'time'=>$time,
                     'playnum'=>$playCount,
-                    'active'=>$status,
+                    'active'=>$status2,
+                    'behavior'=>$behavior,
+                    'duration'=>$duration,
                 ];
                 array_push($data,$tempData);
             }
             $sumsize = TestUser::where('id','=',$user->id)->first()->production->sum('size');
             $sumsize = round($sumsize/1024/1024/1024,2).'GB';
-            return response()->json(['data'=>$data,'sumsize'=>$sumsize,'allProduction'=>$allProduction,'failProduction'=>$failProduction,'checkingProduction'=>$checkingProduction],200);
+
+            return response()->json(['data'=>$data,'dataNum'=>$dataNum,'sumsize'=>$sumsize,'allProduction'=>$allProduction,'failProduction'=>$failProduction,'checkingProduction'=>$checkingProduction],200);
         }catch (ModelNotFoundException $q){
             return  response()->json(['error'=>'not_found'],404);
         }
@@ -193,15 +223,15 @@ class ProductionController extends Controller
         try{
             $status = [
                 [
+                    'label'=>null,
+                    'des'=>'全部',
+                ],
+                [
                     'label'=> 0,
                     'des'=>'未审核'
                 ],
                 [
                     'label'=> 1,
-                    'des'=>'审核中'
-                ],
-                [
-                    'label'=> 2,
                     'des'=>'参赛中'
                 ],
                 [
@@ -209,17 +239,21 @@ class ProductionController extends Controller
                     'des'=>'未通过'
                 ],
                 [
-                    'label'=> 5,
-                    'des'=>'处理中'
-                ],
-                [
                     'label'=> 6,
-                    'des'=>'私有'
+                    'des'=>'审核中'
                 ],
                 [
                     'label'=> 7,
+                    'des'=>'处理中'
+                ],
+                [
+                    'label'=> 8,
                     'des'=>'异常'
                 ],
+                [
+                    'label'=> 9,
+                    'des'=>'私有'
+                ]
             ];
             return response()->json(['data'=>$status],200);
         }catch (\Exception $e) {
@@ -227,6 +261,30 @@ class ProductionController extends Controller
         }
     }
 
+    public function up(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+            $user = \Auth::guard('api')->user();
+            $data0 = Tweet::where('video','=',null)->where('type','=',3)->where('user_id',$user->id)->first();
+            if($data0){
+                $id = $data0->id;
+            }else{
+                $data = new Tweet;
+                $data -> user_id = $user->id;
+                $data -> created_at = time();
+                $data -> type = 3;
+                $data -> updated_at = time();
+                $data ->save();
+                $id = $data->id;
+            }
+            DB::commit();
+
+            return response()->json(['id'=>$id,'user_id'=>$user->id],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error' => $e->getMessage()], $e->getCode());
+        }
+    }
 
     /**
      * @param Request $request
@@ -236,156 +294,167 @@ class ProductionController extends Controller
     public function doUp(Request $request)
     {
         try{
-            $keys = [];
             $id = $request->get('id');
-            $film_id = $request->get('film_id',null);
             $name = $request->get('name',null);
             $des = $request->get('des',null);
             $is_priviate = $request->get('is_priviate',0);
+            $is_download = $request->get('is_download',1);
+            $is_reply = $request->get('is_reply',1);
             $password = $request->get('password',null);
             $size = $request->get('size',0);
             $address = $request->get('address',null);
-            array_push($keys,$address);
-            $keyPairs = array();
+            if(is_null($id)||is_null($name)||is_null($address)||is_null($size)){
+                return response()->json(['error'=>'数据不合法'],200);
+            }
+            $url = "http://video.ects.cdn.hivideo.com/".$address.'?avinfo';
+            $html = file_get_contents($url);
+            $rule1 = "/\"width\":.*?,/";
+            $rule2 = "/\"height\":.*?,/";
+            $rule3 = "/\"duration\":.*?,/";
+            preg_match($rule1,$html,$width);
+            preg_match($rule2,$html,$height);
+            preg_match($rule3,$html,$duration);
+            $width =rtrim( explode(' ',$width[0])[1],',');
+            $height = rtrim(explode(' ',$height[0])[1],',');
+            $duration = (int)trim(rtrim(explode(' ',$duration[0])[1],','),'"');
+            DB::beginTransaction();
+            $newProduction = Tweet::find($id);
+            $newProduction -> name = $name;
+            $newProduction -> active = 7;
+            $newProduction -> is_priviate = $is_priviate;
+            if($is_priviate==1){
+                $is_download = 0;
+                $is_reply = 0;
+            }
+            $newProduction -> is_download = $is_download;
+            $newProduction -> is_reply = $is_reply;
+            $newProduction -> password = $password;
+            $newProduction -> size = $size;
+            $newProduction -> video = $address;
+            $newProduction -> created_at = time();
+            $newProduction -> updated_at = time();
+            $newProduction -> duration = $duration;
+            $newProduction -> save();
+            $content = new TweetContent;
+            $content -> tweet_id = $id;
+            $content -> content = $des;
+            $content -> created_at = time();
+            $content -> updated_at = time();
+            $content ->save();
+
+            DB::commit();
+            $keys1 = [];
+            DB::beginTransaction();
+            $production = Tweet::find($id);
+            $address = $production->video;
+            array_push($keys1,$address);
+            $keyPairs1 = array();
             foreach($keys1 as $key)
             {
                 $keyPairs1[$key] = $key;
             }
             $srcbucket = 'hivideo-video-ects';
             $destbucket = 'hivideo-video';
-            $message = CloudStorage::copyfile($keyPairs,$srcbucket,$destbucket);
-            DB::beginTransaction();
-                $newProduction = Productions::find($id);
-                $newProduction -> name = $name;
-                $newProduction -> active = 5;
-                $newProduction -> des = $des;
-                $newProduction -> is_priviate = $is_priviate;
-                $newProduction -> password = $password;
-                $newProduction -> size = $size;
-                $newProduction -> address = $address;
-                $newProduction -> time_add = time();
-                $newProduction -> time_update = time();
-                $newProduction -> save();
-                $filmFestProduction = new FilmfestsProductions;
-                $filmFestProduction -> filmfests_id = $film_id;
-                $filmFestProduction -> productions_id = $id;
-                $filmFestProduction -> time_add = time();
-                $filmFestProduction -> time_update = time();
-                $filmFestProduction ->save();
-            DB::commit();
-            return redirect('/test/copy/'.$id);
+            //  扩展名
+            $ex = pathinfo($address, PATHINFO_EXTENSION);
+            //  分辨率
+            $fenBianLv = CloudStorage::getWidthAndHeight($address);
+            //  移动到正式空间  还没改名字
+            $message = CloudStorage::copyfile($keyPairs1,$srcbucket,$destbucket);
+            if($message[0]['code']==200){
+                //  产生新名字
+                $newAddress = str_replace('.'.$ex, '_'.$fenBianLv.'.'.$ex, $address);
+                //  改名字
+                $move = CloudStorage::reNameFile($destbucket,$address,$destbucket,$newAddress);
+                if($move){
+                    $production = Tweet::find($id);
+                    $production -> updated_at = time();
+                    $production -> save();
+                    DB::commit();
+                    $address = $production->video;
+                    $cover = CloudStorage::saveCover($address,$newAddress);
+                    if($cover){
+                        DB::beginTransaction();
+                        $bb = 'img.cdn.hivideo.com/'.$address.'vframe-001_'.$cover.'_.jpg';
+                        $production = Tweet::find($id);
+                        $production -> screen_shot = $bb;
+                        $production -> active = 0;
+                        $production -> video =$newAddress;
+//                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+                        $production -> save();
+
+                    }else{
+                        $production -> active =8;
+                        $production -> updated_at = time();
+                        $production -> save();
+                        $production -> error_reason = '保存图片失败';
+                        DB::commit();
+                        return response()->json(['message'=>'保存图片失败'],200);
+                    }
+                    DB::commit();
+                }else{
+                    $production -> active =8;
+                    $production -> updated_at = time();
+                    $production -> save();
+                    $production -> error_reason = '重命名失败';
+                    DB::commit();
+                    return response()->json(['message'=>'重命名失败'],200);
+                }
+                DB::beginTransaction();
+                $production = Tweet::find($id);
+                $address = $production->video;
+                $bucket = 'hivideo-video';
+                $key = $address;
+                if($width>=1280){
+                    $message = CloudStorage::transcoding($bucket,$key,$width,$height);
+                    if($message){
+                        $production -> transcoding_video = $address.'.m3u8';
+                        $production -> transcoding_id = $message;
+                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+                        $production -> is_transcod = 1;
+                        $production -> updated_at = time();
+                        $production -> save();
+                        DB::commit();
+                        return response()->json(['message'=>'success'],200);
+
+                    }else{
+                        $production -> active =8;
+                        $production -> updated_at = time();
+                        $production -> save();
+                        $production -> error_reason = '转码失败';
+                        DB::commit();
+                        return response()->json(['message'=>'转码失败'],200);
+                    }
+                }else{
+                    return response()->json(['message'=>'success'],200);
+                }
+
+            }else{
+                $production -> active =8;
+                $production -> updated_at = time();
+                $production -> save();
+                $production -> error_reason = '移动失败';
+                DB::commit();
+                return response()->json(['message'=>'移动失败'],200);
+            }
         }catch (ModelNotFoundException $q){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
         }
     }
 
-
-    /**
-     * @param $id
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * 移动
-     */
-    public function copy($id,Request $request)
+    public function index1(Request $request)
     {
         try{
-            DB::beginTransaction();
-            $production = Productions::find($id);
-            $address = $production->address;
-            array_push($keys,$address);
-            $keyPairs = array();
-            foreach($keys1 as $key)
-            {
-                $keyPairs1[$key] = $key;
-            }
-            $srcbucket = 'hivideo-video-ects';
-            $destbucket = 'hivideo-video';
-            $message = CloudStorage::copyfile($keyPairs,$srcbucket,$destbucket);
-            if($message == 200){
-                $production -> address =$address;
-                $production -> time_update = time();
-                $production -> save();
-            }else{
-                $production -> active =7;
-                $production -> time_update = time();
-                $production -> save();
-            }
-            DB::commit();
-            return redirect('/test/transcoding/'.$id);
-        }catch (ModelNotFoundException $q){
-            DB::rollBack();
-            return response()->json(['error'=>'not_found'],404);
-        }
-    }
-
-
-    /**
-     * @param $id
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * 转码
-     */
-    public function transcoding($id,Request $request)
-    {
-        try{
-            DB::beginTransaction();
-            $production = Productions::find($id);
-            $address = $production->address;
+            $key =  $request->get('key');
             $bucket = 'hivideo-video';
-            $key = $address;
-            $rule = "/(\d{3,4}\*\d{3*4})/";
-            preg_match($rule,$address,$widthAndHeight);
-            $width = explode('*',$widthAndHeight)[0];
-            $height = explode('*',$widthAndHeight)[1];
-            $message = CloudStorage::transcoding($bucket,$key,$width,$height);
-            if($message){
-                $production -> address = $address.'m3u8';
-                $production -> time_update = time();
-                $production -> save();
-            }else{
-                $production -> active =7;
-                $production -> time_update = time();
-                $production -> save();
-            }
-            DB::commit();
-            return redirect('/test/DRM'.$id);
+            $a = CloudStorage::deleteNew($bucket,$key);
+//            $bb = 'z0.5a3b6601b946531900e11481';
+//            $a = CloudStorage::searchStatus($bb);
+            dd($a);
+//            dd($a['items'][0]);
+            return response()->json(['data'=>$a],200);
         }catch (ModelNotFoundException $q){
-            DB::rollBack();
-            return response()->json(['error'=>'not'],404);
-        }
-    }
-
-
-    /**
-     * @param $id
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     * 加密
-     */
-    public function DRM($id,Request $request)
-    {
-        try{
-            DB::beginTransaction();
-            $production = Productions::find($id);
-            $address = $production->address;
-            $bucket = 'hivideo-video';
-            $key = $address;
-            $message = CloudStorage::DRM($bucket,$key);
-            if($message){
-                $production -> address = 'v.cdn.hivideo.com/'.$address;
-                $production -> time_update = time();
-                $production -> active = 0;
-                $production -> save();
-            }else{
-                $production -> active =7;
-                $production -> time_update = time();
-                $production -> save();
-            }
-            DB::commit();
-            return response()->json(['message'=>'success'],200);
-        }catch (ModelNotFoundException $q){
-            DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
         }
     }
@@ -407,14 +476,14 @@ class ProductionController extends Controller
             DB::beginTransaction();
             foreach ($id as $k => $v)
             {
-                $data = Productions::find($id);
+                $data = Tweet::find($id);
                 if($data){
-                    if($data->active != 2){
-                        $data->active = 4;
+                    if($data->active != 1){
+                        $data->active = 3;
                         $data->time_update = time();
                         $data->save();
-                        $data2 = $data->filmfests()->first();
-                        $data2 ->count = ($data2->count)-1;
+                        $data2 = $data->belongsToManyActivity()->first();
+                        $data2 ->count = ($data2->work_count)-1;
                         $data2 ->save();
 
                     }
@@ -425,6 +494,25 @@ class ProductionController extends Controller
         }catch (ModelNotFoundException $q){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    public function publicStataus()
+    {
+        try{
+            $data = [
+                [
+                    'label'=>'is_reply',
+                    'des'=>'禁止评论和评分'
+                ],
+                [
+                    'label'=>'is_download',
+                    'des'=>'禁止下载'
+                ],
+            ];
+            return response()->json(['data'=>$data],200);
+        }catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], $e->getCode());
         }
     }
 }
