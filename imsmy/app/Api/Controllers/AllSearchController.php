@@ -259,13 +259,13 @@ class AllSearchController extends Controller
                 if($user_info->count()){
 
                     return response()->json([
-                        'data'  =>  $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
+                        'user'  =>  $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
                     ],200);
 
                 }else{
 
                     return response()->json([
-                        'data'  => [],
+                        'user'  => [],
                     ],200);
                 }
                 }else{                                               //如果涉及敏感词汇
@@ -396,7 +396,7 @@ class AllSearchController extends Controller
                     }
 
                     // 调用内部函数，返回数据
-                    return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
+                    return response() -> json(['filter'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
                 }
@@ -432,7 +432,7 @@ class AllSearchController extends Controller
 
                     // 调用内部函数，返回数据
                     return response() -> json([
-                        'data'  => $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
+                        'template'  => $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
                     ], 200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
@@ -607,9 +607,9 @@ class AllSearchController extends Controller
                         -> where('comment','like','%'.$keyword.'%')
                         -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','users_count'], 'page', $page);
 
-                    return [
-                        'data' => $this -> activityTransformer -> transformCollection($data->all()),
-                    ];
+                    return response()->json([
+                        'activity' => $this -> activityTransformer -> transformCollection($data->all()),
+                    ],200);
 
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
@@ -649,7 +649,7 @@ class AllSearchController extends Controller
                         ->get(['id','name','cover','net_address','duration','watch_count']);
 
                     return response()->json([
-                        'data' => $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
+                        'fragment' => $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
                     ], 200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -814,7 +814,7 @@ class AllSearchController extends Controller
                 }
 
                 return response()->json([
-                    'data'      =>      $this->newTweetsSearchTransformer->transformCollection($tweet),
+                    'tweet'      =>      $this->newTweetsSearchTransformer->transformCollection($tweet),
                 ],200);
 
             }else{                                               //如果涉及敏感词汇
@@ -845,7 +845,7 @@ class AllSearchController extends Controller
 
                 return response()->json([
                     // 数据
-                    'data' => count($topics) ? $this->searchTopicsTransformer->transformCollection($topics->all()) : null,
+                    'topic' => count($topics) ? $this->searchTopicsTransformer->transformCollection($topics->all()) : null,
                 ]);
 
             }catch (\Exception $e){
