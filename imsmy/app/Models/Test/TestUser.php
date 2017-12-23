@@ -34,6 +34,6 @@ class TestUser extends Model implements AuthenticatableContract
      */
     public function production()
     {
-        return $this->hasMany('App\Models\Productions','user_id','id');
+        return $this->hasMany('App\Models\Tweet','user_id','id');
     }
 }

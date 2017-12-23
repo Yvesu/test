@@ -53,7 +53,7 @@ class Activity extends Common
      */
     public function hasManyChannel()
     {
-        return $this->belongsToMany('App\Models\Channel', 'channel_activity', 'activity_id', 'channel_id');
+        return $this->belongsToMany('App\Models\FilmfestFilmType', 'filmfest_filmtype', 'filmfest_id', 'type_id');
     }
 
     /**

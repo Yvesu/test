@@ -79,30 +79,44 @@ Route::group(['namespace'=>'NewWeb'],function (){
     /**
      * 首页
      */
-    Route::get('/','TestIndexController@index');
-    //维护中
+//    Route::get('/','TestIndexController@index');
     Route::get('/',function (){
         return view('stick');
     });
 
+    Route::get('/user',function (){
+        return view('web');
+    });
+
+    
 });
 
-
+Route::get('index1','NewWeb\Test\ProductionController@index1');
 $api -> version('v1',function($api) {
 
-    $api -> group(['namespace' => 'App\Http\controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
+    $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
 
         /**
          * 测试页面登录
          */
         $api -> post('/testlogin','TestLoginController@login');
 
+
+
         // 验证管理员的登录信息
         $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
+
+            /**
+             * 七牛云的路由
+             */
+            $api->group(['prefix' => 'cloudStorage'],function($api){
+                $api->post('token','CloudStorageController@token');
+            });
             /**
              * 网站前台测试页面
              */
             $api -> post('index','Test\ProductionController@index');
+
 
             /**
              * 作品页面
@@ -122,7 +136,12 @@ $api -> version('v1',function($api) {
             /**
              * 电影节页面
              */
-            $api -> post('filmfest','Test\FilmfestController@index');
+            $api -> post('/filmfest','Test\FilmFestController@index');
+
+            /**
+             * 作品上传页面
+             */
+            $api -> post('/up','Test\ProductionController@Up');
 
             /**
              * 作品执行上传
@@ -130,14 +149,10 @@ $api -> version('v1',function($api) {
             $api -> post('doup','Test\ProductionController@doUp');
 
             /**
-             * 进行复制
+             * 测试上传
              */
-            $api -> post('copy/{id}','Test\ProductionController@copy');
+            $api -> post('testdoup','Test\ProductionController@testDoUp');
 
-            /**
-             * 进行转码
-             */
-            $api -> post('transcoding/{id}','Test\ProductionController@transcoding');
 
             /**
              * 加密
@@ -148,6 +163,11 @@ $api -> version('v1',function($api) {
              * 删除作品
              */
             $api -> post('production/delete','Test\ProductionController@delete');
+
+            /**
+             * 点击公有获得的数据
+             */
+            $api -> post('public','Test\ProductionController@publicStataus');
 
 
 
