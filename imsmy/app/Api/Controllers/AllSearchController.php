@@ -110,7 +110,7 @@ class AllSearchController extends Controller
         try{
             //过滤数据
             if(!is_numeric($request->get('page',1)) || !is_numeric($request->get('type'))) return response()->json(['message'=>'bad_request'],403);
-//dd($request->get('keyword'));
+
             //页数
             $page = $request->get('page',1);
 
@@ -119,6 +119,8 @@ class AllSearchController extends Controller
 
             //搜索的内容
             $keyword = removeXSS($request->get('keyword'));
+
+            $user = Auth::guard('api')->user();
 
             //过滤
             if(empty($keyword) && strlen($keyword)<1 && $keyword!=0) return response()->json(['message'=>'keyword is empty'],403);

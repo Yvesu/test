@@ -907,119 +907,11 @@ class TweetController extends BaseController
               // 将手机信息存入tweet数组中
               $newTweet['phone_id'] = $phone_id;
         }
-            //TODO  暂停使用  水印
-//            if ($request->get('screen_shot')){
-//
-//                $imageUrlBuilder = new ImageUrlBuilder();
-//                //获取图片地址
-//                $url = CloudStorage::downloadUrl($request->get('screen_shot'));
-//
-//                $mark = Mark::where('active',1)->first();
-//
-//                $mark_url = CloudStorage::downloadUrl($mark->mark_content);
-//
-//                $mark_url = 'http://www.hivideo.com/home/img/logo.png';
-//
-//                $waterLink = $imageUrlBuilder->waterImg($url, $mark_url,'100','SouthEast','228','0','0.05');
-//
-//                //获取用户名
-//                $username = User::find($id);
-//
-//                $textLink = $imageUrlBuilder->waterText($waterLink, ' @ '.$username->nickname, '微软雅黑', 500,'white','90','SouthEast','100','10');
-//
-//                $arr_url = parse_url($textLink);
-//
-//                $tweet_url = $arr_url['host'].$arr_url['path'].'?'.$arr_url['query'];
-//
-//                $newTweet['screen_shot'] = $tweet_url;
-//            }
 
             // 将数据存入 tweet 表中
             $tweet = Tweet::create($newTweet);
 
-            //移动至定时任务
-
- /*       if($request->get('screen_shot') != null ) {
-              // 图片鉴黄
-              $url = CloudStorage::ImageCheck($request->get('screen_shot'));
-
-              //鉴黄检测
-              $image_qpulp = file_get_contents($url);
-
-              $image_qpulp_res = json_decode($image_qpulp, true);
-
-              if ($image_qpulp_res['result']['label'] == 0) {
-                  // 七牛检测未通过  涉及色情
-                  Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-
-                  //创建记录
-                  $tweet_qiniu_check = TweetQiniuCheck::create([
-                      'user_id'  => $id,
-                      'tweet_id' => $tweet->id,
-                      'image_qpulp' => 2,
-                      'create_time' => time(),
-                  ]);
-              } else if ($image_qpulp_res['result']['label'] == 1) {
-                  // 七牛检测未通过  涉及色情
-                  Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-                  //创建记录
-                  $tweet_qiniu_check = TweetQiniuCheck::create([
-                      'user_id'  => $id,
-                      'tweet_id' => $tweet->id,
-                      'image_qpulp' => 1,
-                      'create_time' => time(),
-                  ]);
-              } else {
-                  $tweet_qiniu_check = TweetQiniuCheck::create([
-                      'user_id'  => $id,
-                      'tweet_id' => $tweet->id,
-                      'image_qpulp' => 0,
-                      'create_time' => time(),
-                  ]);
-              }
-
-              //政治人物检测
-              $url_z = CloudStorage::qpolitician($request->get('screen_shot'));
-
-              //读取
-              $qpolitician = file_get_contents($url_z);
-
-              //取数据
-              $qpolitician_result = json_decode($qpolitician, true);
-
-              //写入检测记录
-              foreach ($qpolitician_result['result']['detections'] as $v) {
-                  if (array_key_exists("sample", $v)) {
-                      //写入记录
-                      TweetQiniuCheck::where('id', '=', $tweet_qiniu_check->id)->update(['qpolitician' => 1]);
-
-                      //修改状态
-                      Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-                  }
-              }
-        }
-
-            //短视频鉴黄
-
-            $tupu_video =  CloudStorage::privateUrl($request->get('video').'?tupu-video/nrop/f/5/s/30');
-
-            $tupu_video_res = file_get_contents($tupu_video);
-
-            $tupu_video_result = json_decode($tupu_video_res,true);
-
-            if($tupu_video_result['review']){
-                if($request->get('screen_shot') == null){
-                    TweetQiniuCheck::create([
-                        'user_id'  => $id,
-                        'tweet_id' => $tweet->id,
-                        'tupu_video' => 1,
-                        'create_time' => time(),
-                    ]);
-                }
-                TweetQiniuCheck::where('id','=',$tweet_qiniu_check->id)->update(['tupu_video'=>1]);
-            }
-*/
-             //关键词提取
+            //关键词提取
             if($content) {
 
                 //提取关键词
@@ -1132,12 +1024,14 @@ class TweetController extends BaseController
 
             DB::commit();
 
-
-            //写入待检测
-            DB::table('tweet_to_qiniu')->insert([
-                'tweet_id'    => $tweet->id,
-                'create_time' => time(),
-            ]);
+//            大于10分钟  人工审核
+            if( (int)$request->get('duration') <= 600){
+                //写入待检测
+                DB::table('tweet_to_qiniu')->insert([
+                    'tweet_id'    => $tweet->id,
+                    'create_time' => time(),
+                ]);
+            }
 
             //是否添加水印
             if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);

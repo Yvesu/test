@@ -7,6 +7,7 @@ use App\Models\Mark;
 use App\Models\MarkTweet;
 use App\Models\Tweet;
 use App\Models\TweetMark;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -37,30 +38,43 @@ class DownloadTweetController extends BaseController
 //        }catch (\Exception $e){
 //            return response()->json(['message'=>'bad_request'],500);
 //        }
-        $willMark = TweetMark::where('active',1)->take(2)->get();
 
-        if ($willMark->count()){
-            sleep(30);
-        }
+ //---------------------------------------------------------------------------------------------
+//        $willMark = TweetMark::where('active',1)->take(2)->get();
+//
+//        if (!$willMark->count()){
+//            die();
+//        }
+//
+//        $arrs = $willMark->toArray();
+//
+//        foreach ($arrs as $arr) {
+//            //        //获取动态
+//            $tweet = Tweet::find($arr['tweet_id']);
+//
+////        //视频地址
+//            $tweet_url = $tweet->video;
+//
+////        //获取水印
+//            $mark = Mark::where('active', 1)->find($arr['mark_id']);
+//
+//            $mark_url = $mark->mark_content;
+//
+//            $id = $arr['tweet_id'];
+//
+//            $noti = 'http://www.goobird.com/api/notification';
+//
+//            $user = User::find($tweet->user_id);
+//
+//            $nickname = $user->nickname;
+//
+//            CloudStorage::Mark($tweet_url, $mark_url, $id,$noti,$nickname);
 
-        $arrs = $willMark->toArray();
+//        }
 
-        foreach ($arrs as $arr) {
-            //        //获取动态
-            $tweet = Tweet::find($arr['tweet_id']);
-
-//        //视频地址
-            $tweet_url = $tweet->video;
-
-//        //获取水印
-            $mark = Mark::where('active', 1)->find($arr['mark_id']);
-
-            $mark_url = $mark->mark_content;
-
-            $id = $arr['tweet_id'];
-
-            CloudStorage::Mark($tweet_url, $mark_url, $id);
-
-        }
+        //------------------------------------------------------------------------------------
+        $tweet = Tweet::find($id);
+        $noti = 'http://www.goobird.com/api/notification';
+        CloudStorage::joint($tweet,$noti);
     }
 }

@@ -379,10 +379,9 @@ class DiscoveryController extends BaseController
             // 大家都在搜
             $hot = HotSearch::recommend()->take(6)->get();
 
-            return response()->json(
-                $hot->count() ? $this->hotSearchTransformer->transformCollection($hot->all()) : [],
-                200
-            );
+            return response()->json([
+                'data'=>$hot->count() ? $this->hotSearchTransformer->transformCollection($hot->all()) : [],
+            ],200);
         }catch(ModelNotFoundException $e){
             return response()->json(['error'=>'bad_request'],403);
         }catch(\Exception $e){

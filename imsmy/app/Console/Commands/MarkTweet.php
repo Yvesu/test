@@ -6,6 +6,7 @@ use App\Models\Mark;
 use App\Models\Tweet;
 use App\Models\TweetMark;
 use App\Facades\CloudStorage;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class MarkTweet extends Command
@@ -63,7 +64,13 @@ class MarkTweet extends Command
 
             $id = $arr['tweet_id'];
 
-            CloudStorage::Mark($tweet_url, $mark_url, $id);
+            $noti = 'http://www.goobird.com/api/notification';
+
+            $user = User::find($tweet->user_id);
+
+            $nickname = $user->nickname;
+
+            CloudStorage::Mark($tweet_url, $mark_url, $id,$noti,$nickname);
 
         }
 

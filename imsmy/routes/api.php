@@ -747,8 +747,9 @@ $api->version(['v1'],function($api){
                 $api -> post('advertising', 'ActivityController@rotation');
 
                 // 赛事列表
-                $api -> post('list', 'ActivityController@index');
-
+                $api->group(['middleware' => ['app.user']],function ($api) {
+                    $api->post('list', 'ActivityController@index');
+                });
                 // 赛事--动态详情
                 $api -> post('tweet', 'TweetController@activityTweetsDetails');
 

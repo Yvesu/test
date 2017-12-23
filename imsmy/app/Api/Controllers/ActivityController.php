@@ -94,24 +94,62 @@ class ActivityController extends BaseController
             }
 
             // 缓存,热门和最新
-            $data = Cache::remember('activity_list_'.$type.'_'.$page, 5, function() use($page, $type) {
+//            $data = Cache::remember('activity_list_'.$type.'_'.$page, 5, function() use($page, $type) {
 
-                // 获取赛事（原活动）数据
-                $data = Activity::with(['belongsToUser' => function($q){
-                    $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
-                }, 'hasManyTweets'])
-                    -> ofExpires()
-                    -> ofType($type)
-                    -> active()
-                    -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
+                if ($type == 2){
+                    // 获取赛事（原活动）数据
+                    $data = Activity::with(['belongsToUser' => function($q){
+                        $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
+                    }, 'hasManyTweets'])
+                        -> ofExpires()
+                        -> ofType($type)
+                        -> active()
+                        -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
 
                     return [
                         'data' => $this -> hotActivityTransformer->transformCollection($data->all()),
                         'page_count' => $data -> toArray()['last_page']
                     ];
-            });
+                }
 
-            return $data;
+                if ($type == 3){
+
+                    $data_1 = Activity::ofExpires()
+                        -> ofType($type)
+                        -> active()
+                        -> forPage($page,$this->paginate)
+                        -> pluck('id');
+
+                    $arr = $data_1->all();
+
+                    $user = Auth::guard('api')->user();
+
+                    if ($user){
+                           $data_2 = Activity::where('user_id',$user->id)
+                               -> ofExpires()
+                               -> ofType($type)
+                               -> where('active',0)
+                               -> forPage($page,$this->paginate)
+                               -> pluck('id');
+                           $arr = array_merge($data_2->all(),$data_1->all());
+                    }
+
+                    $data = Activity::with(['belongsToUser' => function($q){
+                        $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
+                    }, 'hasManyTweets'])
+                        ->whereIn('id',$arr)
+                        ->orderBy('time_add','desc')
+                        -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
+
+                    return [
+                        'data' => $this -> hotActivityTransformer->transformCollection($data->all()),
+                        'page_count' => $data -> toArray()['last_page']
+                    ];
+                }
+
+//            });
+
+//            return $data;
 
         }catch(\Exception $e){
             return response() -> json(['error'=>'not_found'], 404);

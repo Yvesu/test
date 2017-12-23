@@ -576,7 +576,7 @@ class CloudStorage
     }
 
 
-     public function Mark($file,$mark_url,$id)
+     public function Mark($file,$mark_url,$id,$noti,$nickname)
     {
         $accessKey = 'NVsOLitxzARKF2ZFcTdmqfPc82I3dRQYN3-CYqJY';
         $secretKey = 'i_Jq4G9ijLS-YWsVJI3Gdfydn372pzgLZTHJ5ZTm';
@@ -585,12 +585,25 @@ class CloudStorage
         $url = $this->downloadUrl($file);
         $file_url = ltrim(parse_url($url)['path'],'/') ;
         $pipeline = 'hivideo_drm';
-        $notifyUrl = 'http://www.goobird.com/api/notification';
-        $pfop = new PersistentFop($auth, $bucket, $pipeline,$notifyUrl);
+        $not = $noti;
+        $pfop = new PersistentFop($auth, $bucket, $pipeline,$not);
 //        $mark_uri= $this->downloadUrl($mark_url);
         $waterImg = base64_urlSafeEncode('http://101.200.75.163/home/img/logo.png');
         $save = base64_urlSafeEncode($bucket.":&".$id.'&&'.$file_url);
-        $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
+        $wxl = str_replace('*','x',getNeedBetween($file_url,'_','.'));
+        $text = base64_urlSafeEncode('@'.$nickname);
+        $fond  = base64_urlSafeEncode('微软雅黑');
+        $font_color = base64_urlSafeEncode('#FFFFFF');
+        $font_size = 10;
+//        $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
+        $fops = "avthumb/mp4/s/".$wxl."/vb/1.4m/wmImage/".$waterImg."/wmText/".$text."/wmGravityText/NorthWest/wmFont/".$fond."/wmFontColor/".$font_color."/wmFontSize/".$font_size."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
         list($id, $err) = $pfop->execute($file_url, $fops);
-    }
+         echo "\n====> pfop avthumb result: \n";
+         if ($err != null) {
+             var_dump($err);
+         } else {
+             echo "PersistentFop Id: $id\n";
+         }
+
+     }
 }
