@@ -37,4 +37,5 @@ class Subscription extends Common
     {
         return $query->where('from', $from)->where('to', $to);
     }
+
 }

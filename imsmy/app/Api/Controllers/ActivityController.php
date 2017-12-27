@@ -334,4 +334,51 @@ class ActivityController extends BaseController
         ];
 
     }
+
+    /**
+     * 附近的赛事
+     * @param Request $request
+     * @return array|\Illuminate\Http\JsonResponse
+     */
+    public function nearbyActivity(Request $request)
+    {
+        if (is_null( $nearby = $request->get('nearby')))    return response()->json(['message'=>'bad_request'],403);
+
+        $page = $request->get('page',1);
+
+        $data_1 = Activity::ofExpires()
+            ->where('nearby',$nearby)
+            -> ofType(2)
+            -> active()
+            -> forPage($page,$this->paginate)
+            -> pluck('id');
+
+            $arr = $data_1->all();
+
+            $user = Auth::guard('api')->user();
+
+            if ($user){
+                $data_2 = Activity::where('user_id',$user->id)
+                    ->where('nearby',$nearby)
+                    -> ofExpires()
+                    -> ofType(3)
+                    -> where('active',0)
+                    -> forPage($page,$this->paginate)
+                    -> pluck('id');
+                $arr = array_merge($data_2->all(),$data_1->all());
+            }
+
+            $data = Activity::with(['belongsToUser' => function($q){
+                $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
+            }, 'hasManyTweets'])
+                ->whereIn('id',$arr)
+                ->orderBy('time_add','desc')
+                -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
+
+            return [
+                'data' => $this -> hotActivityTransformer->transformCollection($data->all()),
+                'page_count' => $data -> toArray()['last_page']
+            ];
+
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Api\Controllers;
 
 use App\Api\Transformer\ActivityTransformer;
 use App\Api\Transformer\FragCollectTransformer;
+use App\Api\Transformer\MakeFileTransformer;
 use App\Api\Transformer\MakeFiterTransformer;
 use App\Api\Transformer\MakeTemplateFileDetailsTransformer;
 use App\Api\Transformer\NewFragmentSearchTransformer;
@@ -50,9 +51,13 @@ class AllSearchController extends Controller
 
     private $searchTopicsTransformer;
 
-    private $newTemplateSearchTransformer;
+ //   private $newTemplateSearchTransformer;
 
-    private $newFragmentSearchTransformer;
+ //   private $newFragmentSearchTransformer;
+
+    private $makeFileTransformer;
+
+    private $fragCollectTransformer;
 
     public function __construct
     (
@@ -61,8 +66,10 @@ class AllSearchController extends Controller
         ActivityTransformer $activityTransformer,
         NewTweetSearchTransformer $newTweetSearchTransformer,
         SearchTopicsTransformer $searchTopicsTransformer,
-        NewTemplateSearchTransformer $newTemplateSearchTransformer,
-        NewFragmentSearchTransformer $newFragmentSearchTransformer
+      //  NewTemplateSearchTransformer $newTemplateSearchTransformer,
+   //     NewFragmentSearchTransformer $newFragmentSearchTransformer,
+        MakeFileTransformer $makeFileTransformer,
+        FragCollectTransformer $fragCollectTransformer
     )
     {
         $this -> newUserSearchTransformer       =   $newUserSearchTransformer;
@@ -70,8 +77,10 @@ class AllSearchController extends Controller
         $this -> activityTransformer            =   $activityTransformer;
         $this -> newTweetsSearchTransformer     =   $newTweetSearchTransformer;
         $this -> searchTopicsTransformer        =   $searchTopicsTransformer;
-        $this -> newTemplateSearchTransformer   =   $newTemplateSearchTransformer;
-        $this -> newFragmentSearchTransformer   =   $newFragmentSearchTransformer;
+     //   $this -> newTemplateSearchTransformer   =   $newTemplateSearchTransformer;
+     //   $this -> newFragmentSearchTransformer   =   $newFragmentSearchTransformer;
+        $this -> makeFileTransformer             =   $makeFileTransformer;
+        $this -> fragCollectTransformer          =   $fragCollectTransformer;
 
         if (!Cache::get('keywords')){
             $keyword_obj = Keywords::distinct('keyword')->get(['keyword']);
@@ -166,7 +175,7 @@ class AllSearchController extends Controller
      */
     private function user($page,$keyword)
     {
-        $user = \Cache::remember('user:'.$keyword,'1',function() use ($page,$keyword){
+//        $user = \Cache::remember('user:'.$keyword,'1',function() use ($page,$keyword){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                 //获取用户信息
@@ -191,7 +200,7 @@ class AllSearchController extends Controller
                             ->whereIn('active', [1,2])
                             ->orderBy('fans_count','DESC')
                             ->whereNotIn('id',$blacklist)
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                     }else{                  //手机号搜索   用户未登录
 
                         $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
@@ -201,7 +210,7 @@ class AllSearchController extends Controller
                             ->where('search_phone', 1)
                             ->whereIn('active', [1,2])
                             ->orderBy('fans_count','DESC')
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                     }
 
@@ -218,7 +227,7 @@ class AllSearchController extends Controller
                                 ->whereNotIn('id',$blacklist)
                                 ->forPage($page,$this->paginate)
                                 ->whereIn('active', [1,2])
-                                ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                                ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                         }else{          //如果搜索不到   用户未登录
 
@@ -226,7 +235,7 @@ class AllSearchController extends Controller
                                 ->orderBy('fans_count','DESC')
                                 ->forPage($page,$this->paginate)
                                 ->whereIn('active', [1,2])
-                                ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                                ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                         }
                     }
 
@@ -243,7 +252,7 @@ class AllSearchController extends Controller
                             ->whereNotIn('id',$blacklist)
                             ->forPage($page,$this->paginate)
                             ->whereIn('active', [1,2])
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                     }else{          //昵称搜索   用户未登录
 
@@ -251,7 +260,7 @@ class AllSearchController extends Controller
                             ->orderBy('fans_count','DESC')
                             ->forPage($page,$this->paginate)
                             ->whereIn('active', [1,2])
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                     }
 
                 }
@@ -275,7 +284,7 @@ class AllSearchController extends Controller
             }catch (\Exception $e){
                 return response()->json(['message'=>'bad_request'],403);
             }
-        });
+//        });
 
         return $user;
     }
@@ -422,17 +431,19 @@ class AllSearchController extends Controller
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                     $details = MakeTemplateFile::with(['belongsToFolder'=>function($q){
                         $q->select(['id','name']);
+                    },'belongsToUser'=>function($q){
+                        $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
                     }])
                         ->where('test_result',1)
                         -> where('active',1)
                         ->where('name','like','%'.$keyword.'%')
                         ->forpage($page,$this->paginate)
                         ->orderBy('count','DESC')
-                        -> get( ['id','folder_id', 'name','preview_address','address','cover','duration','watch_count']);
+                        -> get(['id','user_id','vipfree','time_add','folder_id','integral', 'name','preview_address','address','cover','duration','watch_count','count']);
 
                     // 调用内部函数，返回数据
                     return response() -> json([
-                        'template'  => $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
+                        'template'  => $this ->makeFileTransformer->searchtransform($details),
                     ], 200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
@@ -605,10 +616,10 @@ class AllSearchController extends Controller
                     }])
                         -> active()
                         -> where('comment','like','%'.$keyword.'%')
-                        -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','users_count'], 'page', $page);
+                        -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','users_count','forwarding_time'], 'page', $page);
 
                     return response()->json([
-                        'activity' => $this -> activityTransformer -> transformCollection($data->all()),
+                        'activity' => $this -> activityTransformer ->ptransform($data->all()),
                     ],200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -640,16 +651,16 @@ class AllSearchController extends Controller
                     })
                         ->with(['belongsToManyFragmentType'=>function($q){
                             $q->select(['name']);
-                        }])
+                        },'belongsToUser'])
                         ->where('test_results',1)
                         ->where('active', 1)
                         ->orWhere('name', 'like', '%' . $keyword . '%')
                         ->forPage($page, $this->paginate)
                         ->orderBy('watch_count', 'DESC')
-                        ->get(['id','name','cover','net_address','duration','watch_count']);
+                        ->get();
 
                     return response()->json([
-                        'fragment' => $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
+                        'fragment' => $this-> fragCollectTransformer->transform($fragment_info->toArray()) //$this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
                     ], 200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -841,11 +852,11 @@ class AllSearchController extends Controller
                     ->able()
                     ->orderBy('id','desc')
                     ->forPage($page,$this->paginate)
-                    ->get(['id','name','comment','icon']);
+                    ->get(['id','name','comment','icon','like_count']);
 
                 return response()->json([
                     // 数据
-                    'topic' => count($topics) ? $this->searchTopicsTransformer->transformCollection($topics->all()) : null,
+                    'topic' => count($topics) ? $this->searchTopicsTransformer->ptransform($topics->all()) : null,
                 ]);
 
             }catch (\Exception $e){
@@ -886,7 +897,7 @@ class AllSearchController extends Controller
                         ->whereIn('active', [1,2])
                         ->orderBy('fans_count','DESC')
                         ->whereNotIn('id',$blacklist)
-                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                 }else{                  //手机号搜索   用户未登录
 
                     $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
@@ -896,7 +907,7 @@ class AllSearchController extends Controller
                         ->where('search_phone', 1)
                         ->whereIn('active', [1,2])
                         ->orderBy('fans_count','DESC')
-                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                 }
 
@@ -913,7 +924,7 @@ class AllSearchController extends Controller
                             ->whereNotIn('id',$blacklist)
                             ->take(3)
                             ->whereIn('active', [1,2])
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                     }else{          //如果搜索不到   用户未登录
 
@@ -921,7 +932,7 @@ class AllSearchController extends Controller
                             ->orderBy('fans_count','DESC')
                             ->take(3)
                             ->whereIn('active', [1,2])
-                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                            ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                     }
                 }
 
@@ -938,7 +949,7 @@ class AllSearchController extends Controller
                         ->whereNotIn('id',$blacklist)
                         ->take(3)
                         ->whereIn('active', [1,2])
-                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
 
                 }else{          //昵称搜索   用户未登录
 
@@ -946,7 +957,7 @@ class AllSearchController extends Controller
                         ->take(3)
                         ->orderBy('fans_count','DESC')
                         ->whereIn('active', [1,2])
-                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover']);
+                        ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
                 }
 
             }
@@ -954,13 +965,15 @@ class AllSearchController extends Controller
             //模板
             $details = MakeTemplateFile::with(['belongsToFolder'=>function($q){
                 $q->select(['id','name']);
+            },'belongsToUser'=>function($q){
+                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
             }])
                 ->where('test_result',1)
                 -> where('active',1)
                 ->where('name','like','%'.$keyword.'%')
-                ->take(3)
+                ->forpage($page,$this->paginate)
                 ->orderBy('count','DESC')
-                -> get( ['id','folder_id', 'name','preview_address','address','cover','duration','watch_count']);
+                -> get(['id','user_id','vipfree','time_add','folder_id','integral', 'name','preview_address','address','cover','duration','watch_count','count']);
 
             //竞赛
             $activity = Activity::with(['belongsToUser','hasManyTweets.belongsToUser' => function ($q){
@@ -969,7 +982,7 @@ class AllSearchController extends Controller
                 -> active()
                 -> where('comment','like','%'.$keyword.'%')
                 ->take(3)
-                -> get(['id','user_id','bonus','comment','expires','time_add','icon','users_count']);
+                -> get(['id','user_id','bonus','comment','expires','time_add','icon','users_count','forwarding_time']);
 
             //片段
             $fragment_info = Fragment::WhereHas('keyWord', function ($q) use ($keyword) {
@@ -977,13 +990,13 @@ class AllSearchController extends Controller
             })
                 ->with(['belongsToManyFragmentType'=>function($q){
                     $q->select(['name']);
-                }])
+                },'belongsToUser'])
                 ->where('test_results',1)
                 ->where('active', 1)
                 ->orWhere('name', 'like', '%' . $keyword . '%')
                 ->forPage($page, $this->paginate)
                 ->orderBy('watch_count', 'DESC')
-                ->get(['id','name','cover','net_address','duration','watch_count']);
+                ->get();
 
             //动态
             $tweet_1 = Tweet::WhereHas('hasOneContent',function ($q) use ($keyword){
@@ -1118,15 +1131,15 @@ class AllSearchController extends Controller
                 ->able()
                 ->orderBy('like_count','desc')
                 ->take(3)
-                ->get(['id','name','comment','icon']);
+                ->get(['id','name','comment','icon','like_count']);
 
             return response()->json([
                 'user'      =>   $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
-                'template'  =>   $this->newTemplateSearchTransformer->transformCollection($details->toArray()),
-                'activity'  =>   $this -> activityTransformer -> transformCollection($activity->all()),
-                'fragment'  =>   $this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
+                'template'  =>  $this ->makeFileTransformer->searchtransform($details),
+                'activity'  =>   $this -> activityTransformer -> ptransform($activity->all()),
+                'fragment'  =>   $this-> fragCollectTransformer->transform($fragment_info->toArray()),
                 'tweet'     =>   $this->newTweetsSearchTransformer->transformCollection($tweet),
-                'topic'     =>   $this->searchTopicsTransformer->transformCollection($topics->all()) ,
+                'topic'     =>   $this->searchTopicsTransformer->ptransform($topics->all()) ,
             ]);
         }catch (\Exception $e){
             return response()->json(['message'=>'bad_request'],500);

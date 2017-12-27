@@ -25,6 +25,7 @@ class Activity extends Common
         'recommend_expires',
         'time_add',
         'time_update',
+        'nearby'
     ];
 
     public $timestamps = false;

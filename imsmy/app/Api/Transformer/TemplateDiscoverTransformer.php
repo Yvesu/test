@@ -32,4 +32,31 @@ class TemplateDiscoverTransformer extends Transformer
             'time_add'      => $data->time_add,
         ];
     }
+
+    /**
+     * 置顶
+     * @param $data
+     * @return array
+     */
+    public function ptransform($datas)
+    {
+        $arr = [];
+        foreach ($datas as $data){
+            $arr [] =   [
+                'id'            => $data->id,
+                'user_id'       => $data->user_id,
+                'style'         => 2,
+                'name'          => $data->name,
+                'intro'         => $data->intro,
+                'location'      => $data->location ?:'',
+                'count'         => $data->count,
+                'cover'         => CloudStorage::downloadUrl($data->cover),
+                'preview_address' => CloudStorage::downloadUrl($data->preview_address),
+                'user'          => $this->usersSearchTransformer->transform($data->belongsToUser),
+                'time_add'      => $data->time_add,
+                'duration'      =>  changeTimeType($data->duration),
+            ];
+        }
+        return $arr;
+    }
 }

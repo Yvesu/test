@@ -2,6 +2,7 @@
 namespace App\Api\Transformer;
 
 use App\Api\Controllers\Traits\TweetsCommon;
+use App\Models\Subscription;
 use CloudStorage;
 use Auth;
 use App\Models\TweetLike;
@@ -27,7 +28,7 @@ class ActivityTweetDetailsTransformer extends Transformer
         $user = Auth::guard('api')->user();
 
         $tweet = $data->hasOneTweet;
-        
+
         $replies = $tweet->hasManyTweetReply->take(9);
 
         // 排名，写在缓存，一分钟一更新，写在trait文件里。
@@ -45,6 +46,27 @@ class ActivityTweetDetailsTransformer extends Transformer
                 ];
             }
         }
+        if ($user){
+            $res_1 = Subscription::OfAttention($user->id,$data->hasOneUser->id)->first();
+            $res_2 = Subscription::OfAttention($data->hasOneUser->id,$user->id)->first();
+            if ($res_1){
+                if ($res_2){
+                    $result = 2;
+                }else{
+                    $result = 1;
+                }
+            }else{
+                $result = 0;
+
+                if ($user->id === $data->hasOneUser->id){
+                    $result = 3;
+                }
+
+            }
+
+        }else{
+            $result = 0;
+        }
 
         return [
             'id'            => $data->tweet_id,
@@ -60,6 +82,7 @@ class ActivityTweetDetailsTransformer extends Transformer
             'video'         => CloudStorage::downloadUrl($tweet->video),
             'user'          => $this->usersWithTransformer->transform($data->hasOneUser),
             'reply'         => $reply,
+            'attention'     => $result,
         ];
     }
 }

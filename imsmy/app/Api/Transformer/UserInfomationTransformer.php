@@ -8,7 +8,6 @@ class UserInfomationTransformer extends Transformer
 {
     public function transform($user)
     {
-
         return [
             'id'                    =>  $user -> id,
             'nickname'              =>  $user -> nickname,

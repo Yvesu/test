@@ -66,7 +66,6 @@ class CompetitionController extends BaseController
                 'comment'  => 'required|max:255',
                 'bonus'    => 'required',
                 'expires'  => 'required|numeric',
-
             ]);
 
             // 获取所有信息
@@ -86,7 +85,8 @@ class CompetitionController extends BaseController
                 'user_id'      => $id,
                 'comment'      => removeXSS($request -> get('comment')),
                 'bonus'        => $bonus,
-                'location'     => $input['location']===null ?:'',
+                'location'     => $input['location']===null ?  '' :  $input['location'],
+                'nearby'       => $request->get('nearby') ?:'',
                 'expires'      => $input['expires'],
                 'time_add'     => $time,
                 'time_update'  => $time,
@@ -124,6 +124,8 @@ class CompetitionController extends BaseController
 
             // 获取赛事的详情
             $data = Activity::with('belongsToUser')->findOrFail($id);
+
+            Activity::where('id',$id)->increment('forwarding_time');
 
             // 返回数据
             return response()->json($this->competitionTransformer->transform($data));

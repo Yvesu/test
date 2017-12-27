@@ -612,6 +612,8 @@ $api->version(['v1'],function($api){
             });
         });
 
+        $api->post('make/template/recommend','MakeTemplateController@recommend');
+
         // 用户可为登录状态，或者为非登录状态
         $api->group(['middleware' => ['app.user']], function ($api) {
 
@@ -651,7 +653,6 @@ $api->version(['v1'],function($api){
                     // 首页
                     $api->post('/folder','MakeTemplateController@folder');
                     $api->post('/index','MakeTemplateController@index');
-                    $api->post('/recommend','MakeTemplateController@recommend');
                     $api->post('/details','MakeTemplateController@details');
 
                     // 下载
@@ -1138,5 +1139,23 @@ $api->version(['v1'],function($api){
         //视频下载
         $api->get('/download/tweet/{id}','DownloadTweetController@mark')
             ->where('id','[0-9]+');
+
+        //附近的赛事
+        $api->get('/nearby/activity','ActivityController@nearbyActivity');
+
+        $api->group(['prefix'=>'/texture'],function($api){
+
+            // 纹理推荐
+            $api -> get('/recommend','TextureController@recommend');
+
+            //纹理的分类
+            $api->get('/folder','TextureController@folder');
+
+            //分类下的作品
+            $api->get('/file/{id}','TextureController@file')
+            ->where('id','[0-9]+');
+
+        });
+
     });
 });

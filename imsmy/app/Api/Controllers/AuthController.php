@@ -218,12 +218,6 @@ class AuthController extends BaseController
             // 保存token
             $auth->token = $token;
 
-            UserToken::create([
-                'user_id'       =>    $auth->id,
-                'token'         =>    $auth->token,
-                'create_time'   =>     time(),
-            ]);
-
             // 获取用户关注人数
             $auth -> attention = Subscription::where('from',$auth->id)->count();
 

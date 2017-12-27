@@ -35,7 +35,7 @@ class CompetitionTransformer extends Transformer
             'icon'              => CloudStorage::downloadUrl($data->icon),
             'created_at'        => $data->time_add,
             'already_like'      => $already_like ? $already_like->status : '0',       // 收藏关系
-            'forwarding_time'   => $data->forwarding_times,       // 阅读总量
+            'forwarding_time'   => $data->forwarding_time,       // 阅读总量
             'like_count'        => $data->like_count,            // 点赞总量
             'work_count'        => $data->work_count,            // 作品总量
             'users_count'       => $data -> users_count,       // 用户总量
@@ -44,6 +44,7 @@ class CompetitionTransformer extends Transformer
             'theme'             => $data->theme,
             'comment'           => $data->comment,
             'already_join'      => $already_join ? 1 : 0,
+            'location'          =>  $data->location,
         ];
     }
 }

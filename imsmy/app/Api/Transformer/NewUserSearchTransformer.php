@@ -46,6 +46,7 @@ class NewUserSearchTransformer extends Transformer
                 'verify_info' => $item['verify_info'],
                 'signature' => $item['signature'] ?: '',
                 'cover' => CloudStorage::downloadUrl($item['cover']),
+                'fans'  =>$item['fans_count'],
                 'attention' => $attention,
             ];
 
@@ -57,6 +58,7 @@ class NewUserSearchTransformer extends Transformer
                 'verify' => $item['verify'],
                 'verify_info' => $item['verify_info'],
                 'signature' => $item['signature'] ?: '',
+                'fans'  =>$item['fans_count'],
                 'cover' => CloudStorage::downloadUrl($item['cover']),
                 'attention' => 0,
             ];

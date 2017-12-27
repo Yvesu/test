@@ -16,4 +16,20 @@ class SearchTopicsTransformer extends Transformer
             'icon'          => CloudStorage::downloadUrl($topic->icon),
         ];
     }
+
+    public function ptransform($topics)
+    {
+        $arr = [];
+        foreach ($topics as $topic){
+            $arr[] =  [
+                'id'            => $topic->id,
+                'name'          => $topic->name,
+                'comment'       => $topic->comment,
+//            'icon'          => CloudStorage::downloadUrl($topic->icon),
+                'like_count'    =>  $topic->like_count,
+            ];
+        }
+
+        return $arr;
+    }
 }

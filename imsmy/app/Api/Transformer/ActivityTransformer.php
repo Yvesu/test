@@ -41,4 +41,37 @@ class ActivityTransformer extends Transformer
             'avatars'       => $avatars,
         ];
     }
+
+
+    public function ptransform($datas)
+    {
+        $arr = [];
+        foreach ($datas as $data){
+            // 获取参加赛事的前9个人的头像
+            $avatars = [];
+
+            if($data -> hasManyTweets -> first()){
+
+                foreach($data -> hasManyTweets -> take(9) as $key => $value){
+
+                    $avatars[] = CloudStorage::downloadUrl($value -> belongsToUser -> avatar);
+                }
+            }
+
+            $arr[] =  [
+                'id'            => $data->id,
+                'name'          => $data->name,
+                'bonus'         => $data->bonus,
+                'comment'       => $data->comment,
+                'users_count'   => $data->users_count,
+                'forwarding_time'   =>$data->forwarding_time,
+                'expires'       => $data->expires,
+                'cover'         => CloudStorage::downloadUrl($data->icon),
+                'user'          => $this->usersTransformer->transform($data->belongsToUser),
+                'avatars'       => $avatars,
+
+            ];
+        }
+                return $arr;
+    }
 }

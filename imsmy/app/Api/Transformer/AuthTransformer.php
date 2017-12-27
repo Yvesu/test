@@ -11,19 +11,20 @@ namespace App\Api\Transformer;
 use App\Models\UserToken;
 use Config;
 use CloudStorage;
+use Illuminate\Support\Facades\Cache;
 use JWTAuth;
 
 class AuthTransformer extends Transformer
 {
     public function transform($auth)
     {
-//        $is_exit =UserToken::where('user_id',$auth->id)->get();
-//
-//        if ($is_exit->count()>1){
-//            $old = UserToken::where('user_id',$auth->id)->orderBy('create_time','asc')->first();
-//            JWTAuth::invalidate($old->token);
-//            UserToken::where('token',$old->token)->delete();
-//        }
+        if ($old_token = Cache::get($auth->id.'token')){
+            JWTAuth::invalidate($old_token);
+            Cache::forget($auth->id.'token');
+            Cache::forever($auth->id.'token',$auth->token);
+        }else{
+            Cache::forever($auth->id.'token',$auth->token);
+        }
 
         return [
             'id'           => (string)$auth->id,

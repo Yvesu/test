@@ -19,6 +19,8 @@ use CloudStorage;
 use DB;
 use Auth;
 use Log;
+use Tymon\JWTAuth\JWTAuth;
+use Tymon\JWTAuth\Token;
 
 /**
  * 视频制作模板接口管理
