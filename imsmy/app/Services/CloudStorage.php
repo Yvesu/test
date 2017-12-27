@@ -413,6 +413,11 @@ class CloudStorage
     }
 
 
+    /**
+     * @param $key
+     * @return string
+     * 获得视频分辨率
+     */
     public function getWidthAndHeight($key)
     {
 
@@ -428,6 +433,15 @@ class CloudStorage
         return $width.'*'.$height;
     }
 
+    /**
+     * @param $srcbucket
+     * @param $key
+     * @param $destbucket
+     * @param $destKey
+     * @return bool
+     * @throws \Exception
+     * 重命名
+     */
     public function reNameFile($srcbucket,$key,$destbucket,$destKey)
     {
         list($ret, $error) = $this->bucketManager->move($srcbucket,$key,$destbucket,$destKey,true);
@@ -439,29 +453,26 @@ class CloudStorage
     }
 
 
-
+    /**
+     * @param $key
+     * @param $newAddress
+     * @param $width
+     * @param $height
+     * @return bool|string
+     * 截图
+     */
     public function saveCover($key,$newAddress,$width,$height)
     {
         $bucket = 'hivideo-video';
-        $fileBucket = 'goobird-dev';
-        $pipeline = 'hivideo_drm';
+        $fileBucket = 'hivideo-img';
+        $pipeline = 'goobird-dev';
         $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
         $pipeline = 'hivideo_drm';
         $fileKey1 = $key.'vframe-001_'.$width.'*'.$height.'_.jpg';
-        $fileKey2 = $key.'vframe-002_'.$width.'*'.$height.'_.jpg';
-        $fileKey3 = $key.'vframe-003_'.$width.'*'.$height.'_.jpg';
         $fops = 'vframe/jpg/offset/7/w/'.$width.'/h/'.$height.'|saveas/';
         $fops .= base64_urlSafeEncode("$fileBucket:$fileKey1");
         list($id,$err) = $pfop->execute($newAddress,$fops,$pipeline,$force=true);
-
-        $fops2 = 'vframe/jpg/offset/14/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops2 .= base64_urlSafeEncode("$fileBucket:$fileKey2");
-        list($id,$err2) = $pfop->execute($newAddress,$fops2,$pipeline,$force=true);
-
-        $fops3 = 'vframe/jpg/offset/50/w/'.$width.'/h/'.$height.'|saveas/';
-        $fops3 .= base64_urlSafeEncode("$fileBucket:$fileKey3");
-        list($id,$err3) = $pfop->execute($newAddress,$fops3,$pipeline,$force=true);
-        if ($err != null || $err2 != null || $err3 != null) {
+        if ($err != null) {
             return false;
         } else {
             return $width.'*'.$height;
@@ -504,7 +515,29 @@ class CloudStorage
     }
 
 
-    public function DRM($bucket,$id)
+    //  暂时无用
+    public function DRM($bucket,$key)
+    {
+        $kk = \Qiniu\base64_urlSafeEncode('www.goobird.com');
+        $hlsKey = base64_urlSafeEncode('1234567890123456');
+        $fops = "avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/$hlsKey/hlsKeyUrl/$kk/hlsMethod/qiniu-protection-10|saveas/".\Qiniu\base64_urlSafeEncode($bucket.":".$key."m3u8");
+        $pipeline = 'hivideo_drm';
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
+        list($id, $err) = $pfop->execute($key,$fops);
+        if ($err != null) {
+            return false;
+        } else {
+            return true;
+        }
+
+
+
+
+
+    }
+
+    //  暂时无用
+    public function DRM3($bucket,$id)
     {
         \DB::beginTransaction();
         $production = Tweet::find($id);
@@ -515,21 +548,15 @@ class CloudStorage
             $bucket1 = 'hivideo-video';
             $pfop1 = new PersistentFop($auth,$bucket1);
             list($ret, $err1) = $pfop1->status($production->transcoding_id);
-            if($ret['code']==0 && $ret['des']=="The fop was completed successfully" && isset($ret['items'][0]['key'])){
+            if($ret['code']==0 && $ret['desc']=="The fop was completed successfully" && isset($ret['items'][0]['key'])){
                 $key = $production->transcoding_video;
                 $key = str_replace('v.cdn.hivideo.com/','',$key);
-                $HLSkey = base64_urlSafeEncode('456daf8742acc485');
-                $key1 = base64_urlSafeEncode($key);
-                $fop = 'avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/';
-                $fop .= $HLSkey;
-                $fop .= '/hlsKeyUrl/';
-                $fop .= 'aaa';
-                $fop .= '/hlsMethod/qiniu-protection-10|saveas/';
-                $fop .= base64_urlSafeEncode("$bucket:$key");
+                $kk = \Qiniu\base64_urlSafeEncode('www.goobird.com');
+                $hlsKey = base64_urlSafeEncode('1234567890123456');
+                $fops = "avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/$hlsKey/hlsKeyUrl/$kk/hlsMethod/qiniu-protection-10|saveas/".\Qiniu\base64_urlSafeEncode($bucket.":drm/".$key);
                 $pipeline = 'hivideo_drm';
-                $fops = base64_urlSafeEncode($fop);
                 $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
-                list($id, $err) = $pfop->execute($key1,$fops);
+                list($id, $err) = $pfop->execute($key,$fops);
                 if ($err != null) {
                     $production -> active = 8;
                     $production -> error_reason = '加密失败';
@@ -539,6 +566,7 @@ class CloudStorage
                     $production -> time_up_over = time();
                     $production -> active = 0;
                     $production -> is_drm = 1;
+                    $production -> drm_address = 'v.cdn.hivideo.com'.$key;
                     $production -> save();
                     DB::commit();
                     return true;
@@ -550,17 +578,12 @@ class CloudStorage
             $key = $production->video;
             $key = str_replace('v.cdn.hivideo.com/','',$key);
             $HLSkey = base64_urlSafeEncode('456daf8742acc485');
-            $key1 = base64_urlSafeEncode($key);
-            $fop = 'avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/';
-            $fop .= $HLSkey;
-            $fop .= '/hlsKeyUrl/';
-            $fop .= 'aaa';
-            $fop .= '/hlsMethod/qiniu-protection-10|saveas/';
-            $fop .= base64_urlSafeEncode("$bucket:$key");
+            $kk = \Qiniu\base64_urlSafeEncode('www.goobird.com');
+            $hlsKey = base64_urlSafeEncode('1234567890123456');
+            $fops = "avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/$hlsKey/hlsKeyUrl/$kk/hlsMethod/qiniu-protection-10|saveas/".\Qiniu\base64_urlSafeEncode($bucket.":drm/".$key);
             $pipeline = 'hivideo_drm';
-            $fops = base64_urlSafeEncode($fop);
             $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
-            list($id, $err) = $pfop->execute($key1, $fops);
+            list($id, $err) = $pfop->execute($key,$fops);
             if ($err != null) {
                 $production -> active = 8;
                 $production -> error_reason = '加密失败';
@@ -569,6 +592,8 @@ class CloudStorage
             } else {
                 $production -> time_up_over = time();
                 $production -> active = 0;
+                $production -> is_drm = 1;
+                $production -> drm_address = 'v.cdn.hivideo.com'.$key;
                 $production -> save();
                 DB::commit();
                 return true;
@@ -579,9 +604,59 @@ class CloudStorage
 
     }
 
+    //  暂时无用
+    public function DRM2()
+    {
+
+        $bucket = 'hivideo-video-ects';
+        $key ='3zh5Cm7179.mp4';
+        $kk = \Qiniu\base64_urlSafeEncode('www.qiniu.com');
+        $hlsKey = base64_urlSafeEncode('456daf8742acc485');
+        $fops = "avthumb/m3u8/noDomain/1/vcodec/copy/acodec/copy/hlsKey/$hlsKey/hlsKeyUrl/$kk/hlsMethod/qiniu-protection-10|saveas/".\Qiniu\base64_urlSafeEncode($bucket.":hls.m3u8");
+        $pipeline = 'hivideo_drm';
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
+        list($id, $err) = $pfop->execute($key,$fops);
+        if ($err != null) {
+            return false;
+        } else {
+            return true;
+        }
+
+    }
+
+    // 暂时无用
+    public function transcoding1($bucket,$key,$width,$height)
+    {
+        $pipeline = 'hivideo_alternative';
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
+        $fileKey = $key.'.m3u8';
+        $hlsKey = base64_urlSafeEncode('1234567890123456');
+        $kk = \Qiniu\base64_urlSafeEncode('www.qiniu.com');
+        $fops ='adapt/m3u8/multiResolution/';
+        $fops .= (int)($width/3).':'.(int)($height/3).',';
+        $fops .= (int)($width/2).':'.(int)($height/2).',';
+        $fops .= $width.':'.$height.'/';
+        $fops .= 'envBandWidth/200000,500000,2400000/multiVb/200k,500k,8500k/hlstime/10/noDomain/1/vcodec/copy/acodec/copy/hlsKey/'.$hlsKey.'/hlsKeyUrl/'.$kk.'/hlsMethod/qiniu-protection-10|saveas/'.\Qiniu\base64_urlSafeEncode($bucket.':'.$fileKey);
+
+        list($id, $err) = $pfop->execute($key, $fops);
+        if ($err != null) {
+            return false;
+        } else {
+            return $id;
+        }
+    }
 
 
-    public function transcoding($bucket,$key,$width,$height)
+    /**
+     * @param $bucket
+     * @param $key
+     * @param $width
+     * @param $height
+     * @param $choice
+     * @return bool
+     * 转码
+     */
+    public function transcoding($bucket,$key,$width,$height,$choice)
     {
         $pipeline = 'hivideo_alternative';
         $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
@@ -593,11 +668,32 @@ class CloudStorage
         $fops .= 'envBandWidth/200000,500000,2400000/multiVb/200k,500k,8500k/hlstime/10|saveas/';
         $fops .= base64_urlSafeEncode("$bucket:$fileKey");
         list($id, $err) = $pfop->execute($key, $fops);
-        if ($err != null) {
-            return false;
-        } else {
-            return $id;
+        $ex = pathinfo($key, PATHINFO_EXTENSION);
+        $key3 = str_replace($ex,'m3u8',$key);
+        $fileKey3 = $key3;
+        $fops3 = 'avthumb/m3u8/noDomain/1/segtime/5|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey3);
+        list($id, $err2) = $pfop->execute($key,$fops3);
+        if($choice == 1){
+            $key1 = str_replace($ex,'m3u8',$key);
+            $fileKey1 = 'high/'.$key1;
+            $fileKey2 = 'norm/'.$key1;
+            $fops1 = 'avthumb/m3u8/noDomain/1/segtime/5/s/'.(int)($width/2).'x'.(int)($height/2).'|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey1);
+            $fops2 = 'avthumb/m3u8/noDomain/1/segtime/5/s/'.(int)($width/3).'x'.(int)($height/3).'|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey2);
+            list($id, $err1) = $pfop->execute($key,$fops2);
+            list($id, $err2) = $pfop->execute($key,$fops1);
+            if($err != null || $err1 != null || $err2 != null){
+                return false;
+            }else{
+                return true;
+            }
+        }else{
+            if ($err != null) {
+                return false;
+            } else {
+                return $id;
+            }
         }
+
     }
 
     public function searchStatus($key)
@@ -616,7 +712,8 @@ class CloudStorage
     {
         $pfop = new PersistentFop($this->auth,$bucket);
         list($ret, $err1) = $pfop->status($id);
-        if($ret['code']==0 && $ret['des']=="The fop was completed successfully" && isset($ret['items'][0]['key'])){
+        set_time_limit(0);
+        if($ret['code']==0){
             return true;
         }elseif ($ret['code']==3 && $ret['des']=='The fop is failed'){
             return false;
@@ -649,5 +746,24 @@ class CloudStorage
 //        $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
          $fops = "avthumb/mp4/s/" . $wxl . "/vb/1.4m/wmImage/" . $waterImg . "/wmText/" . $text . "/wmGravityText/NorthWest/wmFont/" . $fond . "/wmFontColor/" . $font_color . "/wmFontSize/" . $font_size . "/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/" . $save;
          list($id, $err) = $pfop->execute($file_url, $fops);
+     }
+
+     public function ccss($bucket,$key,$width,$height,$choice)
+     {
+         $pipeline = 'hivideo_alternative';
+         $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
+         $ex = pathinfo($key, PATHINFO_EXTENSION);
+         $key2 = str_replace($ex,'.m3u8',$key);
+         $fileKey2 = 'high/'.$key2;
+         $fops2 = 'avthumb/m3u8/noDomain/1/segtime/5/s/'.(int)($width/2).'x'.(int)($height/2).'|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey2);
+         list($id, $err1) = $pfop->execute($key,$fops2);
+             if ($err1 != null) {
+                 return false;
+             } else {
+                 return true;
+             }
+
+
+
      }
 }

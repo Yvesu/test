@@ -316,9 +316,10 @@ class MixResourceController extends Controller
             $duration = $request->get('duration', 0);
             $count = $request->get('count', 0);
             $page = $request->get('page', 1);
+            $everyPageNum = $request ->get('everypagenum',10);
             $active = 1;
             DB::beginTransaction();
-            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count);
+            $mainData = $this->mainData($everyPageNum,$active,$page, $name, $type, $integral, $time, $duration, $count);
             $data = $this->finallyData($mainData, 1);
             DB::commit();
             return $data;
@@ -345,9 +346,10 @@ class MixResourceController extends Controller
             $count = $request->get('count', 0);
             $page = $request->get('page', 1);
             $active = 1;
+            $everyPageNum = $request ->get('everypagenum',10);
             $recommend  = 1;
             DB::beginTransaction();
-            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count,$recommend);
+            $mainData = $this->mainData($everyPageNum,$active,$page, $name, $type, $integral, $time, $duration, $count,$recommend);
             $data = $this->finallyData($mainData, 2);
             DB::commit();
             return $data;
@@ -374,8 +376,9 @@ class MixResourceController extends Controller
             $count = $request->get('count', 0);
             $page = $request->get('page', 1);
             $active = 3;
+            $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
-            $mainData = $this->mainData($active,$page, $name, $type, $integral, $time, $duration, $count);
+            $mainData = $this->mainData($everyPageNum,$active,$page, $name, $type, $integral, $time, $duration, $count);
             $data = $this->finallyData($mainData, 3);
             DB::commit();
             return $data;
@@ -386,7 +389,7 @@ class MixResourceController extends Controller
     }
 
 
-    private function mainData($active,$page,$name=null,$type=null,$integral=0,$time=0,$duration=0,$count=0,$recommend=null)
+    private function mainData($everyPageNum,$active,$page,$name=null,$type=null,$integral=0,$time=0,$duration=0,$count=0,$recommend=null)
     {
         try{
             switch ($time){
@@ -423,14 +426,20 @@ class MixResourceController extends Controller
                     $duration = 0;
             }
             $allData = MakeEffectsFile::where('active','=',$active)
-            ->where('test_result','=',1)->Name($name)->Type($type)->where('integral','>=',$integral)->Duration($duration)
+            ->where('test_result','=',1)->Name($name)->Type($type)->where('integral','>=',$integral)->Time($time)->Duration($duration)
             ->Counta($count);
             if($recommend == 1){
-                $mainData = $allData->where('recommend','=',1)->forPage($page,$this->paginate)->get();
+                $mainData = $allData->where('recommend','=',1)->forPage($page,$everyPageNum)->get();
+                $dataNum = $allData->where('recommend','=',1)->get();
             }else{
-                $mainData = $allData->forPage($page,$this->paginate)->get();
+                $mainData = $allData->forPage($page,$everyPageNum)->get()->count();
+                $dataNum = $allData->get()->count();
             }
-            return $mainData;
+            $data = [
+                $mainData,
+                $dataNum
+            ];
+            return $data;
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -461,7 +470,7 @@ class MixResourceController extends Controller
 
         $data = [];
 
-        foreach($mainData as $k => $v)
+        foreach($mainData[0] as $k => $v)
         {
             $folder = $v->belongsToFolder()->first()?$v->belongsToFolder->name:'';
             $userName = $v->belongsToUser->nickname;
@@ -536,10 +545,10 @@ class MixResourceController extends Controller
             array_push($data,$tempData);
 
         }
-
+        $dataNum = $mainData[1];
         $sumnum = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->get()->count();
         $todaynew = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-        return response()->json(['data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
+        return response()->json(['dataNum'=>$dataNum,'data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
     }
 
 
@@ -553,8 +562,10 @@ class MixResourceController extends Controller
         try{
             $active = $request->get('active',1);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
-            $mainData = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
+            $mainData = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
+            $dataNum = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->get()->count();
             $data = [];
             $space = MakeEffectsFile::get()->sum('size');
             $max = $mainData->max('sort');
@@ -644,7 +655,7 @@ class MixResourceController extends Controller
             }
 
             DB::commit();
-            return response()->json(['data'=>$data,'num'=>$num,'batchBehavior'=>$batchBehavior]);
+            return response()->json(['dataNum'=>$dataNum,'data'=>$data,'num'=>$num,'batchBehavior'=>$batchBehavior]);
         }catch (ModelNotFoundException $q){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);

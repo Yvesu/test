@@ -35,7 +35,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
-
+            $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
             //  注册用户  以及男女比例
             $userNum = User::all()->count();
@@ -62,13 +62,18 @@ class UserManageController extends Controller
 
             if($integral == 0)
             {
-                $mainData = User::where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
-                    ->forPage($page,$this->paginate)
+                    ->forPage($page,$everyPageNum)
                     ->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
+                    ->get()->count();
             }
 
             //  表格数据
@@ -176,7 +181,7 @@ class UserManageController extends Controller
                 'levelUp'=>'升级',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'userNum'=>$userNum,'womenUserNumProportion'=>$womenUserNumProportion,'menUserNumProportion'=>$menUserNumProportion,'todayNewUser'=>$todayNewUser,'todayNewUserWomen'=>$todayNewUserWomen,'todayNewUserMen'=>$todayNewUserMen],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'userNum'=>$userNum,'womenUserNumProportion'=>$womenUserNumProportion,'menUserNumProportion'=>$menUserNumProportion,'todayNewUser'=>$todayNewUser,'todayNewUserWomen'=>$todayNewUserWomen,'todayNewUserMen'=>$todayNewUserMen],200);
 
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -245,6 +250,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             DB::beginTransaction();
             //  第三方登录的用户数及各种比例
@@ -299,16 +305,26 @@ class UserManageController extends Controller
                 $maindata = User::whereHas('hasManyOAuth',function ($q) use ($thirdtype){
                     $q->where('oauth_name','like',"%$thirdtype%");
                 })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
-                    ->forPage($page,$this->paginate)
+                    ->forPage($page,$everyPageNum)
                     ->get();
+                $dataNum = User::whereHas('hasManyOAuth',function ($q) use ($thirdtype){
+                    $q->where('oauth_name','like',"%$thirdtype%");
+                })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
+                    ->get()->count();
             }else{
                 $maindata = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->whereHas('hasManyOAuth',function ($q) use ($thirdtype){
                     $q->where('oauth_name','like',"%$thirdtype%");
                 })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
-                    ->forPage($page,$this->paginate)
+                    ->forPage($page,$everyPageNum)
                     ->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->whereHas('hasManyOAuth',function ($q) use ($thirdtype){
+                    $q->where('oauth_name','like',"%$thirdtype%");
+                })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
+                    ->get()->count();
             }
 
             $data = [];
@@ -359,7 +375,7 @@ class UserManageController extends Controller
                 'stop'=>'冻结',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'thirdpartyUserNum'=>$thirdpartyUserNum,'thirdpartyQQProportion'=>$thirdpartyQQProportion,'thirdpartyWeixinProportion'=>$thirdpartyWeixinProportion,'thirdpartyWeiboProportion'=>$thirdpartyWeiboProportion,'todayNewUserNum'=>$todayNewUserNum,'todayNewQQProportion'=>$todayNewQQProportion,'todayNewWeixinProportion'=>$todayNewWeixinProportion,'todayNewWeiboProportion'=>$todayNewWeiboProportion],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'thirdpartyUserNum'=>$thirdpartyUserNum,'thirdpartyQQProportion'=>$thirdpartyQQProportion,'thirdpartyWeixinProportion'=>$thirdpartyWeixinProportion,'thirdpartyWeiboProportion'=>$thirdpartyWeiboProportion,'todayNewUserNum'=>$todayNewUserNum,'todayNewQQProportion'=>$todayNewQQProportion,'todayNewWeixinProportion'=>$todayNewWeixinProportion,'todayNewWeiboProportion'=>$todayNewWeiboProportion],200);
 
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -418,6 +434,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             //  vip用户总数和男女比例
             DB::beginTransaction();
@@ -446,13 +463,18 @@ class UserManageController extends Controller
             //  主要表格数据
             if($integral == 0)
             {
-                $mainData = User::where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                         $q->where('integral_count','>=',$integral);
                     })->where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
-                        ->forPage($page,$this->paginate)
+                        ->forPage($page,$everyPageNum)
                         ->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
+                    ->get()->count();
             }
             $data = [];
             foreach ($mainData as $k => $v)
@@ -512,7 +534,7 @@ class UserManageController extends Controller
                 'levelUp'=>'升级',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'vipUserNum'=>$vipUserNum,'vipManUserProportino'=>$vipManUserProportino,'vipWomenUserProportino'=>$vipWomenUserProportino,'todayNewVipUserNum'=>$todayNewVipUserNum,'todayMan'=>$todayMan,'todayWomen'=>$todayWomen],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'vipUserNum'=>$vipUserNum,'vipManUserProportino'=>$vipManUserProportino,'vipWomenUserProportino'=>$vipWomenUserProportino,'todayNewVipUserNum'=>$todayNewVipUserNum,'todayMan'=>$todayMan,'todayWomen'=>$todayWomen],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
@@ -559,6 +581,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             //  机构用户数量及男女比例
             DB::beginTransaction();
@@ -588,11 +611,15 @@ class UserManageController extends Controller
             //  表格主要数据
             if($integral == 0)
             {
-                $mainData = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
-                })->where('verify_checker','=',$checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->where('verify_checker','=',$checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->where('verify_checker','=',$checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
             $data = [];
@@ -636,7 +663,7 @@ class UserManageController extends Controller
                 'stop'=>'冻结',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'organizationUserNum'=>$organizationUserNum,'organizationManProportion'=>$organizationManProportion,'organizationWomenProportion'=>$organizationWomenProportion,'todayNewOrganizationNum'=>$todayNewOrganizationNum,'todayNewOrganizationManNum'=>$todayNewOrganizationManNum,'todayNewOrganizationWomenNum'=>$todayNewOrganizationWomenNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'organizationUserNum'=>$organizationUserNum,'organizationManProportion'=>$organizationManProportion,'organizationWomenProportion'=>$organizationWomenProportion,'todayNewOrganizationNum'=>$todayNewOrganizationNum,'todayNewOrganizationManNum'=>$todayNewOrganizationManNum,'todayNewOrganizationWomenNum'=>$todayNewOrganizationWomenNum],200);
 
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -660,6 +687,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             //  机构用户数量及男女比例
             DB::beginTransaction();
@@ -689,11 +717,15 @@ class UserManageController extends Controller
             //  表格主要数据
             if($integral == 0)
             {
-                $mainData = User::where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
-                })->Checker($checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->Checker($checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->Checker($checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
 
@@ -742,7 +774,7 @@ class UserManageController extends Controller
                 'levelUp'=>'升级',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'verifyUserNum'=>$verifyUserNum,'verifyManProportion'=>$verifyManProportion,'verifyWomenProportion'=>$verifyWomenProportion,'todayNewVerifyNum'=>$todayNewVerifyNum,'todayNewOrganizationManNum'=>$todayNewVerifyManNum,'todayNewVerifyWomenNum'=>$todayNewVerifyWomenNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'verifyUserNum'=>$verifyUserNum,'verifyManProportion'=>$verifyManProportion,'verifyWomenProportion'=>$verifyWomenProportion,'todayNewVerifyNum'=>$todayNewVerifyNum,'todayNewOrganizationManNum'=>$todayNewVerifyManNum,'todayNewVerifyWomenNum'=>$todayNewVerifyWomenNum],200);
 
         }catch (ModelNotFoundException $e){
             DB::rollBack();
@@ -766,6 +798,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             //  创作者用户与男女比例
             DB::beginTransaction();
@@ -811,7 +844,14 @@ class UserManageController extends Controller
                     }else{
                         $q->where('checker_id','=',$checker)->where('type','=',1);
                     }
-                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
+                    if(is_null($checker)){
+                        $q->where('type','=',1);
+                    }else{
+                        $q->where('checker_id','=',$checker)->where('type','=',1);
+                    }
+                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
@@ -821,7 +861,16 @@ class UserManageController extends Controller
                     }else{
                         $q->where('checker_id','=',$checker)->where('type','=',1);
                     }
-                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->whereHas('privilegeUser',function ($q) use($checker) {
+                    if(is_null($checker)){
+                        $q->where('type','=',1);
+                    }else{
+                        $q->where('checker_id','=',$checker)->where('type','=',1);
+                    }
+                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
             $data = [];
@@ -865,7 +914,7 @@ class UserManageController extends Controller
                 'stop'=>'冻结',
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'createrNum'=>$createrNum,'manCreaterProportion'=>$manCreaterProportion,'womenCreaterProportion'=>$womenCreaterProportion,'todayNewCreaterNum'=>$todayNewCreaterNum,'todayNewManCreaterNum'=>$todayNewManCreaterNum,'todayNewWomenCreaterNum'=>$todayNewWomenCreaterNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'createrNum'=>$createrNum,'manCreaterProportion'=>$manCreaterProportion,'womenCreaterProportion'=>$womenCreaterProportion,'todayNewCreaterNum'=>$todayNewCreaterNum,'todayNewManCreaterNum'=>$todayNewManCreaterNum,'todayNewWomenCreaterNum'=>$todayNewWomenCreaterNum],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
@@ -888,6 +937,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             //  审查者用户与男女比例
             DB::beginTransaction();
@@ -933,7 +983,14 @@ class UserManageController extends Controller
                     }else{
                         $q->where('checker_id','=',$checker)->where('type','=',2);
                     }
-                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
+                    if(is_null($checker)){
+                        $q->where('type','=',2);
+                    }else{
+                        $q->where('checker_id','=',$checker)->where('type','=',2);
+                    }
+                })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
@@ -943,7 +1000,16 @@ class UserManageController extends Controller
                     }else{
                         $q->where('checker_id','=',$checker)->where('type','=',2);
                     }
-                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->whereHas('privilegeUser',function ($q) use($checker) {
+                    if(is_null($checker)){
+                        $q->where('type','=',2);
+                    }else{
+                        $q->where('checker_id','=',$checker)->where('type','=',2);
+                    }
+                })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
             $data = [];
@@ -986,7 +1052,7 @@ class UserManageController extends Controller
                 'stop'=>'冻结',
             ];
             DB::commit();
-            return response()->json(['batchBehaivor'=>$batchBehavior,'data'=>$data,'investigateNum'=>$investigateNum,'manInvestigateProportion'=>$manInvestigateProportion,'womenInvestigateProportion'=>$womenInvestigateProportion,'todayNewInvestigateNum'=>$todayNewInvestigateNum,'todayNewManInvestigateNum'=>$todayNewManInvestigateNum,'todayNewWomenInvestigateNum'=>$todayNewWomenInvestigateNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehaivor'=>$batchBehavior,'data'=>$data,'investigateNum'=>$investigateNum,'manInvestigateProportion'=>$manInvestigateProportion,'womenInvestigateProportion'=>$womenInvestigateProportion,'todayNewInvestigateNum'=>$todayNewInvestigateNum,'todayNewManInvestigateNum'=>$todayNewManInvestigateNum,'todayNewWomenInvestigateNum'=>$todayNewWomenInvestigateNum],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
@@ -1004,6 +1070,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             DB::beginTransaction();
             //  精选用户数以及男女比例
@@ -1032,11 +1099,15 @@ class UserManageController extends Controller
 
             if($integral == 0)
             {
-                $mainData = User::where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
-                })->Choiceness($checker)->where('active','=',2)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->Choiceness($checker)->where('active','=',2)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->Choiceness($checker)->where('active','=',2)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
             $data = [];
@@ -1069,7 +1140,7 @@ class UserManageController extends Controller
                 'stop' => '冻结'
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'choicenessNum'=>$choicenessNum,'manChoicenessProportion'=>$manChoicenessProportion,'womenChoicenessProportion'=>$womenChoicenessProportion,'todayNewChoicenessNum'=>$todayNewChoicenessNum,'todayNewChoicenessManNum'=>$todayNewChoicenessManNum,'todayNewChoicenessWomenNum'=>$todayNewChoicenessWomenNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'choicenessNum'=>$choicenessNum,'manChoicenessProportion'=>$manChoicenessProportion,'womenChoicenessProportion'=>$womenChoicenessProportion,'todayNewChoicenessNum'=>$todayNewChoicenessNum,'todayNewChoicenessManNum'=>$todayNewChoicenessManNum,'todayNewChoicenessWomenNum'=>$todayNewChoicenessWomenNum],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
@@ -1086,6 +1157,7 @@ class UserManageController extends Controller
             $productionNum = $request->get('productionNum',0);
             $integral = $request->get('integral',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
 
             DB::beginTransaction();
             //  冻结用户数以及男女比例
@@ -1114,11 +1186,15 @@ class UserManageController extends Controller
 
             if($integral == 0)
             {
-                $mainData = User::where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                $mainData = User::where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
-                })->Stop($checker)->where('active','=',0)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$this->paginate)->get();
+                })->Stop($checker)->where('active','=',0)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
+                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                    $q->where('integral_count','>=',$integral);
+                })->Stop($checker)->where('active','=',0)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
 
             $data = [];
@@ -1151,7 +1227,7 @@ class UserManageController extends Controller
                 'delete' => '删除'
             ];
             DB::commit();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'stopNum'=>$stopNum,'manstopProportion'=>$manstopProportion,'womenstopProportion'=>$womenstopProportion,'todayNewstopNum'=>$todayNewstopNum,'todayNewstopManNum'=>$todayNewstopManNum,'todayNewstopWomenNum'=>$todayNewstopWomenNum],200);
+            return response()->json(['dataNum'=>$dataNum,'batchBehavior'=>$batchBehavior,'data'=>$data,'stopNum'=>$stopNum,'manstopProportion'=>$manstopProportion,'womenstopProportion'=>$womenstopProportion,'todayNewstopNum'=>$todayNewstopNum,'todayNewstopManNum'=>$todayNewstopManNum,'todayNewstopWomenNum'=>$todayNewstopWomenNum],200);
         }catch (ModelNotFoundException $e){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);

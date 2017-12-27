@@ -45,6 +45,8 @@ class FilterController extends Controller
             //  页码
             $page = $request->get('page',1);
 
+            $everyPageNum = $request ->get('everypagenum',10);
+
             //  时间  0 全部  1一天内    2 一周内    3 一月内
             $time = $request->get('time',0);
             switch ($time){
@@ -66,9 +68,11 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->get()->count();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->get()->count();
             }
 
             $data = [];
@@ -139,7 +143,7 @@ class FilterController extends Controller
             $sum = MakeFilterFile::get()->count();
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['data'=>$data,'sum' => $sum,'todaynew' => $todaynew,],200);
+            return response()->json(['data'=>$data,'sum' => $sum,'todaynew' => $todaynew,'dataNum'=>$dataNum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }
@@ -464,6 +468,9 @@ class FilterController extends Controller
 
             //  时间  0 全部  1一天内    2 一周内    3 一月内
             $time = $request->get('time',0);
+
+            $everyPageNum = $request ->get('everypagenum',10);
+
             switch ($time){
                 case 0:
                     $time = 0;
@@ -483,9 +490,11 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->get()->count();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->get()->count();
             }
 
             $data = [];
@@ -536,7 +545,7 @@ class FilterController extends Controller
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
-            return response()->json(['data'=>$data,'type'=> $type1,'operator' => $operator1,'time' => $time,'integral' => $num1  ,'count' => $count,'sum' => $sum,'todaynew' => $todaynew,],200);
+            return response()->json(['data'=>$data,'dataNum'=>$dataNum,'time' => $time,'sum' => $sum,'todaynew' => $todaynew,],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }
@@ -552,6 +561,7 @@ class FilterController extends Controller
     {
         try{
             $active = $request->get('active',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             if($active == 2){
                 return response()->json(['message'=>'无数据'],200);
             }
@@ -559,7 +569,7 @@ class FilterController extends Controller
             $maxsort = $maindata1->max('sort');
             $sum = $maindata1->count();
             $page = $request->get('page',1);
-            $maindata = MakeFilterFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
+            $maindata = MakeFilterFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
 //            dd($maxsort);
             $data = [];
             foreach($maindata as $item => $value)
@@ -629,7 +639,7 @@ class FilterController extends Controller
             }
 
 
-            return response()->json(['data'=>$data,'sum'=>$sum],200);
+            return response()->json(['data'=>$data,'dataNum'=>$sum,'sum'=>$sum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -846,6 +856,7 @@ class FilterController extends Controller
             //  搜索条件
             //  关键字
             $name = $request->get('name');
+            $everyPageNum = $request ->get('everypagenum',10);
             //  类别
             $folder_id = $request->get('folder_id','');
     //        dd($folder_id);
@@ -879,9 +890,11 @@ class FilterController extends Controller
             //  取出滤镜表中的数据
             if(empty($folder_id))
             {
-                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->get()->count();
             }else{
-                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
+                $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->get()->count();
             }
             $data = [];
             //  取出操作员 并和其余数据存入到数组中
@@ -918,7 +931,7 @@ class FilterController extends Controller
 
             $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
-            return response()->json(['data'=>$data,'type'=>$folder,'operator'=>$operator1,'time'=>$time,'integral'=>$num1,'count'=>$count,'sum'=>$sum,'todaynew'=>$todaynew],200);
+            return response()->json(['data'=>$data,'dataNum'=>$dataNum,'time'=>$time,'sum'=>$sum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
         }

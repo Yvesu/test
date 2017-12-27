@@ -34,8 +34,9 @@ class TemplateController extends Controller
             $duration = $request->get('duration',0);
             $count = $request->get('count',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
-            $mainData = $this->mainData($page,$name,$type,$operator,$time,$duration,$count);
+            $mainData = $this->mainData($everyPageNum,$page,$name,$type,$operator,$time,$duration,$count);
             $data = $this->finallyData($mainData,1);
             DB::commit();
             return $data;
@@ -62,9 +63,10 @@ class TemplateController extends Controller
             $duration = $request->get('duration',0);
             $count = $request->get('count',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             $recommend=1;
             DB::beginTransaction();
-            $mainData = $this->mainData($page,$name,$type,$operator,$time,$duration,$count,$recommend);
+            $mainData = $this->mainData($everyPageNum,$page,$name,$type,$operator,$time,$duration,$count,$recommend);
             $data = $this->finallyData($mainData,2);
             DB::commit();
             return $data;
@@ -89,10 +91,11 @@ class TemplateController extends Controller
             $duration = $request->get('duration',0);
             $count = $request->get('count',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             $recommend=null;
             $ishot = 1;
             DB::beginTransaction();
-            $mainData = $this->mainData($page,$name,$type,$operator,$time,$duration,$count,$recommend,$ishot);
+            $mainData = $this->mainData($everyPageNum,$page,$name,$type,$operator,$time,$duration,$count,$recommend,$ishot);
             $data = $this->finallyData($mainData,3);
             DB::commit();
             return $data;
@@ -117,11 +120,12 @@ class TemplateController extends Controller
             $duration = $request->get('duration',0);
             $count = $request->get('count',0);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             $recommend=null;
             $ishot = null;
             $status = 2;
             DB::beginTransaction();
-            $mainData = $this->mainData($page,$name,$type,$operator,$time,$duration,$count,$recommend,$ishot,$status);
+            $mainData = $this->mainData($everyPageNum,$page,$name,$type,$operator,$time,$duration,$count,$recommend,$ishot,$status);
             $data = $this->finallyData($mainData,4);
             DB::commit();
             return $data;
@@ -141,9 +145,11 @@ class TemplateController extends Controller
     {
         try{
             $active = $request->get('active',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             $page = $request->get('page',1);
             DB::beginTransaction();
-            $mainData = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
+            $mainData = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
+            $dataNum = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->get();
             $data = [];
             $space = MakeTemplateFile::get()->sum('size');
             $max = $mainData->max('sort');
@@ -230,7 +236,7 @@ class TemplateController extends Controller
             }
 
             DB::commit();
-            return response()->json(['data'=>$data,'num'=>$num,'batchBehavior'=>$batchBehavior]);
+            return response()->json(['dataNum'=>$dataNum,'data'=>$data,'num'=>$num,'batchBehavior'=>$batchBehavior]);
         }catch (ModelNotFoundException $q){
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
@@ -309,7 +315,7 @@ class TemplateController extends Controller
      * @return mixed
      * 产生主要数据
      */
-    private function mainData($page,$name=null,$type=null,$operator=null,$time=0,$duration=0,$count=0,$recommend=null,$ishot=null,$status=null)
+    private function mainData($everyPageNum,$page,$name=null,$type=null,$operator=null,$time=0,$duration=0,$count=0,$recommend=null,$ishot=null,$status=null)
     {
         switch ($time){
             case 0:
@@ -348,15 +354,20 @@ class TemplateController extends Controller
         $allData = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->Name($name)->Type($type)->Operator($operator,$status,$recommend,$ishot)
             ->Time($time)->Duration($duration)->Counta($count);
         if($recommend == 1){
-            $mainData = $allData->where('recommend','=',1)->forPage($page,$this->paginate)->get();
+            $mainData = $allData->where('recommend','=',1)->forPage($page,$everyPageNum)->get();
+            $dataNum = $allData->where('recommend','=',1)->get()->count();
         } elseif($status == 2) {
-            $mainData = $allData->where('status', '=', 2)->forPage($page, $this->paginate)->get();
+            $mainData = $allData->where('status', '=', 2)->forPage($page,$everyPageNum)->get();
+            $mainData = $allData->where('status', '=', 2)->get()->count();
         } elseif($ishot == 1){
-            $mainData = $allData->where('ishot','=',1)->forPage($page,$this->paginate)->get();
+            $mainData = $allData->where('ishot','=',1)->forPage($page,$everyPageNum)->get();
+            $mainData = $allData->where('ishot','=',1)->get()->count();
         } else{
-            $mainData = $allData->where('status','=',1)->forPage($page,$this->paginate)->get();
+            $mainData = $allData->where('status','=',1)->forPage($page,$everyPageNum)->get();
+            $mainData = $allData->where('status','=',1)->get()->count();
         }
-        return $mainData;
+        $data = [$mainData,$dataNum];
+        return $data;
     }
 
 
@@ -400,7 +411,7 @@ class TemplateController extends Controller
                 'delete'=>'删除',
             ];
         }
-        foreach ($mainData as $k=>$v)
+        foreach ($mainData[0] as $k=>$v)
         {
             $folder = $v->belongsToFolder()->first() ? $v->belongsToFolder()->first()->name:null;
             $userName = $v->belongsToUser()->first() ? $v->belongsToUser()->first()->nickname:null;
@@ -567,9 +578,10 @@ class TemplateController extends Controller
             array_push($data,$tempData);
 
         }
+        $dataNum = $mainData[1];
         $sumnum = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->get()->count();
         $todaynew = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-        return response()->json(['data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
+        return response()->json(['dataNum'=>$dataNum,'data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
     }
 
 }

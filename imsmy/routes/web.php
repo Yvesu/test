@@ -88,8 +88,11 @@ Route::group(['namespace'=>'NewWeb'],function (){
         return view('web');
     });
 
+    Route::get('test','TestController@test');
 
 });
+
+
 
 Route::get('index1','NewWeb\Test\ProductionController@index1');
 $api -> version('v1',function($api) {
@@ -100,6 +103,11 @@ $api -> version('v1',function($api) {
          * 测试页面登录
          */
         $api -> post('/testlogin','TestLoginController@login');
+
+        /**
+         * 测试刷新token
+         */
+        $api -> post('test/testrefreshtoken','TestLoginController@refresh');
 
 
 
@@ -157,7 +165,7 @@ $api -> version('v1',function($api) {
             /**
              * 加密
              */
-            $api -> post('DRM/{id}','Test\ProductionController@DRM');
+            $api -> post('drm','Test\ProductionController@drm');
 
             /**
              * 删除作品
@@ -169,7 +177,39 @@ $api -> version('v1',function($api) {
              */
             $api -> post('public','Test\ProductionController@publicStataus');
 
+            $api -> group(['prefix'=>'user'],function ($api){
 
+                /**
+                 * 用户首页
+                 */
+                $api -> post('index','User\UserController@index');
+
+                /**
+                 * 获得分类
+                 */
+                $api -> post('gettype','User\UserCommonController@type');
+
+                /**
+                 * 获得布局
+                 */
+                $api -> post('getlayout','User\UserCommonController@layout');
+
+                /**
+                 * 获得排序方法
+                 */
+                $api -> post('getorderby','User\UserCommonController@orderby_function');
+
+            });
+
+            /**
+             * 请求播放视频接口
+             */
+            $api -> post('play','Play\PlayController@play');
+
+            /**
+             * 请求分辨率
+             */
+            $api -> post('getresolutionratio','Play\PlayController@resolution_ratio');
 
         });
     });
