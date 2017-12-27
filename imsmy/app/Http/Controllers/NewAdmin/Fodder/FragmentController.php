@@ -46,6 +46,8 @@ class FragmentController extends Controller
             $time = $request->get('time');
             //  页码
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
+
             switch ($time){
                 case 0:
                     $time = 0;
@@ -83,9 +85,11 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$everyPageNum)->get();
+                $dataNum = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->get()->count();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->forPage($page,$everyPageNum)->get();
+                $dataNum = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->get()->count();
             }
 
             $data = [];
@@ -178,7 +182,7 @@ class FragmentController extends Controller
             ];
             $sumnum = Fragment::where('active','=',1)->get()->count();
             $todaynew = Fragment::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['batchBehavior'=>$batchBehavior,'dataNum'=>$dataNum,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -667,6 +671,8 @@ class FragmentController extends Controller
             $time = $request->get('time');
             //  页码
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
+
             switch ($time){
                 case 0:
                     $time = 0;
@@ -704,9 +710,11 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$everyPageNum)->get();
+                $dataNum = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->get()->count();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->forPage($page,$everyPageNum)->get();
+                $dataNum = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','1')->where('ishot','=',1)->get()->count();
             }
 
             $data = [];
@@ -773,7 +781,7 @@ class FragmentController extends Controller
             ];
             $sumnum = Fragment::where('active','=',1)->get()->count();
             $todaynew = Fragment::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['batchBehavior'=>$batchBehavior,'dataNum'=>$dataNum,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }
@@ -790,13 +798,14 @@ class FragmentController extends Controller
         try{
             $active = $request->get('active',1);
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
             if($active == 2 || $active == 0){
                 return response()->json(['message'=>'无数据'],200);
             }
             $maindata1 = FragmentType::where('active','=',$active)->orderBy('sort')->get();
             $maxsort = $maindata1->max('sort');
             $sum = $maindata1->count();
-            $maindata = FragmentType::where('active','=',$active)->orderBy('sort')->forPage($page,$this->paginate)->get();
+            $maindata = FragmentType::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
             $data = [];
             foreach ($maindata as $item => $value)
             {
@@ -879,7 +888,7 @@ class FragmentController extends Controller
 
             }
 
-            return response()->json(['$batchBehavior'=>$batchBehavior,'data'=>$data,'sum'=>$sum],200);
+            return response()->json(['$batchBehavior'=>$batchBehavior,'data'=>$data,'dataNum'=>$sum,'sum'=>$sum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not+found'],404);
         }
@@ -1116,6 +1125,8 @@ class FragmentController extends Controller
             $time = $request->get('time');
             //  页码
             $page = $request->get('page',1);
+            $everyPageNum = $request ->get('everypagenum',10);
+
             switch ($time){
                 case 0:
                     $time = 0;
@@ -1153,9 +1164,11 @@ class FragmentController extends Controller
 
             //取数据
             if(empty($type)){
-                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
+                $dataNum = Fragment::Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
             }else{
-                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$this->paginate)->get();
+                $maindata = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
+                $dataNum = FragmentType::find($type)->belongsToManyFragment()->Name($name)->Operator($operator)->Duration($duration)->Counta($count)->Integral($integral)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
             }
 
             $data = [];
@@ -1196,7 +1209,7 @@ class FragmentController extends Controller
             $batchBehavior = ['cancelshield'=>'取消屏蔽','delete'=>'删除',];
             $sumnum = Fragment::where('active','=',3)->get()->count();
             $todaynew = Fragment::where('active','=',3)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
-            return response()->json(['$batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
+            return response()->json(['dataNum'=>$dataNum,'$batchBehavior'=>$batchBehavior,'data'=>$data,'sumnum'=>$sumnum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error'=>'not_found'],404);
         }

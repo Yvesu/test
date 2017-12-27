@@ -186,6 +186,11 @@ class Tweet extends Common
         return $this->hasOne('App\Models\Tweet','id','retweet')->with('hasOneTweet');
     }
 
+    public function prexTweet()
+    {
+        return $this->hasOne('App\Models\Tweet','id','retweet');
+    }
+
     /**
      * 转发动态与原创动态 一对一关系
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -867,6 +872,8 @@ class Tweet extends Common
             return $query->where('is_priviate','=',1);
         }elseif($status1==3){
             return $query->where('active','=',2)->orWhere('active','=','4')->orWhere('active','=',8);
+        }elseif($status1 == 1){
+            return $query->where('active','=',1)->where('is_match','=',1);
         }else{
             return $query->where('active','=',$status1);
         }

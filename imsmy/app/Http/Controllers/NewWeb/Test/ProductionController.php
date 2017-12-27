@@ -120,7 +120,11 @@ class ProductionController extends Controller
                         $status2 = '未审核'.$is_priviate;
                         break;
                     case 1:
-                        $status2 = '参赛中'.$is_priviate;
+                        if($v->is_match==1){
+                            $status2 = '参赛中'.$is_priviate;
+                        }else{
+                            $status2 = '正常'.$is_priviate;
+                        }
                         break;
                     case 2:
                         $status2 = '未通过'.$is_priviate;
@@ -154,6 +158,7 @@ class ProductionController extends Controller
                     'active'=>$status2,
                     'behavior'=>$behavior,
                     'duration'=>$duration,
+                    'address' => $this->protocol.$v->video,
                 ];
                 array_push($data,$tempData);
             }
@@ -372,7 +377,7 @@ class ProductionController extends Controller
                     $production -> save();
                     DB::commit();
                     $address = $production->video;
-                    $cover = CloudStorage::saveCover($address,$newAddress);
+                    $cover = CloudStorage::saveCover($address,$newAddress,$width,$height);
                     if($cover){
                         DB::beginTransaction();
                         $bb = 'img.cdn.hivideo.com/'.$address.'vframe-001_'.$cover.'_.jpg';
@@ -380,7 +385,6 @@ class ProductionController extends Controller
                         $production -> screen_shot = $bb;
                         $production -> active = 0;
                         $production -> video =$newAddress;
-//                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
                         $production -> save();
 
                     }else{
@@ -406,11 +410,15 @@ class ProductionController extends Controller
                 $bucket = 'hivideo-video';
                 $key = $address;
                 if($width>=1280){
-                    $message = CloudStorage::transcoding($bucket,$key,$width,$height);
+                    $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
                     if($message){
-                        $production -> transcoding_video = $address.'.m3u8';
+                        $finallyAddress = str_replace($ex,'m3u8',$newAddress);
+                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
                         $production -> transcoding_id = $message;
                         $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+                        $production -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
+                        $production -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
+                        $production -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
                         $production -> is_transcod = 1;
                         $production -> updated_at = time();
                         $production -> save();
@@ -426,7 +434,26 @@ class ProductionController extends Controller
                         return response()->json(['message'=>'转码失败'],200);
                     }
                 }else{
-                    return response()->json(['message'=>'success'],200);
+                    $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=0);
+                    if($message){
+//                        $production -> transcoding_video = $address.'.m3u8';
+                        $finallyAddress = str_replace($ex,'m3u8',$newAddress);
+                        $production -> transcoding_id = $message;
+                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+                        $production -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
+                        $production -> is_transcod = 1;
+                        $production -> updated_at = time();
+                        $production -> save();
+                        DB::commit();
+                        return response()->json(['message'=>'success'],200);
+                    }else{
+                        $production -> active =8;
+                        $production -> updated_at = time();
+                        $production -> save();
+                        $production -> error_reason = '转码失败';
+                        DB::commit();
+                        return response()->json(['message'=>'转码失败'],200);
+                    }
                 }
 
             }else{
@@ -446,12 +473,14 @@ class ProductionController extends Controller
     public function index1(Request $request)
     {
         try{
-            $key =  $request->get('key');
-            $bucket = 'hivideo-video';
-            $a = CloudStorage::deleteNew($bucket,$key);
+            $key =  '3zh5Cm7179.mp4';
+            $bucket = 'hivideo-video-ects';
+            $a = CloudStorage::transcoding($bucket,$key,$c=1920,$d=1080,$choice=1);
+//            $a = CloudStorage::deleteNew($bucket,$key);
 //            $bb = 'z0.5a3b6601b946531900e11481';
 //            $a = CloudStorage::searchStatus($bb);
-            dd($a);
+
+//            dd($a);
 //            dd($a['items'][0]);
             return response()->json(['data'=>$a],200);
         }catch (ModelNotFoundException $q){
@@ -476,23 +505,13 @@ class ProductionController extends Controller
             DB::beginTransaction();
             foreach ($id as $k => $v)
             {
-                $data = Tweet::find($id);
+                $data = Tweet::where('id',$v)->first();
                 if($data){
-                    if($data->active != 1){
+                    if($data->is_match != 1){
                         $data->active = 3;
-                        $data->time_update = time();
+                        $data->updated_at = time();
                         $data->save();
-                        if($data->belongsToManyActivity){
-                            foreach ($data->belongsToManyActivity as $kk => $vv)
-                            {
-                                $data2 = Activity::find($v->id);
-                                $data2 ->count = ($vv->work_count)-1;
-                                $data2 ->save();
-                            }
-
-                        }
-
-
+                        $des = TweetContent::where('tweet_id',$v)->delete();
                     }
                 }
             }
@@ -520,6 +539,19 @@ class ProductionController extends Controller
             return response()->json(['data'=>$data],200);
         }catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
+        }
+    }
+
+
+    public function drm(Request $request)
+    {
+        $id = $request->get('id');
+        $bucket = 'hivideo-video';
+        $message = CloudStorage::DRM($bucket,$id);
+        if($message){
+            return response()->json(['message'=>'success'],200);
+        }else{
+            return response()->json(['message'=>'faild'],200);
         }
     }
 }
