@@ -93,20 +93,20 @@ class MakeFileTransformer extends Transformer
         $a = [];
         foreach ($datas as $data) {
             $a[] =  [
-                'id' => $data->id,
-                'name' => $data->name,
-                'integral' => $data->integral,
-                'cover' => CloudStorage::downloadUrl($data->cover),
-                'video' => CloudStorage::downloadUrl($data->preview_address),
-                'count' => $data->count,
-                'has_download' => $user ? (isset($data->hasManyDownload) ? 0 : 1) : 0,
-                'time_add' => $data->time_add,
-                'user' => $this->userTransformer->fragtransform($data->belongsToUser),
-                'type' => $data->belongsToFolder->name,
-                'duration' => $data->duration ?: 0,
-                'watch_count'   =>  $data->watch_count,
-                'vipfree' => $data->vipfree,
-                'storyboard_count'  =>  $data ->storyboard_count,
+                'id'                => $data->id,
+                'name'              => $data->name,
+                'integral'          => $data->integral,
+                'cover'             => CloudStorage::downloadUrl($data->cover),
+                'video'             => CloudStorage::downloadUrl($data->preview_address),
+                'count'             => $data->count,
+                'has_download'      => $user ? (isset($data->hasManyDownload) ? 0 : 1) : 0,
+                'time_add'          => $data->time_add,
+                'user'              => $this->userTransformer->fragtransform($data->belongsToUser),
+                'type'              => $data->belongsToFolder->name,
+                'duration'          => $data->duration ?: 0,
+                'watch_count'       => $data->watch_count,
+                'vipfree'           => $data->vipfree,
+                'storyboard_count'  => $data ->storyboard_count,
             ];
         }
         return $a;

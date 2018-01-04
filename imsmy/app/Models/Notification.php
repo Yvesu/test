@@ -23,6 +23,7 @@ class Notification extends Model
         'status'
     ];
 
+
     /**
      * 提醒与用户 多对一关系
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

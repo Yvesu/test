@@ -48,7 +48,7 @@ class TweetsPersonalTransformer extends Transformer
             $tweetPlay = new TweetPlayController();
             $tweetPlay -> countIncrement($tweet->id,$user);
         }
-
+        $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;
         // 原创
         if(!$tweet->hasOneOriginal){
 
@@ -70,6 +70,7 @@ class TweetsPersonalTransformer extends Transformer
                 'video'         =>  $tweet->video === null ? null : CloudStorage::downloadUrl($tweet->video),
                 'user'          =>  $this->usersTransformer->transform($tweet->belongsToUser),
                 'original'      =>  $tweet->hasOneOriginal == null ? null : $this->transform($tweet->hasOneOriginal),
+                'grade'         =>  $grade,
             ];
         }else{
 
@@ -91,6 +92,7 @@ class TweetsPersonalTransformer extends Transformer
                 'video'         =>  $tweet->hasOneOriginal->video === null ? null : CloudStorage::downloadUrl($tweet->hasOneOriginal->video),
                 'user'          =>  $this->usersTransformer->transform($tweet->belongsToUser),
                 'original'      =>  $tweet->hasOneOriginal == null ? null : $this->transform($tweet->hasOneOriginal),
+                'grade'         =>  $grade,
             ];
         }
     }

@@ -88,9 +88,7 @@ class DiscoveryController extends BaseController
      */
     public function index(Request $request)
     {
-        dd($request);
         try {
-
             // 获取 page
             $page = (int)$request -> get('page',1);
 
@@ -98,79 +96,6 @@ class DiscoveryController extends BaseController
             $films = Cinema::with(['hasManyPicture' => function($q){
                 $q -> orderBy('id','desc');
             }]) -> active() -> get();
-
-            # 附近的人 开始 暂时停用，第二个版本再用
-            // 获取用户所在街道名称
-//            $street = removeXSS($request -> get('street',''));
-//
-//            // 获取用户所在区的编码
-//            $adcode = $request -> get('district','');
-//
-//            // 获取用户所在市的编码
-//            $citycode = $request -> get('city','');
-//
-//            $nearby_users = '';
-//
-//            // 判断是否为空
-//            if($adcode && $citycode && $street){
-//
-//                // 获取在 zx_adcode 表中的id
-//                $nearby_id = Adcode::where('citycode',$citycode)
-//                    ->where('adcode',$adcode)
-//                    ->where('street',$street)
-//                    -> pluck('id');
-//
-//                // 判断是否存在id
-//                if(!empty($nearby_id)){
-//
-//                    // 获取附近用户 区县级
-//                    $nearby_users = User::whereIn('nearby_id',$nearby_id)
-//                        -> ofVerify()
-//                        -> orderBy('id','desc')
-//                        -> take(12)
-//                        -> get(['id','nickname','avatar','verify']);
-//                }
-//
-//                // 判断同街道数量是否为12个
-//                if($nearby_users->count()<12){
-//
-//                    // 获取同一个区的用户id
-//                    $nearby_id = Adcode::where('citycode',$citycode)
-//                        ->where('adcode',$adcode)
-//                        -> pluck('id');
-//
-//                    // 判断是否存在id
-//                    if(!empty($nearby_id)){
-//
-//                        // 获取附近用户 区县级
-//                        $nearby_users = User::whereIn('nearby_id',$nearby_id)
-//                            -> ofVerify()
-//                            -> orderBy('id','desc')
-//                            -> take(12)
-//                            -> get(['id','nickname','avatar','verify']);
-//                    }
-//                }
-//
-//                // 判断同区数量是否为12个
-//                if($nearby_users->count()<12){
-//
-//                    // 获取同一个区的用户id
-//                    $nearby_id = Adcode::where('citycode',$citycode)
-//                        -> pluck('id');
-//
-//                    // 判断是否存在id
-//                    if(!empty($nearby_id)){
-//
-//                        // 获取附近用户 区县级
-//                        $nearby_users = User::whereIn('nearby_id',$nearby_id)
-//                            -> ofVerify()
-//                            -> orderBy('id','desc')
-//                            -> take(12)
-//                            -> get(['id','nickname','avatar','verify']);
-//                    }
-//                }
-//            }
-            # 附近的人 结束
 
             // 获取赛事（原活动）数据
             $activities = Activity::with('belongsToUser', 'hasManyTweets')

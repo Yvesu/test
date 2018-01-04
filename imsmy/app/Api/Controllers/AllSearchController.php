@@ -66,8 +66,6 @@ class AllSearchController extends Controller
         ActivityTransformer $activityTransformer,
         NewTweetSearchTransformer $newTweetSearchTransformer,
         SearchTopicsTransformer $searchTopicsTransformer,
-      //  NewTemplateSearchTransformer $newTemplateSearchTransformer,
-   //     NewFragmentSearchTransformer $newFragmentSearchTransformer,
         MakeFileTransformer $makeFileTransformer,
         FragCollectTransformer $fragCollectTransformer
     )
@@ -77,8 +75,6 @@ class AllSearchController extends Controller
         $this -> activityTransformer            =   $activityTransformer;
         $this -> newTweetsSearchTransformer     =   $newTweetSearchTransformer;
         $this -> searchTopicsTransformer        =   $searchTopicsTransformer;
-     //   $this -> newTemplateSearchTransformer   =   $newTemplateSearchTransformer;
-     //   $this -> newFragmentSearchTransformer   =   $newFragmentSearchTransformer;
         $this -> makeFileTransformer             =   $makeFileTransformer;
         $this -> fragCollectTransformer          =   $fragCollectTransformer;
 
@@ -175,7 +171,7 @@ class AllSearchController extends Controller
      */
     private function user($page,$keyword)
     {
-//        $user = \Cache::remember('user:'.$keyword,'1',function() use ($page,$keyword){
+        $user = \Cache::remember('user:'.$keyword.$page,'1',function() use ($page,$keyword){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                 //获取用户信息
@@ -268,13 +264,13 @@ class AllSearchController extends Controller
                 if($user_info->count()){
 
                     return response()->json([
-                        'user'  =>  $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
+                        'data'  =>  $this ->newUserSearchTransformer->transformCollection($user_info->toArray()),
                     ],200);
 
                 }else{
 
                     return response()->json([
-                        'user'  => [],
+                        'data'  => [],
                     ],200);
                 }
                 }else{                                               //如果涉及敏感词汇
@@ -284,7 +280,7 @@ class AllSearchController extends Controller
             }catch (\Exception $e){
                 return response()->json(['message'=>'bad_request'],403);
             }
-//        });
+        });
 
         return $user;
     }
@@ -297,7 +293,7 @@ class AllSearchController extends Controller
      */
     private function mixture($page,$keyword)
     {
-        $mixture = \Cache::remember('mixture:'.$keyword,'5',function() use ($keyword,$page){
+        $mixture = \Cache::remember('mixture:'.$keyword.$page,'5',function() use ($keyword,$page){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                     $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
@@ -384,7 +380,7 @@ class AllSearchController extends Controller
      */
     private function filter($page,$keyword)
     {
-        $filter = \Cache::remember('filter:'.$keyword,'5',function() use ($keyword,$page){
+        $filter = \Cache::remember('filter:'.$keyword.$page,'5',function() use ($keyword,$page){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                     //  2017 11 27 修改
@@ -405,7 +401,7 @@ class AllSearchController extends Controller
                     }
 
                     // 调用内部函数，返回数据
-                    return response() -> json(['filter'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
+                    return response() -> json(['data'=>$this ->makeFiterTransformer->transformCollection($audio->toArray())],200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
                 }
@@ -426,7 +422,7 @@ class AllSearchController extends Controller
      */
     private function template($page,$keyword)
     {
-        $template = \Cache::remember('template:'.$keyword,'5',function() use ($keyword,$page){
+        $template = \Cache::remember('template:'.$keyword.$page,'5',function() use ($keyword,$page){
             try{
                 if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
                     $details = MakeTemplateFile::with(['belongsToFolder'=>function($q){
@@ -443,7 +439,7 @@ class AllSearchController extends Controller
 
                     // 调用内部函数，返回数据
                     return response() -> json([
-                        'template'  => $this ->makeFileTransformer->searchtransform($details),
+                        'data'  => $this ->makeFileTransformer->searchtransform($details),
                     ], 200);
                 }else{                                               //如果涉及敏感词汇
                     return response()->json(['message'=>'Sensitive vocabulary'],403);
@@ -619,7 +615,7 @@ class AllSearchController extends Controller
                         -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','users_count','forwarding_time'], 'page', $page);
 
                     return response()->json([
-                        'activity' => $this -> activityTransformer ->ptransform($data->all()),
+                        'data' => $this -> activityTransformer ->ptransform($data->all()),
                     ],200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -660,7 +656,7 @@ class AllSearchController extends Controller
                         ->get();
 
                     return response()->json([
-                        'fragment' => $this-> fragCollectTransformer->transform($fragment_info->toArray()) //$this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
+                        'data' => $this-> fragCollectTransformer->transform($fragment_info->toArray()) //$this->newFragmentSearchTransformer->transformCollection($fragment_info->toArray()),
                     ], 200);
 
                 }else{                                               //如果涉及敏感词汇
@@ -825,7 +821,7 @@ class AllSearchController extends Controller
                 }
 
                 return response()->json([
-                    'tweet'      =>      $this->newTweetsSearchTransformer->transformCollection($tweet),
+                    'data'      =>      $this->newTweetsSearchTransformer->transformCollection($tweet),
                 ],200);
 
             }else{                                               //如果涉及敏感词汇
@@ -856,7 +852,7 @@ class AllSearchController extends Controller
 
                 return response()->json([
                     // 数据
-                    'topic' => count($topics) ? $this->searchTopicsTransformer->ptransform($topics->all()) : null,
+                    'data' => count($topics) ? $this->searchTopicsTransformer->ptransform($topics->all()) : [],
                 ]);
 
             }catch (\Exception $e){

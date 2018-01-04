@@ -147,7 +147,7 @@ class FragCollectTransformer extends Transformer
                 'fragment_id'   => $v['id'],
                 'user_id'       => $v['user_id'],
                 'name'          => $v['name'],
-                'duration'      => changeTimeType($v['duration']),
+                'duration'      => $v['duration'],
                 'cover'         => CloudStorage::publicImage($v['cover']),
                 'url'           => CloudStorage::privateUrl($v['net_address']),
                 'down_count'    => $v['count'],

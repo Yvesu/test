@@ -179,7 +179,7 @@ $api->version(['v1'],function($api){
                  */
                 $api->group(['prefix' => 'tweets'],function($api){
 
-                    //动态
+                    //发布动态
                     $api->post('/','TweetController@create')
                         ->where('id','[0-9]+');
 
@@ -1156,6 +1156,9 @@ $api->version(['v1'],function($api){
             ->where('id','[0-9]+');
 
         });
+
+        //删除动态
+        $api->post('/delete/tweet','DeleteController@tweet');
 
     });
 });

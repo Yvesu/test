@@ -73,22 +73,31 @@ class TopperController extends Controller
                         ->first();
 
                     if (!empty($net_work)){
-                        $data[] = $net_work;
+                        $arr['icon']  = $net_work->toArray()['icon'];
+                        $arr['addr']  = $net_work->toArray()['addr'];
+                        $arr['describe']  = $net_work->toArray()['describe'];
+                        $arr['create_at']  = $net_work->toArray()['create_at'];
+                        $arr['style']  = 4;
+                        $data[][] = $arr;
                     }
 
                     // 模板
                     if ($tem = Topper::where('type','=',2)->where('closing_time','>',time())->orderBy('create_at','desc')->first()) {
-                        $templates = MakeTemplateFile::with('belongsToUser')
+                        $templates = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        },'belongsToFolder'=>function($q){
+                            $q->select(['id','name']);
+                        }])
                             ->where('id','=',$tem->works_id)
                             ->where('recommend', 1)
                             ->active()
                             ->where('status', 1)
-                            ->get(['id', 'user_id', 'name', 'intro', 'cover', 'preview_address', 'count', 'time_add']);
+                            ->get(['id', 'user_id','folder_id', 'name', 'intro', 'cover', 'preview_address', 'count', 'time_add','duration','storyboard_count']);
 
                         if($templates -> count()) {
                             $templates = $templates -> random(1);
 
-                            $templates = $this -> templateDiscoverTransformer -> transformCollection($templates->all());
+                            $templates = $this -> templateDiscoverTransformer -> ptransform($templates->all());
 
                             $data[] = $templates;
                         }
@@ -115,8 +124,9 @@ class TopperController extends Controller
 
 
                     //动态
-                    if ($twe = Topper::where('type','=',4)->where('closing_time','>',time())->orderBy('create_at','desc')->first()) {
-                        $tweets = Tweet::where('id','=',$twe->works_id)
+                    if ($twe = Topper::where('type','=',4)->where('closing_time','>',time())->orderBy('create_at','desc')->pluck('works_id')) {
+
+                        $tweets = Tweet::whereIn('id',$twe->all())
                             ->whereType(0)->with(['belongsToManyChannel' => function ($q) {
                             $q->select('name');
                         }])->selectListPageByWithAndWhereAndhas(
@@ -131,7 +141,7 @@ class TopperController extends Controller
 
                             $tweets = $tweets->random(1);
 
-                            $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
+                            $tweets_data = $this->channelTweetsTransformer->ptransform($tweets->all());
 
                             $data[] = $tweets_data;
                         }
@@ -144,6 +154,7 @@ class TopperController extends Controller
                         $number = rand(0,$count);
 
                         $rand = $data[$number];
+
                         if ($rand){
                             return response()->json($rand[0],200);
                         }else{

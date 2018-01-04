@@ -76,7 +76,7 @@ class PersonController extends BaseController
                        return $this->self($page,$be_watch_userid);      //登录用户 === 被查看用户 可以查看全部
                }
 
-            }else{                                  //用户未登录
+            }else{                             //用户未登录
                 //查看该用户的公开动态
                 return $this->open($page,$be_watch_userid);
             }
@@ -110,13 +110,13 @@ class PersonController extends BaseController
                 ->where('visible',0)
                 -> forPage($page, $this -> paginate)
                 ->orderBy('created_at','desc')
-                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','duration','screen_shot','browse_times','created_at']);
+                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','tweet_grade_times','duration','screen_shot','browse_times','created_at']);
 
             return response()->json([
                 'data' => $this->personTweetsTransformer->transformCollection($tweets->all()),
             ]);
         }catch(\Exception $e){
-            return response()->json(['messahe'=>'badrequest'],500);
+            return response()->json(['messahe'=>'bad_request'],500);
         }
     }
 
@@ -144,7 +144,7 @@ class PersonController extends BaseController
                 ->whereIn('visible',[0,1])
                 -> forPage($page, $this -> paginate)
                 ->orderBy('created_at','desc')
-                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','duration','screen_shot','browse_times','created_at']);
+                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','tweet_grade_times','duration','screen_shot','browse_times','created_at']);
 
             return response()->json([
                 'data' => $this->personTweetsTransformer->transformCollection($tweets->all()),
@@ -172,8 +172,8 @@ class PersonController extends BaseController
                 ->whereIn('active',[0,1])
                 -> forPage($page, $this -> paginate)
                 ->orderBy('created_at','desc')
-                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','duration','screen_shot','browse_times','created_at']);
-//dd($tweets);
+                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_times','tweet_grade_total','duration','screen_shot','browse_times','created_at']);
+
             return response()->json([
                 'data' => $this->personTweetsTransformer->transformCollection($tweets->all()),
             ]);

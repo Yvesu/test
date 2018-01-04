@@ -51,10 +51,12 @@ class TemplateDiscoverTransformer extends Transformer
                 'location'      => $data->location ?:'',
                 'count'         => $data->count,
                 'cover'         => CloudStorage::downloadUrl($data->cover),
-                'preview_address' => CloudStorage::downloadUrl($data->preview_address),
+                'video'         => CloudStorage::downloadUrl($data->preview_address),
                 'user'          => $this->usersSearchTransformer->transform($data->belongsToUser),
                 'time_add'      => $data->time_add,
-                'duration'      =>  changeTimeType($data->duration),
+                'duration'      =>  $data->duration,
+                'storyboard_count'  => $data->storyboard_count,
+                'folder'          =>  $data->belongsToFolder->name,
             ];
         }
         return $arr;

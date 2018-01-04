@@ -31,6 +31,7 @@ class PersonTweetsTransformer extends Transformer
 
     public  function transform($tweet)
     {
+
         $user_from = Auth::guard('api')->user();
         // 评论分数判断
         $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;

@@ -221,6 +221,12 @@ class AuthController extends BaseController
             // 获取用户关注人数
             $auth -> attention = Subscription::where('from',$auth->id)->count();
 
+//            UserToken::create([
+//                'user_id'   =>  $auth->id,
+//                'token'     =>  $auth->token,
+//                'create_time'   => time(),
+//            ]);
+
             // all good so return the token
             return response()->json($this->authTransformer->transform($auth));
         } catch (ModelNotFoundException $e) {

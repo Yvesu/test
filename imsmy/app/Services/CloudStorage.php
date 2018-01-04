@@ -11,6 +11,7 @@ namespace App\Services;
 use App\Models\Cloud\QiniuUrl;
 use App\Models\Tweet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Qiniu\Auth;
 use function Qiniu\base64_urlSafeDecode;
 use function Qiniu\base64_urlSafeEncode;
@@ -762,8 +763,19 @@ class CloudStorage
              } else {
                  return true;
              }
+     }
 
 
+     public function deleteFile($bucket,$key)
+     {
+         $bucketMgr = new BucketManager($this->auth);
 
+         $err = $bucketMgr->delete($bucket, $key);
+//         echo "\n====> delete $key : \n";
+         if ($err !== null) {
+             Log::info(serialize($err));
+         } else {
+             return 'success';
+         }
      }
 }

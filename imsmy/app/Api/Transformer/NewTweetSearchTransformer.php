@@ -28,7 +28,7 @@ class NewTweetSearchTransformer extends Transformer
     {
         return [
             'id'            =>      $item['id'],
-            'duration'      =>      changeTimeType($item['duration']),
+            'duration'      =>      $item['duration'],
             'screen_shot'   =>      CloudStorage::downloadUrl($item['screen_shot']),
             'browse_times'  =>      $item['browse_times'],
             'content'       =>      $item['has_one_content']['content'],

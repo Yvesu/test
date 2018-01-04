@@ -129,7 +129,7 @@ class TweetReplyController extends BaseController
 
             // 发给被评论者的提醒消息
             $newNotice = [
-                'user_id'           => $id,
+                'user_id'           => (int)$id,
                 'notice_user_id'    => $tweet->user_id,
                 'type'              => 2,
                 'type_id'           => $tweet_id,
@@ -137,7 +137,7 @@ class TweetReplyController extends BaseController
                 'updated_at'        => $time
             ];
 
-            DB::beginTransaction();
+//            DB::beginTransaction();
 
             // 判断内容是否有@人信息
             $at = $this->regexAt($newReply['content']);
@@ -151,21 +151,27 @@ class TweetReplyController extends BaseController
                 // 将新生成的评论信息id作为提醒表中的type_id
                 $newNotice['type_id'] = $reply->id;
                 $data[] = $newNotice;
+
                 if(null != $newReply['reply_id']){
                     $data[] = [
-                        'user_id'           => $newNotice['user_id'],
-                        'notice_user_id'    => $reply->reply_id,
+                        'user_id'           => (int)$newNotice['user_id'],
+                        'notice_user_id'    => $request->get('reply_user_id'),
                         'type'              => 4,
                         'type_id'           => $newNotice['type_id'],
                         'created_at'        => $time,
-                        'updated_at'        => $time
+                        'updated_at'        => $time,
                     ];
+                    // 发给评论者的提醒消息
+                    Notification::create($data[1]);
+
+                    $this->createNotification($reply,$at);
+                }else{
+                    // 发给评论者的提醒消息
+                    Notification::create($data[0]);
+
+                    $this->createNotification($reply,$at);
                 }
 
-                // 发给评论者的提醒消息
-                Notification::create($data);
-
-                $this->createNotification($reply,$at);
             }
 
             // 将tweet表中的评论总数加1
@@ -192,7 +198,7 @@ class TweetReplyController extends BaseController
                 $reply -> tweet_grade_total = 0;
             }
 
-            DB::commit();
+//            DB::commit();
 
             // 返回新生成评论数据的id
             return response()->json([

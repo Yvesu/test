@@ -757,6 +757,15 @@ function getNeedBetween($kw1,$mark1,$mark2){
     return $kw;
 }
 
+/**
+ * @param $object
+ * @return mixed
+ */
+function objectToArrayAgain($object) {
+    //先编码成json字符串，再解码成数组
+    return json_decode(json_encode($object), true);
+}
+
 
 
 
