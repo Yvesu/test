@@ -148,7 +148,7 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-       
+        Maatwebsite\Excel\ExcelServiceProvider::class,
 	
 	/*
          * umeng
@@ -304,6 +304,7 @@ return [
 
         // 自定义log
         'CommandLog' => App\Facades\CommandLog::class,
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
 
     ],
 

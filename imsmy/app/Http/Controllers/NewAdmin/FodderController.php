@@ -12,6 +12,7 @@ use App\Models\FragmentTypeFragment;
 use App\Models\KeywordFragment;
 use App\Models\Keywords;
 use App\Models\Make\MakeChartletFile;
+use App\Models\Make\MakeEffectsFile;
 use App\Models\Make\MakeTemplateFile;
 use CloudStorage;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -36,15 +37,16 @@ class FodderController extends Controller
     public function index()
     {
         //  模板文件的总大小
-        $templateSumSize = MakeTemplateFile::sum('size');
+        $templateSumSize = MakeTemplateFile::sum('size')/(1024*1024*1024);
         //  贴图文件的总大小
-        $chartletSumSize = (MakeChartletFile::sum('size'))/(1024*1024*1024);
+//        $chartletSumSize = (MakeChartletFile::sum('size'))/(1024*1024*1024);
         //  特效文件总大小
-        $effectSumSize = (MakeChartletFile::sum('size'))/(1024*1024*1024);
+        $effectSumSize = (MakeEffectsFile::sum('size'))/(1024*1024*1024);
         //  片段文件总大小  暂无先设置为0
-        $fragmentSumSize = 0;
+        $fragmentSumSize = Fragment::sum('size')/(1024*1024*1024);
         //  总大小
-        $sum = $templateSumSize+$chartletSumSize+$effectSumSize+$fragmentSumSize;
+        $sum = $templateSumSize+$effectSumSize+$fragmentSumSize;
+
 //        dd($sum);
         /**
          * 总览
@@ -53,7 +55,7 @@ class FodderController extends Controller
             'template'=>floor(($templateSumSize/$sum)*100).'%',
             'fragment'=>floor(($fragmentSumSize/$sum)*100).'%',
             'effect'=>floor(($effectSumSize/$sum)*100).'%',
-            'chartlet'=>floor(($chartletSumSize/$sum)*100).'%',
+//            'chartlet'=>floor(($chartletSumSize/$sum)*100).'%',
             ];
 //        dd($masterData);
 
@@ -97,7 +99,7 @@ class FodderController extends Controller
          * 日发布大小对比
          */
         //  今日发布量
-        $templateThisDaySize = MakeTemplateFile::where('')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
+        $templateThisDaySize = MakeTemplateFile::where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
         $templateThisDaySize = $templateThisDaySize/(1024*1024*1024);
 
         //  昨日发布量
@@ -106,6 +108,7 @@ class FodderController extends Controller
 
         //  日发布量对比
         $templateDaySize = $templateThisDaySize - $templateYesterdaySize;
+
 
         /**
          *  周发布量对比
@@ -182,7 +185,7 @@ class FodderController extends Controller
         $templateMonthOfficial1 = MakeTemplateFile::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
         //  本月官方发布比较量
         $templateMonthOfficial = $templateMonthOfficial1 - $templateMonthOfficial2;
-//        dd($templateMonthOfficial);
+
 
         /**
          * 月用户发布比较量
@@ -204,7 +207,7 @@ class FodderController extends Controller
         $temlateLastMonthSize = MakeTemplateFile::where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->sum('size');
 
         //  月发布大小比较量
-        $templateMontSize = $templateThisMonthSize - $templateLastWeekSize;
+        $templateMontSize = $templateThisMonthSize - $temlateLastMonthSize;
 
         /**
          * 官方发布总数量
@@ -217,26 +220,350 @@ class FodderController extends Controller
          */
         $templateUserSum = MakeTemplateFile::where('official','=','1')->count('id');
 
-//        dd($templateUserSum);
+
+        /**
+         * 片段
+         */
+
+        /**
+         * 日官方发布对比量
+         */
+        //  今日官方发布量
+        $fragmentDayOfficial1 = Fragment::where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        //  昨日官方发布量
+        $fragmentDayOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        //  日官方发布对比量
+        $fragmentDayOfficial = $fragmentDayOfficial1-$fragmentDayOfficial2;
+        /**
+         * 日用户发布对比量
+         */
+        //  今日用户发布量
+        $fragmentDayUser1 = Fragment::where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        //  昨日用户发布量
+        $fragmentDayUser2 = Fragment::where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        //  日用户发布对比量
+        $fragmentDayUser = $fragmentDayUser1-$fragmentDayUser2;
+
+        /**
+         * 日发布大小对比
+         */
+        //  今日发布量
+        $fragmentThisDaySize = Fragment::where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
+        $fragmentThisDaySize = $fragmentThisDaySize/(1024*1024*1024);
+
+        //  昨日发布量
+        $fragmentYesterdaySize = Fragment::where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $fragmentYesterdaySize = $fragmentYesterdaySize/(1024*1024*1024);
+
+        //  日发布量对比
+        $fragmentDaySize = $fragmentThisDaySize - $fragmentYesterdaySize;
+
+
+        /**
+         *  周发布量对比
+         */
+        //  一周的时间戳
+        $oneWeek = 60*60*24*7;
+        //  本周一的时间戳
+        $thisMonday = strtotime( "previous monday" );
+        //  现在的时间戳
+        $time = time();
+        //  上周一的时间戳
+        $lastMonday = $thisMonday-$oneWeek;
+        //  上周此时的时间戳
+        $lastWeekTime = $time-$oneWeek;
+
+        /**
+         *  周官方发布对比量
+         */
+        //  本周官方发布量
+        $fragmentWeekOfficial1 = Fragment::where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        //  上周官方发布量
+        $fragmentWeekOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        //  官方发布对比量
+        $fragmentWeekOfficial = $fragmentWeekOfficial1-$fragmentWeekOfficial2;
+
+        /**
+         * 周用户发布对比量
+         */
+
+        //  本周用户发布量
+        $fragmentWeekUser1 = Fragment::where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        //  上周用户发布量
+        $fragmentWeekUser2 = Fragment::where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        //  用户发布对比量
+        $fragmentWeekUser = $fragmentWeekUser1 - $fragmentWeekUser2;
+
+        /**
+         * 周发布量对比
+         */
+
+        //  本周发布大小
+        $fragmentThisWeekSize = Fragment::where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->sum('size');
+        //  上周发布大小
+        $fragmentLastWeekSize = Fragment::where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->sum('size');
+        //  周发布比较量
+        $fragmentWeekSize = $fragmentThisWeekSize - $fragmentLastWeekSize;
+
+
+        /**
+         * 月发布量对比
+         */
+        //  本月1号的时间戳
+        $a =  date('Y-m',time());
+        $thisMonthFirstDay = strtotime($a.'-1 0:0:0');
+        //  上月最后一天的时间戳
+        $lastMonthFinalyDay = $thisMonthFirstDay-1;
+        //  上月1号的时间戳
+        $b = date('Y-m',$lastMonthFinalyDay);
+        $lastMonthFirstDay = strtotime($b.'-1 0:0:0');
+
+//        dd(date('Y-m-d H:i:s',$lastMonthFirstDay));
+        //  上月今天的时间戳
+        $c = date('d H:i:s',time());
+
+        $lastMonthToday = strtotime($b.'-'.$c);
+//        dd(date('Y-m-d H:i:s',$lastMonthToday));
+        /**
+         * 月官方发布比较量
+         */
+        //  上月官方发布量
+        $fragmentMonthOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        //  本月官方发布量
+        $fragmentMonthOfficial1 = Fragment::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        //  本月官方发布比较量
+        $fragmentMonthOfficial = $fragmentMonthOfficial1 - $fragmentMonthOfficial2;
+
+
+        /**
+         * 月用户发布比较量
+         */
+
+        //  上月用户发布量
+        $fragmentMonthUser2 = Fragment::where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+
+        //  本月用户发布量
+        $fragmentMonthUser1 = Fragment::Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+
+        //  月用户发布比较量
+        $fragmentMonthUser = $fragmentMonthUser1 - $fragmentMonthUser2;
+
+        //  本月发布大小
+        $fragmentThisMonthSize = Fragment::where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->sum('size');
+
+        //  上月发布大小
+        $fragmentLastMonthSize = Fragment::where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->sum('size');
+
+        //  月发布大小比较量
+        $fragmentMontSize = $fragmentThisMonthSize - $fragmentLastMonthSize;
+
+        /**
+         * 官方发布总数量
+         */
+
+        $fragmentOfficialSum = Fragment::where('official','=','0')->count('id');
+
+        /**
+         * 用户发布总数量
+         */
+        $fragmentUserSum = Fragment::where('official','=','1')->count('id');
 
 
 
 
+        /**
+         * 特效
+         */
+
+        /**
+         * 日官方发布对比量
+         */
+        //  今日官方发布量
+        $effectDayOfficial1 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        //  昨日官方发布量
+        $effectDayOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        //  日官方发布对比量
+        $effectDayOfficial = $effectDayOfficial1-$effectDayOfficial2;
+        /**
+         * 日用户发布对比量
+         */
+        //  今日用户发布量
+        $effectDayUser1 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        //  昨日用户发布量
+        $effectDayUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        //  日用户发布对比量
+        $effectDayUser = $effectDayUser1-$effectDayUser2;
+
+        /**
+         * 日发布大小对比
+         */
+        //  今日发布量
+        $effectThisDaySize = MakeEffectsFile::where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
+        $effectThisDaySize = $effectThisDaySize/(1024*1024*1024);
+
+        //  昨日发布量
+        $effectYesterdaySize = MakeEffectsFile::where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $effectYesterdaySize = $effectYesterdaySize/(1024*1024*1024);
+
+        //  日发布量对比
+        $effectDaySize = $effectThisDaySize - $effectYesterdaySize;
+
+
+        /**
+         *  周发布量对比
+         */
+        //  一周的时间戳
+        $oneWeek = 60*60*24*7;
+        //  本周一的时间戳
+        $thisMonday = strtotime( "previous monday" );
+        //  现在的时间戳
+        $time = time();
+        //  上周一的时间戳
+        $lastMonday = $thisMonday-$oneWeek;
+        //  上周此时的时间戳
+        $lastWeekTime = $time-$oneWeek;
+
+        /**
+         *  周官方发布对比量
+         */
+        //  本周官方发布量
+        $effectWeekOfficial1 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        //  上周官方发布量
+        $effectWeekOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        //  官方发布对比量
+        $effectWeekOfficial = $effectWeekOfficial1-$effectWeekOfficial2;
+
+        /**
+         * 周用户发布对比量
+         */
+
+        //  本周用户发布量
+        $effectWeekUser1 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        //  上周用户发布量
+        $effectWeekUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        //  用户发布对比量
+        $effectWeekUser = $effectWeekUser1 - $effectWeekUser2;
+
+        /**
+         * 周发布量对比
+         */
+
+        //  本周发布大小
+        $effectThisWeekSize = MakeEffectsFile::where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->sum('size');
+        //  上周发布大小
+        $effectLastWeekSize = MakeEffectsFile::where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->sum('size');
+        //  周发布比较量
+        $effectWeekSize = $effectThisWeekSize - $effectLastWeekSize;
 
 
 
+        /**
+         * 月发布量对比
+         */
+        //  本月1号的时间戳
+        $a =  date('Y-m',time());
+        $thisMonthFirstDay = strtotime($a.'-1 0:0:0');
+        //  上月最后一天的时间戳
+        $lastMonthFinalyDay = $thisMonthFirstDay-1;
+        //  上月1号的时间戳
+        $b = date('Y-m',$lastMonthFinalyDay);
+        $lastMonthFirstDay = strtotime($b.'-1 0:0:0');
+
+//        dd(date('Y-m-d H:i:s',$lastMonthFirstDay));
+        //  上月今天的时间戳
+        $c = date('d H:i:s',time());
+
+        $lastMonthToday = strtotime($b.'-'.$c);
+//        dd(date('Y-m-d H:i:s',$lastMonthToday));
+        /**
+         * 月官方发布比较量
+         */
+        //  上月官方发布量
+        $effectMonthOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        //  本月官方发布量
+        $effectMonthOfficial1 = MakeEffectsFile::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        //  本月官方发布比较量
+        $effectMonthOfficial = $effectMonthOfficial1 - $effectMonthOfficial2;
 
 
+        /**
+         * 月用户发布比较量
+         */
+
+        //  上月用户发布量
+        $effectMonthUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+
+        //  本月用户发布量
+        $effectMonthUser1 = MakeEffectsFile::Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+
+        //  月用户发布比较量
+        $effectMonthUser = $effectMonthUser1 - $effectMonthUser2;
+
+        //  本月发布大小
+        $effectThisMonthSize = MakeEffectsFile::where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->sum('size');
+
+        //  上月发布大小
+        $effectLastMonthSize = MakeEffectsFile::where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->sum('size');
+
+        //  月发布大小比较量
+        $effectMontSize = $effectThisMonthSize - $effectLastMonthSize;
+
+        /**
+         * 官方发布总数量
+         */
+
+        $effectOfficialSum = MakeEffectsFile::where('official','=','0')->count('id');
+
+        /**
+         * 用户发布总数量
+         */
+        $effectUserSum = MakeEffectsFile::where('official','=','1')->count('id');
 
 
+        $data = [
+            [
+            'sum' => round($sum,2),
+            'masterData' => $masterData,
+            'effectSumSize' => round($effectSumSize,2),
+            'fragmentSumSize' => round($fragmentSumSize,2),
+            'templateSumSize' => round($templateSumSize,2),
+            'templateDayOfficial' => $templateDayOfficial,
+            'templateDayUser' => $templateDayUser,
+            'templateDaySize' => $templateDaySize,
+            'templateWeekOfficial' => $templateWeekOfficial,
+            'templateWeekUser' => $templateWeekUser,
+            'templateWeekSize' => $templateWeekSize,
+            'templateMonthOfficial' => $templateMonthOfficial,
+            'templateMonthUser' => $templateMonthUser,
+            'templateMontSize' => $templateMontSize,
+            'templateOfficialSum' => $templateOfficialSum,
+            'templateUserSum' => $templateUserSum,
+            'fragmentDayOfficial' => $fragmentDayOfficial,
+            'fragmentDayUser' => $fragmentDayUser,
+            'fragmentDaySize' => $fragmentDaySize,
+            'fragmentWeekOfficial' => $fragmentWeekOfficial,
+            'fragmentWeekUser' => $fragmentWeekUser,
+            'fragmentWeekSize' => $fragmentWeekSize,
+            'fragmentMonthOfficial' => $fragmentMonthOfficial,
+            'fragmentMonthUser' => $fragmentMonthUser,
+            'fragmentMontSize' => $fragmentMontSize,
+            'fragmentOfficialSum' => $fragmentOfficialSum,
+            'fragmentUserSum' => $fragmentUserSum,
+            'effectDayOfficial' => $effectDayOfficial,
+            'effectDayUser' => $effectDayUser,
+            'effectDaySize' => $effectDaySize,
+            'effectWeekOfficial' => $effectWeekOfficial,
+            'effectWeekUser' => $effectWeekUser,
+            'effectWeekSize' => $effectWeekSize,
+            'effectMonthOfficial' => $effectMonthOfficial,
+            'effectMonthUser' => $effectMonthUser,
+            'effectMontSize' => $effectMontSize,
+            'effectOfficialSum' => $effectOfficialSum,
+            'effectUserSum' => $effectUserSum,
 
-
-
-
-
-
-
-
+                ]
+        ];
+        return response()->json(['data'=>$data],200);
     }
 
     /**

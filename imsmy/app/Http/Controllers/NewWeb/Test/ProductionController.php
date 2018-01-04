@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\NewWeb\Test;
 
 use App\Models\FilmfestsProductions;
+use App\Models\Keywords;
+use App\Models\KeywordTweets;
 use App\Models\Productions;
 use App\Models\Test\TestUser;
 use App\Models\Tweet;
@@ -15,6 +17,8 @@ use App\Http\Controllers\Controller;
 use CloudStorage;
 use Illuminate\Support\Facades\DB;
 use Omnipay\Common\Exception\RuntimeExceptionTest;
+use JWTAuth;
+use Illuminate\Support\Facades\Redis;
 
 class ProductionController extends Controller
 {
@@ -50,7 +54,11 @@ class ProductionController extends Controller
     public function Production(Request $request)
     {
         try{
+//            $old_token = JWTAuth::getToken();
+//            $old_token = serialize($old_token);
             $user = \Auth::guard('api')->user();
+//            Redis::select(3);
+//            Redis::Hset($user->name,'get_token',$old_token);
             $active = $request->get('active',null);
             $page = $request->get('page',1);
             $type = $request->get('type',1);
@@ -308,6 +316,7 @@ class ProductionController extends Controller
             $password = $request->get('password',null);
             $size = $request->get('size',0);
             $address = $request->get('address',null);
+            $keyword = $request->get('keyword',null);
             if(is_null($id)||is_null($name)||is_null($address)||is_null($size)){
                 return response()->json(['error'=>'数据不合法'],200);
             }
@@ -444,6 +453,33 @@ class ProductionController extends Controller
                         $production -> is_transcod = 1;
                         $production -> updated_at = time();
                         $production -> save();
+                        if($keyword){
+                            $keywords = explode('|',$keyword);
+                            $keywords = array_unique($keywords);
+                            $tweet_id = $production->id;
+                            KeywordTweets::where('tweet_id',$tweet_id)->delete();
+                            foreach ($keywords as $item => $value)
+                            {
+                                $keyword = Keywords::where('keyword',$value)->first();
+                                if($keyword){
+                                    $keyword_id = $keyword->id;
+                                }else{
+                                    $newkeyword = new Keywords;
+                                    $newkeyword ->keyword = $v;
+                                    $newkeyword ->create_at = time();
+                                    $newkeyword ->update_at = time();
+                                    $newkeyword ->save();
+                                    $keyword_id = $newkeyword->id;
+                                }
+
+                                $keywordTweet = new KeywordTweets;
+                                $keywordTweet -> tweet_id = $tweet_id;
+                                $keywordTweet -> keyword_id = $keyword_id;
+                                $keywordTweet -> create_time = time();
+                                $keywordTweet -> update_time = time();
+                                $keywordTweet -> save();
+                            }
+                        }
                         DB::commit();
                         return response()->json(['message'=>'success'],200);
                     }else{
@@ -455,6 +491,7 @@ class ProductionController extends Controller
                         return response()->json(['message'=>'转码失败'],200);
                     }
                 }
+
 
             }else{
                 $production -> active =8;
