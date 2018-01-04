@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\NewAdmin\Template;
 
+use App\Models\Admin\Administrator;
 use Auth;
 use CloudStorage;
 use App\Models\Make\MakeTemplateFile;
@@ -582,6 +583,118 @@ class TemplateController extends Controller
         $sumnum = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->get()->count();
         $todaynew = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
         return response()->json(['dataNum'=>$dataNum,'data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 上传模板页面
+     */
+    public function up(Request $request)
+    {
+        try{
+            $admin = Auth::guard('api')->user();
+            $admin_info = Administrator::with('hasOneUser')->where('id',$admin->id)->firstOrFail(['user_id']);
+//            dd($admin_info->user_id);
+            $oldData = MakeTemplateFile::where('user_id','=',$admin_info->user_id)->where('name','=','')->first();
+            if($oldData){
+                $id = $oldData->id;
+            }else{
+                $newData = new MakeTemplateFile;
+                $newData -> user_id = $admin_info->user_id;
+                $newData -> time_add = time();
+                $newData -> save();
+                $id = $newData -> id;
+            }
+            $data = [
+                'id'=>$id,
+                'user_id'=>$admin_info->user_id,
+            ];
+            return response()->json(['data'=>$data],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 执行上传
+     */
+    public function doUp(Request $request)
+    {
+        try{
+            $keys1 = [];
+            $keys2 = [];
+            $keys3 = [];
+            $id = $request->get('id',null);
+            $folder_id = $request->get('folder_id',null);
+            $name = $request->get('name',null);
+            $intro = $request->get('intro',null);
+            $address = $request->get('address',null);
+            $preview_address = $request->get('preview_address',null);
+            $integral = $request->get('integral',0);
+            $cover = $request->get('cover',null);
+            $size = $request->get('size',null);
+            $duration = $request->get('duration',null);
+            $vipfree = $request->get('vipfree',null);
+            if(is_null($id)||is_null($folder_id)||is_null($name)||is_null($intro)||is_null($address)||is_null($preview_address)||is_null($cover)||is_null($size)||is_null($duration))
+            {
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            array_push($keys2,$preview_address);
+            array_push($keys1,$cover);
+            array_push($keys3,$address);
+            $keyPairs1 = array();
+            $keyPairs2 = array();
+            $keyPairs3 = array();
+            foreach($keys1 as $key)
+            {
+                $keyPairs1[$key] = $key;
+            }
+            foreach ($keys2 as $key)
+            {
+                $keyPairs2[$key] = $key;
+            }
+            foreach ($keys3 as $key)
+            {
+                $keyPairs3[$key] = $key;
+            }
+
+            $srcbucket1 = 'hivideo-video-ects';
+            $srcbucket2 = 'hivideo-file-ects';
+            $srcbucket3 = 'hivideo-img-ects';
+            $destbucket1 = 'hivideo-img';
+            $destbucket2 = 'hivideo-video';
+            $destbucket3 = 'hivideo-zip';
+            $message1 = CloudStorage::copyfile($keyPairs1,$srcbucket3,$destbucket1);
+            $message2 = CloudStorage::copyfile($keyPairs2,$srcbucket1,$destbucket2);
+            $message3 = CloudStorage::copyfile($keyPairs3,$srcbucket2,$destbucket3);
+            if($message1[0]['code']==200 && $message2[0]['code']==200 && $message3[0]['code']==200)
+            {
+                DB::beginTransaction();
+                $data = MakeTemplateFile::find($id);
+                $data -> folder_id = $folder_id;
+                $data -> name = $name;
+                $data -> intro = $intro;
+                $data -> address = 'zip.cdn.hivideo.com/'.$address;
+                $data -> preview_address = 'v.cdn.hivideo.com/'.$preview_address;
+                $data -> cover = 'img.cdn.hivideo.com/'.$cover;
+                $data -> size = $size;
+                $data -> duration = $duration;
+                $data -> vipfree = $vipfree;
+                $data -> integral = $integral;
+                $data -> save();
+                DB::commit();
+                return response()->json(['message'=>'success'],200);
+            }else{
+                return response()->json(['message'=>'fail']);
+            }
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
     }
 
 }

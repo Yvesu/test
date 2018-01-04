@@ -87,6 +87,7 @@ Route::group(['namespace'=>'NewWeb'],function (){
     Route::get('/user',function (){
         return view('web');
     });
+    Route::get('/testuser','Office\WebIndexController@userIndex');
 
     Route::get('test','TestController@test');
 
@@ -97,6 +98,7 @@ Route::group(['namespace'=>'NewWeb'],function (){
 Route::get('index1','NewWeb\Test\ProductionController@index1');
 $api -> version('v1',function($api) {
 
+//    $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'api'],function ($api){
     $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
 
         /**
@@ -107,12 +109,14 @@ $api -> version('v1',function($api) {
         /**
          * 测试刷新token
          */
-        $api -> post('test/testrefreshtoken','TestLoginController@refresh');
+//        $api -> post('test/testrefreshtoken','TestLoginController@refresh');
+//        $api -> post('test/xxoo','TestLoginController@xxoo');
 
 
 
         // 验证管理员的登录信息
         $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
+//        $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
 
             /**
              * 七牛云的路由
@@ -262,6 +266,23 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                  * 将发布地址存入数据库
                  */
                 $api->post('/saveaddress','SaveAddressController@saveAddress');
+
+                /**
+                 * 站务
+                 */
+                $api -> group(['prefix'=>'office'],function ($api){
+
+                    /**
+                     * 上传用户端index配置文件
+                     */
+                    $api -> post('up/user/index','Office\WebIndexFileController@upUserIndex');
+
+                    /**
+                     * 上传管理员端index配置文件
+                     */
+                    $api -> post('up/admin/index','Office\WebIndexFileController@upAdminIndex');
+
+                });
 
                 /**
                  * 内容 TODO 新版接口  视频部分
@@ -600,6 +621,16 @@ $api -> version('v1', ['namespace' => 'App\Http\Controllers\NewAdmin'], function
                          * 添加新分类
                          */
                         $api->post('/addtype','Template\TemplateController@addType');
+
+                       /**
+                        * 上传模板页面
+                        */
+                       $api -> post('/up','Template\TemplateController@up');
+
+                       /**
+                        * 执行上传
+                        */
+                       $api -> post('/doup','Template\TemplateController@doUp');
 
                         /**
                          * 操作及公共内容
