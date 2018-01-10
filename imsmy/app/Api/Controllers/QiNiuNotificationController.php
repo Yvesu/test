@@ -7,8 +7,10 @@ use App\Models\Mark;
 use App\Models\MarkTweet;
 use App\Models\NoExitWord;
 use App\Models\Tweet;
+use App\Models\TweetJoin;
 use App\Models\TweetMark;
 use App\Models\TweetToCheck;
+use App\Models\TweetTrasf;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
@@ -61,16 +63,56 @@ class QiNiuNotificationController extends BaseController
                 'create_time'   =>  $time,
             ]);
         }
-
-
-
-
-
-
-
-
     }
 
+    public function joinvideo()
+    {
+        $NotifyData = file_get_contents("php://input");
+        $res = json_decode($NotifyData)->code;
+        if ($res === 0 ){
+            $keyword= json_decode($NotifyData)->items[0]->key;
+            $tweet_id=getNeedBetween($keyword, '&' , '&&' );
+            $new_url = 'v.cdn.hivideo.com/'.$keyword;
+            $res = Tweet::find($tweet_id)->update(['join_video'=>$new_url]);
+            if ($res){TweetJoin::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+        }
+    }
 
+    public function transcoding()
+    {
+        $NotifyData = file_get_contents("php://input");
+        $res = json_decode($NotifyData)->code;
+        if ($res === 0 ){
+            $key = json_decode($NotifyData)->items[0]->key;
+            switch ($key){
+                case strstr($key,'norm'):
+                    $tweet_id=getNeedBetween($key, '&' , '&&' );
+                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['norm_video'=>$new_url]);
+                    if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+                    break;
+                case strstr($key,'adapt'):
+                    $tweet_id=getNeedBetween($key, '&' , '&&' );
+                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['transcoding_video'=>$new_url]);
+                    if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+                    break;
+                case strstr($key,'original'):
+                    $tweet_id=getNeedBetween($key, '&' , '&&' );
+                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['video_m3u8'=>$new_url]);
+                    if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+                    break;
+                case strstr($key,'high'):
+                    $tweet_id= getNeedBetween($key, '&' , '&&' );
+                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['high_video'=>$new_url]);
+                    if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+                    break;
+                default :
+                    die;
+            }
+        }
+    }
 
 }

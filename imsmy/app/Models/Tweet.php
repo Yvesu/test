@@ -53,6 +53,12 @@ class Tweet extends Common
         'fragment_id',
         'filter_id',
         'template_id',
+        'join_video',
+        'lossless',
+        'video_m3u8',
+        'norm_video',
+        'high_video',
+        'transcoding_video',
     ];
 
     /**

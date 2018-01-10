@@ -7,6 +7,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use App\Models\Make\{MakeFilterFile,MakeFilterFolder,MakeFilterDownloadLog};
 use App\Models\Make\MakeFilterUser;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use CloudStorage;
 use DB;
@@ -43,88 +44,60 @@ class MakeFilterController extends BaseController
             // 要查询资料的类型 1我的，2正常目录，3最热，4最新，5推荐
             $type = (int)$request -> get('type',1);
 
-            // 搜索条件
-            $search = removeXSS($request->get('search'));
-            $where = [['active',1]];
-            $page = [(int)$request -> get('page',1), $this->paginate];
-            $select = ['id','user_id','name','cover','content','count','integral','time_add'];
+            $page = (int)$request -> get('page',1);
 
-            // 我的 下载过的
-            if(1 === $type){
-
-                // 获取用户信息
-                if(!$user = Auth::guard('api') -> user())
-                    return response()->json(['error'=>'bad_request'],403);
-
-                // 获取数据
-                $whereHas = [['hasManyUserFile',[['user_id',$user->id]]]];
-
-
-                $audio = MakeFilterFile::where('test_result',1)->selectListPageByWithAndWhereAndWhereHas([], $whereHas, $where, [], $page, $select);
-
-                // 获取指定目录下的滤镜
-            } elseif (2 === $type){
-
+            if (2 === $type){
                 // 普通目录必须要有 folder_id
-                if(!$folder_id = (int)$request -> get('folder_id'))
-                    return response()->json(['error'=>'bad_request'],403);
+                if(!$folder_id = (int)$request -> get('folder_id'))    return response()->json(['error'=>'bad_request'],403);
 
-                // yy  修改
-                $audio = MakeFilterFile::WhereHas('belongsToManyFolder',function ($q) use ($folder_id){
-                    $q->where('folder_id','=',$folder_id);
-                })
-                    ->ofSearch($search)
-                    ->with(['belongsToUser'=>function($q){
-                        $q->select(['id','nickname']);
-                    },'belongsToManyFolder'=>function($q){
-                        $q->select(['name']);
-                    },'belongsToTextureMixType'])
-                    ->forpage($request->get('page',1),$this->paginate)
-                    ->where('active',1)
-                    ->where('test_result',1)
-                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
+                    // yy  修改
+                    $audio = MakeFilterFile::where('active', 1)
+                        ->where('test_result', 1)
+                        ->WhereHas('belongsToManyFolder', function ($q) use ($folder_id) {
+                            $q->where('folder_id', '=', $folder_id);
+                        })
+                        ->with(['belongsToUser' => function ($q) {
+                            $q->select(['id', 'nickname']);
+                        }, 'belongsToManyFolder' => function ($q) {
+                            $q->select(['name']);
+                        }, 'belongsToTextureMixType'])
+                        ->forpage($request->get('page', 1), $this->paginate)
+                        ->get(['id', 'user_id', 'name', 'cover', 'content', 'count', 'integral', 'time_add', 'texture', 'texture_mix_type_id']);
 
-                $count = MakeFilterFile::WhereHas('belongsToManyFolder',function ($q) use ($folder_id){
-                    $q->where('folder_id','=',$folder_id);
-                })
-                    ->ofSearch($search)
-                    ->with(['belongsToUser'=>function($q){
-                        $q->select(['id','nickname']);
-                    },'belongsToManyFolder'=>function($q){
-                        $q->select(['name']);
-                    },'belongsToTextureMixType'])
-                    ->where('active',1)
-                    ->where('test_result',1)
-                    ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
-
-
+                    $count = MakeFilterFile::where('active', 1)
+                        ->where('test_result', 1)
+                        ->WhereHas('belongsToManyFolder', function ($q) use ($folder_id) {
+                            $q->where('folder_id', '=', $folder_id);
+                        })
+                        ->with(['belongsToUser' => function ($q) {
+                            $q->select(['id', 'nickname']);
+                        }, 'belongsToManyFolder' => function ($q) {
+                            $q->select(['name']);
+                        }, 'belongsToTextureMixType'])
+                        ->get(['id', 'user_id', 'name', 'cover', 'content', 'count', 'integral', 'time_add', 'texture', 'texture_mix_type_id']);
 
             } else {
-
               //  2017 11 27 修改
-                $audio = MakeFilterFile::ofType($type)
-                    -> ofSearch($search)
+                $audio = MakeFilterFile::where('active',1)
                     ->with(['belongsToUser'=>function($q){
                         $q->select(['id','nickname']);
                     },'belongsToManyFolder'=>function($q){
                         $q->select(['name']);
                     },'belongsToTextureMixType'])
+                    ->ofType($type)
                     ->forpage($request->get('page',1),$this->paginate)
-                    ->where('active',1)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
 
-                $count =  MakeFilterFile::ofType($type)
-                    -> ofSearch($search)
+                $count =  MakeFilterFile::where('active',1)
                     ->with(['belongsToUser'=>function($q){
                         $q->select(['id','nickname']);
                     },'belongsToManyFolder'=>function($q){
                         $q->select(['name']);
                     },'belongsToTextureMixType'])
-                    ->where('active',1)
+                    ->ofType($type)
                     ->get(['id','user_id','name','cover','content','count','integral','time_add','texture','texture_mix_type_id']);
 
             }
-
 
             foreach($audio as $value){
                 $value -> cover = $value -> cover;
@@ -134,10 +107,10 @@ class MakeFilterController extends BaseController
 
             // 调用内部函数，返回数据
            if($page[0]==1) {
-               return response()->json([
-                   'data' => $data,
-                   'page_count' => ceil ($count->count()/$this->paginate),
-            ], 200);
+                   return response()->json([
+                       'data' => $data,
+                       'page_count' => ceil ($count->count()/$this->paginate),
+                ], 200);
            }
 
            return response()->json([

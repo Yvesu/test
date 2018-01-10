@@ -8,6 +8,7 @@ use App\Models\Make\MakeAudioFile;
 use App\Models\Make\MakeEffectsFile;
 use App\Models\Make\MakeFilterFile;
 use App\Models\Make\MakeTemplateFile;
+use App\Models\Shade;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Auth;
@@ -40,32 +41,30 @@ class PayTypeController extends BaseController
             case 'mixture':
                //混合
                 return $this->mixturePay($id,$user_Id);
-                break;
 
             case 'filter' :
                 //滤镜
                 return $this->filter($id,$user_Id);
-                break;
 
             case 'template' :
                 //滤镜
                 return $this->template($id,$user_Id);
-                break;
 
             case 'audio' :
                 //滤镜
                 return $this->audio($id,$user_Id);
-                break;
+
 
             case 'audioeffect' :
                 //滤镜
                 return $this->audioeffect($id,$user_Id);
-                break;
 
             case 'fragment' :
                 //滤镜
                 return $this->fragment($id,$user_Id);
-                break;
+
+            case 'shade':
+                return $this->shade($id,$user_Id);
 
             default :
                 //不存在的类型
@@ -398,6 +397,64 @@ class PayTypeController extends BaseController
             return response()->json(['message'=>'not_found'],404);
         }
     }
+
+    /**
+     * @param $id
+     * @param $user_Id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function shade($id,$user_Id)
+    {
+        try {
+            //获取混合信息
+            $mixture_info = Shade::findOrFail($id);
+
+            //判断用户是否为VIP
+            $is_vip = User::find($user_Id)->is_vip;
+
+            //会员是否免费
+            $vip_free = $mixture_info -> vipfree;
+
+            //用户为会员且资源为用户免费
+            if(!$vip_free && $is_vip) return response()->json(['message'=>'success'],200);
+
+            //混合素材的积分
+            $mixture_integral = $mixture_info -> intergral;
+
+            //获取用户积分
+            $user_integral = User\UserIntegral::where('user_id',$user_Id)->first();
+
+            //判断用户积分
+            if(is_null($user_integral) || $mixture_integral > $user_integral->integral_count) return response()->json(['message'=>'Lack of integral'],205);
+
+            //事务开始
+            \DB::beginTransaction();
+
+            //支付原因
+            $pay_reason = '遮罩:' . $mixture_info->name;
+
+            //支付类型
+            $type = 'shade';
+
+            //会员免费 但是用户不是会员
+            if (!$vip_free && !$is_vip) {
+                return $this->doinsert($user_Id,$type,$id,$mixture_integral,$pay_reason);
+            }
+
+            //会员不免费
+            if ($vip_free){
+                return $this->doinsert($user_Id,$type,$id,$mixture_integral,$pay_reason);
+            }
+
+        }catch (\Exception $e){
+            \DB::rollBack();
+            return response()->json(['message'=>'not_found'],404);
+        }
+    }
+
+
+
+
 
     /**
      * @param $user_Id

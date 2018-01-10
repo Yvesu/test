@@ -26,37 +26,8 @@ class ChannelTweetsTransformer extends Transformer
 
     public function transform($tweet)
     {
-
-        // 获取图片信息
-//        if($tweet->photo){
-//
-//            // 解析成数组
-//            $photo = json_decode($tweet->photo,true);
-//
-//            // 筛选图片的信息，最多三张
-//            if(count($photo) <= 3){
-//
-//                $new_photo = $photo;
-//            }else{
-//
-//                // 取前三张图片
-//                $new_photo = array_slice($photo,0,3);
-//            }
-//        }
-
         // 判断用户是否为登录状态
         $user_from = Auth::guard('api')->user();
-
-//        $already_follow = '';
-//
-//        if($user_from) {
-//
-//            // 判断登录用户是否关注对方
-//            $already_follow = Subscription::ofAttention($user_from->id, $tweet->belongsToUser->user_id)->first();
-//
-//            // 判断对方是否为登录用户粉丝
-//            $already_fans = Subscription::ofAttention($tweet->belongsToUser->user_id, $user_from->id)->first();
-//        }
 
         // 评论分数判断
         $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;

@@ -20,6 +20,8 @@ class Kernel extends ConsoleKernel
 
         \App\Console\Commands\Qicheck::class,
         \App\Console\Commands\MarkTweet::class,
+        \App\Console\Commands\TweetTrans::class,
+        \App\Console\Commands\JoinVideo::class,
 //        \App\Console\Commands\CacheSensitiveWord::class,
 //        \App\Console\Commands\CacheKeywords::class,
 //        \App\Console\Commands\NoExitWord::class,
@@ -38,11 +40,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //鉴黄检测
         $schedule->command('Qicheck')->everyMinute();
-
-        //视频水印
         $schedule->command('mark:tweet')->everyMinute();
+        $schedule->command('tweet:trans')->everyMinute();
+        $schedule->command('Join:video')->everyMinute();
 
         //敏感词
 //        $schedule->command('CacheSensitiveWord')->everyMinute();//->daily();

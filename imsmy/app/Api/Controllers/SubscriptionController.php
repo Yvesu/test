@@ -77,6 +77,48 @@ class SubscriptionController extends BaseController
             // 判断是获取关注还是粉丝数据
             if ($type === 'follower') {
                 $subscriptions_all = Subscription::where('to', $id);
+
+                // 获取关注的集合
+                $subscriptions = $subscriptions_all -> where('updated_at', '<', $date) -> orderBy('updated_at', 'desc') -> take($limit) -> get();
+
+                // 判断所取数据数量
+                if($subscriptions -> count() <= 0) return ['data' => []];
+
+                // 获取id，并拼接字符串
+                $arr = $subscriptions->pluck('unread','from')->all();
+                $str = implode(',', array_keys($arr));
+
+                // 获取关注对象类型的数组
+                $arr_type = $subscriptions->pluck('type','from')->all();
+
+                // 根据id获取用户信息
+                $users = User::whereIn('id', array_keys($arr))
+                    ->orderByRaw(DB::raw("FIELD(id,$str)"))
+                    ->get();
+
+                // 将未查看的动态信息存入集合
+                foreach($users as $key=>$value){
+
+                    // 未读动态数量
+                    $users[$key]['unread'] = $arr[$value->id];
+
+                    // 关注用户的类型，0为用户，1为话题
+                    $users[$key]['type'] = $arr_type[$value->id];
+                }
+
+                // 统计所取数据的数量
+                $count = $subscriptions->count();
+                return [
+                    'data'       => $count ? $this->subTransformer->transformCollection($users->sortByDesc('unread')->values()->all()) : [],
+                    'data_count'      => $count,
+                    'users_count'  => $subscriptions_all->count(),
+                    'link'       => $count
+                        ? $request->url() .
+                        '?channel=subscription&limit=' . $limit .
+                        '&timestamp=' . strtotime($subscriptions->last()->created_at)
+                        : null
+                ];
+
             } else {
                 $subscriptions_all = Subscription::where('from', $id);
             }

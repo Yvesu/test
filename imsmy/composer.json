@@ -21,8 +21,7 @@
         "spatie/laravel-backup": "^4.18",
         "barryvdh/laravel-debugbar": "^2.4",
         "orangehill/iseed": "^2.4",
-        "lokielse/omnipay-alipay": "^2.0",
-        "maatwebsite/excel": "^2.1"
+        "lokielse/omnipay-alipay": "^2.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

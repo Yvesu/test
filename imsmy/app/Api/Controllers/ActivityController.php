@@ -94,29 +94,34 @@ class ActivityController extends BaseController
             }
 
             // 缓存,热门和最新
-//            $data = Cache::remember('activity_list_'.$type.'_'.$page, 5, function() use($page, $type) {
 
                 if ($type == 2){
+                    $data = Cache::remember('activity_list_'.$type.'_'.$page, 5, function() use($page, $type) {
                     // 获取赛事（原活动）数据
                     $data = Activity::with(['belongsToUser' => function($q){
                         $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
-                    }, 'hasManyTweets'])
-                        -> ofExpires()
-                        -> ofType($type)
+                    }, 'hasManyTweets'=>function($q){
+                        $q->select(['tweet_id','screen_shot']);
+                    }])
                         -> active()
+                        -> ofType($type)
+                        -> ofExpires()
                         -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
 
                     return [
                         'data' => $this -> hotActivityTransformer->transformCollection($data->all()),
                         'page_count' => $data -> toArray()['last_page']
                     ];
+                    });
+                    return $data;
                 }
+
 
                 if ($type == 3){
 
-                    $data_1 = Activity::ofExpires()
-                        -> ofType($type)
-                        -> active()
+                    $data_1 = Activity::active()
+                        ->ofType($type)
+                        ->ofExpires()
                         -> forPage($page,$this->paginate)
                         -> pluck('id');
 
@@ -126,9 +131,9 @@ class ActivityController extends BaseController
 
                     if ($user){
                            $data_2 = Activity::where('user_id',$user->id)
-                               -> ofExpires()
-                               -> ofType($type)
                                -> where('active',0)
+                               -> ofType($type)
+                               -> ofExpires()
                                -> forPage($page,$this->paginate)
                                -> pluck('id');
                            $arr = array_merge($data_2->all(),$data_1->all());
@@ -136,7 +141,9 @@ class ActivityController extends BaseController
 
                     $data = Activity::with(['belongsToUser' => function($q){
                         $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
-                    }, 'hasManyTweets'])
+                    }, 'hasManyTweets'=>function($q){
+                        $q->select(['tweet_id','screen_shot']);
+                    }])
                         ->whereIn('id',$arr)
                         ->orderBy('time_add','desc')
                         -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
@@ -147,9 +154,6 @@ class ActivityController extends BaseController
                     ];
                 }
 
-//            });
-
-//            return $data;
 
         }catch(\Exception $e){
             return response() -> json(['error'=>'not_found'], 404);
@@ -312,10 +316,11 @@ class ActivityController extends BaseController
             $q -> with(['belongsToUser' => function($q) {
                 $q -> select(['id','nickname','avatar']);
             }])-> where('tweet_id', $tweet_id) -> where('status', 0);
-        }]) -> where('tweet_id', $tweet_id)
+        }])
+            -> where('tweet_id', $tweet_id)
             -> where('status', 0)
             -> orderBy('id', 'DESC')
-            -> where('reply_id','!=',null)
+//            -> where('reply_id','!=',null)
             -> get();
 
        if(!$reply->toArray()){

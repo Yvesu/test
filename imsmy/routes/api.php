@@ -764,10 +764,6 @@ $api->version(['v1'],function($api){
                 $api->get('/','ChannelController@index');
 
                 // 获取频道的动态详情信息  例：http://www.goobird.com/api/channels/2/tweets
-//                $api->get('{id}/tweets','TweetController@channelTweets')
-//                    ->where('id','[0-9]+');
-
-                // 获取频道的动态详情信息  例：http://www.goobird.com/api/channels/2/tweets
                 $api->get('{id}/tweets','TweetController@channelNewTweets')
                     ->where('id','[0-9]+');
 
@@ -1111,7 +1107,7 @@ $api->version(['v1'],function($api){
                 $api->post('/font/testresult','MakeFontController@testResult');
 
                 //各种支付
-                $api->post('/pay', 'MakeFilterController@pay');
+                $api->post('/pay', 'PayTypeController@pay');
 
                 //创建收藏
                 $api->post('/user/collect','UserCollectController@createCollect');
@@ -1136,6 +1132,12 @@ $api->version(['v1'],function($api){
         //返回通知
         $api->any('/notification','QiNiuNotificationController@notification');
 
+        //片头尾拼接通知
+        $api -> post('notification/join','QiNiuNotificationController@joinvideo');
+
+        //转码通知
+        $api ->post('notification/trans','QiNiuNotificationController@transcoding');
+
         //视频下载
         $api->get('/download/tweet/{id}','DownloadTweetController@mark')
             ->where('id','[0-9]+');
@@ -1159,6 +1161,41 @@ $api->version(['v1'],function($api){
 
         //删除动态
         $api->post('/delete/tweet','DeleteController@tweet');
+
+        //遮罩
+        $api -> group(['prefix'=>'/shade'],function($api){
+            //遮罩推荐
+            $api->get('/recommend','ShadeController@recommend');
+
+            //遮罩分类
+            $api->get('/folder','ShadeController@folder');
+
+            //遮罩文件
+            $api -> get('/file/{id}','ShadeController@file');
+
+            //下载并使用
+            $api -> get('/downanduse/{id}','ShadeController@downAndUse');
+
+            $api->group(['middleware' => ['app.user','jwt.auth']],function ($api) {
+
+                //测试
+                $api -> get('/test','ShadeController@test');
+
+                //遮盖检测结果
+                $api -> post('/testresult','ShadeController@testresult');
+            });
+
+        });
+
+
+        $api -> group(['prefix'=>'/join'],function($api){
+            //片头预览
+            $api -> get('/video','JoinVideoController@index');
+
+            //推荐的片头
+            $api -> get('/recommend','JoinVideoController@recommend');
+
+        });
 
     });
 });

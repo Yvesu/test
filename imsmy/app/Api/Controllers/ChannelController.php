@@ -13,6 +13,7 @@ use App\Models\Tweet;
 use App\Models\User;
 use App\Models\UserChannel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
@@ -56,8 +57,11 @@ class ChannelController extends BaseController
      */
     public function index()
     {
-        $channels = Channel::active()->orderBy('sort')->get(['id', 'name', 'ename', 'icon']);
-        return response()->json($this->channelsTransformer->transformCollection($channels->all()));
+       $channels = Cache::remember('CHANNEL',60,function(){
+           $channels = Channel::active()->orderBy('sort')->get(['id', 'name', 'ename', 'icon']);
+           return response()->json($this->channelsTransformer->transformCollection($channels->all()));
+       });
+        return $channels;
     }
 
     /**

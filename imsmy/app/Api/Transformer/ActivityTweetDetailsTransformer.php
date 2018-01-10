@@ -68,6 +68,8 @@ class ActivityTweetDetailsTransformer extends Transformer
             $result = 0;
         }
 
+        $grade = $tweet->tweet_grade_total ? number_format($tweet->tweet_grade_total/$tweet->tweet_grade_times,1) : 0;
+
         return [
             'id'            => $data->tweet_id,
             'rank'          => ++$ranking_array[$data->tweet_id],
@@ -83,6 +85,9 @@ class ActivityTweetDetailsTransformer extends Transformer
             'user'          => $this->usersWithTransformer->transform($data->hasOneUser),
             'reply'         => $reply,
             'attention'     => $result,
+            'duration'      => $tweet -> duration,
+            'location'      => $tweet -> location,
+            'grade'         =>$grade,
         ];
     }
 }

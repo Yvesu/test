@@ -11,6 +11,7 @@ use App\Models\Topper;
 use App\Models\Tweet;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 
 class TopperController extends Controller
 {
@@ -44,8 +45,8 @@ class TopperController extends Controller
         if(!empty($city)) {
             //按市推送
             $data = Topper::where('city', '=', $city)
-                ->where('closing_time', '>', time())
                 ->orderBy('create_at', 'desc')
+                ->where('closing_time', '>', time())
                 ->first();
 
             if (!empty($data)) {
@@ -57,8 +58,8 @@ class TopperController extends Controller
             //按省推荐
             $data = Topper::where('province', '=', $province)
                 ->where('type','=',1)
-                ->where('closing_time', '>', time())
                 ->orderBy('create_at', 'desc')
+                ->where('closing_time', '>', time())
                 ->first();
             if (!empty($data)) {
                 return response()->json($data,200);
@@ -67,103 +68,149 @@ class TopperController extends Controller
 
                 $data = [];
                     //网页作品存在时
+                if (!$net_work = Cache::get('NET_WORK')){
                     $net_work = Topper::where('closing_time','>',time())
                         ->where('type','=',1)
                         ->orderBy('create_at','desc')
-                        ->first();
+                        ->get(['icon','addr','describe','create_at']);
+                    Cache::put('NET_WORK',$net_work,6);
+                }
 
                     if (!empty($net_work)){
-                        $arr['icon']  = $net_work->toArray()['icon'];
-                        $arr['addr']  = $net_work->toArray()['addr'];
-                        $arr['describe']  = $net_work->toArray()['describe'];
-                        $arr['create_at']  = $net_work->toArray()['create_at'];
+                        $arr['icon']  = $net_work->random(1)->toArray()[0]['icon'];
+                        $arr['addr']  = $net_work->random(1)->toArray()[0]['addr'];
+                        $arr['describe']  = $net_work->random(1)->toArray()[0]['describe'];
+                        $arr['create_at']  = $net_work->random(1)->toArray()[0]['create_at'];
                         $arr['style']  = 4;
                         $data[][] = $arr;
                     }
 
                     // 模板
-                    if ($tem = Topper::where('type','=',2)->where('closing_time','>',time())->orderBy('create_at','desc')->first()) {
-                        $templates = MakeTemplateFile::with(['belongsToUser'=>function($q){
-                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
-                        },'belongsToFolder'=>function($q){
-                            $q->select(['id','name']);
-                        }])
-                            ->where('id','=',$tem->works_id)
-                            ->where('recommend', 1)
-                            ->active()
-                            ->where('status', 1)
-                            ->get(['id', 'user_id','folder_id', 'name', 'intro', 'cover', 'preview_address', 'count', 'time_add','duration','storyboard_count']);
+                    if(!$templates = Cache::get('TOP_TEMPLATE')) {
 
-                        if($templates -> count()) {
-                            $templates = $templates -> random(1);
+                        $template = Topper::where('type', '=', 2)
+                            ->orderBy('create_at', 'desc')
+                            ->where('closing_time', '>', time())
+                            ->pluck('works_id');
 
-                            $templates = $this -> templateDiscoverTransformer -> ptransform($templates->all());
+                        if ($template->all()) {
 
-                            $data[] = $templates;
-                        }
-                    }
+                            $templates = MakeTemplateFile::with(['belongsToUser' => function ($q) {
+                                $q->select(['id', 'nickname', 'avatar', 'signature', 'verify', 'verify_info']);
+                            }, 'belongsToFolder' => function ($q) {
+                                $q->select(['id', 'name']);
+                            }])
+                                ->where('recommend', 1)
+                                ->active()
+                                ->where('status', 1)
+                                ->whereIn('id', $template->all())
+                                ->get(['id', 'user_id', 'folder_id', 'name', 'intro', 'cover', 'preview_address', 'count', 'time_add', 'duration', 'storyboard_count']);
 
-                    // 竞赛
-                    if ($act = Topper::where('type','=',3)->where('closing_time','>',time())->orderBy('create_at','desc')->first()) {
-                        $activity = Activity::with(['belongsToUser', 'hasManyTweets'])
-                            ->where('id','=',$act->works_id)
-                            ->ofExpires()
-                            ->recommend()
-                            ->get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
+                            if ($templates->count()) {
 
-                        if($activity -> count()) {
+                                Cache::put('TOP_TEMPLATE',$templates,5);
 
-                            $activity = $activity -> random(1);
+                                $templates = $templates->random(1);
 
-                            $activity = $this -> activityDiscoverTransformer -> transformCollection($activity->all());
+                                $templates = $this->templateDiscoverTransformer->ptransform($templates->all());
 
-                            $data[]  = $activity;
-                        }
+                                $data[] = $templates;
 
-                    }
-
-
-                    //动态
-                    if ($twe = Topper::where('type','=',4)->where('closing_time','>',time())->orderBy('create_at','desc')->pluck('works_id')) {
-
-                        $tweets = Tweet::whereIn('id',$twe->all())
-                            ->whereType(0)->with(['belongsToManyChannel' => function ($q) {
-                            $q->select('name');
-                        }])->selectListPageByWithAndWhereAndhas(
-                            [['hasOneContent', ['content', 'tweet_id']], ['belongsToUser', ['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']]],
-                            ['hasOneHot'],
-                            [['active', 1]],
-                            [],
-                            []);
-
-                        // 过滤
-                        if($tweets->count()) {
-
-                            $tweets = $tweets->random(1);
-
-                            $tweets_data = $this->channelTweetsTransformer->ptransform($tweets->all());
-
-                            $data[] = $tweets_data;
-                        }
-
-                    }
-
-                    $count = count($data)-1;
-
-                    if ($count){
-                        $number = rand(0,$count);
-
-                        $rand = $data[$number];
-
-                        if ($rand){
-                            return response()->json($rand[0],200);
-                        }else{
-                            return response()->json(['error' => 'Content is not found'],404);
+                            }
                         }
 
                     }else{
-                        return response()->json(['error' => 'Content is not found'],404);
 
+                        $templates = $templates->random(1);
+
+                        $templates = $this->templateDiscoverTransformer->ptransform($templates->all());
+
+                        $data[] = $templates;
                     }
+
+                    // 竞赛
+                    if (!$activity = Cache::get('TOP_ACTIVITY')) {
+
+                        $active = Topper::where('type', '=', 3)
+                            ->orderBy('create_at', 'desc')
+                            ->where('closing_time', '>', time())
+                            ->pluck('works_id');
+
+                        if ($active->all()) {
+                            $activity = Activity::with(['belongsToUser' => function ($q) {
+                                $q->select('id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info');
+                            }, 'hasManyTweets' => function ($q) {
+                                $q->select(['tweet_id', 'screen_shot']);
+                            }])
+                                ->recommend()
+                                ->whereIn('id', $active->all())
+                                ->ofExpires()
+                                ->get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
+
+                            if ($activity->count()) {
+
+                                Cache::put('TOP_ACTIVITY',$activity,6);
+
+                                $activity = $activity->random(1);
+
+                                $activity = $this->activityDiscoverTransformer->transformCollection($activity->all());
+
+                                $data[] = $activity;
+                            }
+
+                        }
+                    }else{
+
+                        $activity = $activity->random(1);
+
+                        $activity = $this->activityDiscoverTransformer->transformCollection($activity->all());
+
+                        $data[] = $activity;
+                    }
+
+                    //动态
+                    if (!$tweets = Cache::get('TOP_TWEET')) {
+                        $twe = Topper::where('type', '=', 4)
+                            ->orderBy('create_at', 'desc')
+                            ->where('closing_time', '>', time())
+                            ->pluck('works_id');
+
+                        if ($twe->all()) {
+                            $tweets = Tweet::with(['belongsToManyChannel' => function ($q) {
+                                $q->select(['name']);
+                            }, 'hasOneContent' => function ($q) {
+                                $q->select(['content', 'tweet_id']);
+                            }, 'belongsToUser' => function ($q) {
+                                $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                            }])
+                                ->whereIn('id', $twe->all())
+                                ->get(['id', 'user_id', 'type', 'created_at', 'duration', 'screen_shot', 'location', 'browse_times', 'like_count', 'reply_count', 'video']);
+
+
+                            // 过滤
+                            if ($tweets->count()) {
+
+                                Cache::put('TOP_TWEET',$tweets,6);
+
+                                $tweets = $tweets->random(1);
+
+                                $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
+
+                                $data[] = $tweets_data;
+                            }
+
+                        }
+                    }else{
+                        $tweets = $tweets->random(1);
+
+                        $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
+
+                        $data[] = $tweets_data;
+                    }
+
+
+                    return $arr = count($data) ? array_random($data)[0] : [];
+
+
     }
 }

@@ -13,6 +13,7 @@ use App\Api\Transformer\NewTweetChannelTransformer;
 use App\Api\Transformer\NewTweetSearchTransformer;
 use App\Api\Transformer\NewUserSearchTransformer;
 use App\Api\Transformer\SearchTopicsTransformer;
+use App\Api\Transformer\ShadeTransformer;
 use App\Facades\CloudStorage;
 use App\Models\Activity;
 use App\Models\Blacklist;
@@ -26,6 +27,7 @@ use App\Models\Make\MakeFilterFile;
 use App\Models\Make\MakeTemplateFile;
 use App\Models\NoExitWord;
 use App\Models\SensitiveWord;
+use App\Models\Shade;
 use App\Models\Topic;
 use App\Models\Tweet;
 use App\Models\User;
@@ -51,13 +53,11 @@ class AllSearchController extends Controller
 
     private $searchTopicsTransformer;
 
- //   private $newTemplateSearchTransformer;
-
- //   private $newFragmentSearchTransformer;
-
     private $makeFileTransformer;
 
     private $fragCollectTransformer;
+
+    private $shadeTransformer;
 
     public function __construct
     (
@@ -67,7 +67,9 @@ class AllSearchController extends Controller
         NewTweetSearchTransformer $newTweetSearchTransformer,
         SearchTopicsTransformer $searchTopicsTransformer,
         MakeFileTransformer $makeFileTransformer,
-        FragCollectTransformer $fragCollectTransformer
+        FragCollectTransformer $fragCollectTransformer,
+        ShadeTransformer    $shadeTransformer
+
     )
     {
         $this -> newUserSearchTransformer       =   $newUserSearchTransformer;
@@ -75,8 +77,9 @@ class AllSearchController extends Controller
         $this -> activityTransformer            =   $activityTransformer;
         $this -> newTweetsSearchTransformer     =   $newTweetSearchTransformer;
         $this -> searchTopicsTransformer        =   $searchTopicsTransformer;
-        $this -> makeFileTransformer             =   $makeFileTransformer;
-        $this -> fragCollectTransformer          =   $fragCollectTransformer;
+        $this -> makeFileTransformer            =   $makeFileTransformer;
+        $this -> fragCollectTransformer         =   $fragCollectTransformer;
+        $this -> shadeTransformer               =   $shadeTransformer;
 
         if (!Cache::get('keywords')){
             $keyword_obj = Keywords::distinct('keyword')->get(['keyword']);
@@ -152,8 +155,10 @@ class AllSearchController extends Controller
                     return $this->audioEffect($page,$keyword);
                 case 10 :
                     return $this->fragment($page,$keyword);
-                case 11;
+                case 11:
                     return $this->allType($page,$keyword);
+                case 12:
+                    return $this->shade($page,$keyword);
                 default :
                     return response()->json(['message'=>'bad_request'],403);
             }
@@ -861,6 +866,29 @@ class AllSearchController extends Controller
         });
         return $topic;
     }
+
+    public function shade($page,$keyword)
+    {
+        $recommend_shade = Shade::with(['belongToUser' => function ($q) {
+            $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+        }, 'belongToFolder' => function ($q) {
+            $q->select(['id', 'name']);
+        }])
+            -> where('active','1')
+            ->where('test_result','1')
+            ->orderBy('down_count', 'DESC')
+            ->where('name','like','%'.$keyword.'%')
+            ->forPage($page,$this->paginate)
+            ->get(['id', 'name', 'video', 'image', 'user_id', 'folder_id', 'integral', 'official', 'down_count', 'watch_count', 'size', 'duration', 'vipfree', 'create_time']);
+
+        return response()->json([
+            'data' => $this->shadeTransformer->transformCollection($recommend_shade->all()),
+        ], 200);
+
+    }
+
+
+
 
     /**
      * 全部内容

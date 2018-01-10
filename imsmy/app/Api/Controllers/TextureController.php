@@ -79,10 +79,10 @@ class TextureController extends BaseController
 
     public function file($id,Request $request)
     {
-        $texture = Cache::remember($id.'texture','60',function() use($id,$request){
-            try{
-                if (!is_numeric($page = $request->get('page',1)))  return response()->json(['message'=>'bad_request'],403);
+        if (!is_numeric($page = $request->get('page',1)))  return response()->json(['message'=>'bad_request'],403);
 
+        $texture = Cache::remember($id.'texture'.$page,'60',function() use($id,$request,$page){
+            try{
                 $texture =  Texture::with(['belongsToFolder'=>function($q){
                     $q->select(['id','name']);
                 },

@@ -41,7 +41,7 @@ class HotActivityTransformer extends Transformer
                 if($key<5){
 
                     $tweets[] = [
-                        'id' => $value->id,
+                        'id' => $value->tweet_id,
                         'screen_shot' => CloudStorage::downloadUrl($value->screen_shot)
                     ];
                 }
@@ -68,13 +68,13 @@ class HotActivityTransformer extends Transformer
 
         foreach ($data as $v){
             $a[] = [
-                'id' =>$v['id'],
-                'user_id'=>$v['user_id'],
-                'name'=>$v['name'],
-                'duration' =>$v['duration'],
-                'cover' =>$v['cover'],
-                'label'=>$v['key_word'],
-                'type'=>$v['belongs_to_many_fragment_type']
+                'id'        =>  $v['id'],
+                'user_id'   =>  $v['user_id'],
+                'name'      =>  $v['name'],
+                'duration'  =>  $v['duration'],
+                'cover'     =>  $v['cover'],
+                'label'     =>  $v['key_word'],
+                'type'      =>  $v['belongs_to_many_fragment_type']
             ];
         }
 

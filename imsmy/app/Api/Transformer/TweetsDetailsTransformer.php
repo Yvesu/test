@@ -31,7 +31,7 @@ class TweetsDetailsTransformer extends Transformer
 
             foreach($tweet->belongsToManyTopic as $value){
 
-                $topics[] = (object)['name'=>$value->name,'id'=>$value -> id];
+                $topics[] = (object)['name'=>$value->name,'id'=>$value -> topic_id];
             }
         }
 
@@ -44,7 +44,6 @@ class TweetsDetailsTransformer extends Transformer
             'already_like'  =>  $user ? TweetLike::where('tweet_id',$tweet->id)->where('user_id',$user->id)->count() : 0,
             'like_count'    =>  $tweet->like_count,
             'reply_count'   =>  $tweet->reply_count,
-//            'retweet_count' =>  $tweet->retweet_count,
             'content'       =>  $tweet->hasOneContent->content,
             'shot_width_height' =>  $tweet->shot_width_height,
             'screen_shot'   =>  CloudStorage::downloadUrl($tweet->screen_shot),

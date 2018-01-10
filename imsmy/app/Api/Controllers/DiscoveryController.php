@@ -361,7 +361,7 @@ class DiscoveryController extends BaseController
 
         //精选用户
 
-        $top = Cache::remember('top', 5, function () use ($page){
+        $top = Cache::remember('top'.$page, 5, function () use ($page){
 
             $top = User::where('active',2)
                 ->where('is_vip','!=',0)

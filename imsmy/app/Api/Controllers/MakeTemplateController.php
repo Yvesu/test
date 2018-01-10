@@ -18,6 +18,7 @@ use App\Api\Controllers\Traits\UserToAdminGoldManage;
 use CloudStorage;
 use DB;
 use Auth;
+use Illuminate\Support\Facades\Cache;
 use Log;
 use Tymon\JWTAuth\JWTAuth;
 use Tymon\JWTAuth\Token;
@@ -92,11 +93,14 @@ class MakeTemplateController extends BaseController
     public function folder()
     {
         try{
-            // 获取文件夹id,默认为第一个
-            $folder = MakeTemplateFolder::selectList([['active',1]],['sort','ASC'],['id','name','count']);
+            $cache_floder = Cache::remember('template_floder',60,function(){
+                // 获取文件夹id,默认为第一个
+                $folder = MakeTemplateFolder::selectList([['active',1]],['sort','ASC'],['id','name','count']);
 
-            // 返回数据
-            return response() -> json(['data'=>$folder],200);
+                // 返回数据
+                return response() -> json(['data'=>$folder],200);
+            });
+            return $cache_floder;
 
         } catch (ModelNotFoundException $e) {
             return response()->json(['error'=>'not_found'],404);
@@ -117,40 +121,37 @@ class MakeTemplateController extends BaseController
             // 要查询资料的类型 2正常目录，3最热，4最新，5推荐(默认),6搜索
             $type = (int)$request -> get('type',5);
 
-            // 搜索条件
-            $search = removeXSS($request->get('search'));
-
             // 获取页码
             $page = (int)$request -> get('page',1);
 
-            // 用户的登录信息
-            $user = Auth::guard('api') -> user();
-
             $folder_id = (int)$request -> get('folder_id');
 
-            // 普通目录必须要有 folder_id
-            if (2 === $type && !$folder_id)
-                return response()->json(['error'=>'bad_request'],403);
+            $template_index = Cache::remember('template_index'.$type.$page.$folder_id,60,function() use($type,$page,$folder_id){
+                // 普通目录必须要有 folder_id
+                if (2 === $type && !$folder_id)
+                    return response()->json(['error'=>'bad_request'],403);
 
-            // 获取数据
-            $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
-                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
-            },'belongsToFolder'=>function($q){
-                $q->select(['id','name']);
-            }])
-                ->ofType($type, $folder_id)
-                -> ofSearch($search)
-                -> ofHasDownload($user)
-                -> ofNormal()
-                -> active()
-                -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
+                // 获取数据
+                $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                    $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+                },'belongsToFolder'=>function($q){
+                    $q->select(['id','name']);
+                }])
+                    -> active()
+                    -> where('test_result',1)
+                    -> ofNormal()
+                    ->ofType($type, $folder_id)
+                    -> paginate($this -> paginate, ['id','user_id','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
-            // 调用内部函数，返回数据
-            return response() -> json([
-                'data'  => $this -> makeFileTransformer -> transformCollection($data -> all()),
-                'page_count' => $data -> toArray()['last_page']
-            ], 200);
+                // 调用内部函数，返回数据
+                return response() -> json([
+                    'data'  => $this -> makeFileTransformer -> transformCollection($data -> all()),
+                    'page_count' => $data -> toArray()['last_page']
+                ], 200);
+
+            });
+
+            return $template_index;
 
         } catch (\Exception $e) {
             Log::error('chartlet',json_encode($e->getMessage()).date('Y-m-d H:i:s'));
@@ -159,7 +160,7 @@ class MakeTemplateController extends BaseController
     }
 
     /**
-     * 推荐 TODO 待删除
+     * 推荐
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -168,40 +169,38 @@ class MakeTemplateController extends BaseController
         try{
             $folder = $request -> get('folder', 0); // 0为推荐，其他为目录id
 
-            // 搜索条件
-            $search = removeXSS($request -> get('search'));
-
             // 获取页码
             $page = (int)$request -> get('page',1);
 
-            // 用户的登录信息
-            $user = Auth::guard('api') -> user();
+            $recommend_template = Cache::remember('recommend_template'.$folder.$page,60,function() use ($folder,$page){
 
-            // 获取数据集合
+                // 获取数据集合
+                $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                    $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+                },'belongsToFolder'=>function($q){
+                    $q->select(['id','name']);
+                }])
+                    -> where('test_result',1)
+                    -> ofNormal()
+                    -> ofFolder($folder)
+                    -> active()
+                    -> orderBy('sort')
+                    -> paginate($this -> paginate, ['id','user_id','vipfree','storyboard_count','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
 
-            $data = MakeTemplateFile::with(['belongsToUser'=>function($q){
-                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
-            },'belongsToFolder'=>function($q){
-                $q->select(['id','name']);
-            }])
-                ->ofSearch($search, 2)
-                -> ofHasDownload($user)
-                -> ofNormal()
-                -> ofFolder($folder)
-                -> active()
-                -> orderBy('sort')
-                -> where('test_result',1)
-                -> paginate($this -> paginate, ['id','user_id','vipfree','storyboard_count','time_add','folder_id','duration','preview_address','name','integral','cover','count'], 'page', $page);
+                // 调用内部函数，返回数据
+                return response() -> json([
+                    'data'  => $this -> makeFileTransformer -> ptransform($data -> all()),
+                    'page_count' => $data -> toArray()['last_page']
+                ], 200);
 
-            // 调用内部函数，返回数据
-            return response() -> json([
-                'data'  => $this -> makeFileTransformer -> ptransform($data -> all()),
-                'page_count' => $data -> toArray()['last_page']
-            ], 200);
+            });
+
+            return $recommend_template;
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'not_found'], 404);
         }
+
     }
 
     /**

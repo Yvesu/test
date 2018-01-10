@@ -198,7 +198,7 @@ class TweetLikeController extends BaseController
                     $tweet -> increment('like_count');
 
                     // 用户统计数据 点赞量 +1
-                    User::findOrfail($tweet -> user_id) -> increment('like_count');
+                    User::findOrfail($id) -> increment('like_count');
 
                     // 参与话题点赞量 +1
                     Topic::whereHas('hasManyTweetTopic', function($q) use($tweet_id) {
@@ -430,7 +430,7 @@ class TweetLikeController extends BaseController
 
             // 该动态作者的总点赞量 -1
             // 用户统计数据 点赞量 +1
-            User::findOrfail($tweet -> user_id) -> decrement('like_count');
+            User::findOrfail($id) -> decrement('like_count');
 
             // 该动态点赞量数量 -1
             $tweet -> decrement('like_count');
