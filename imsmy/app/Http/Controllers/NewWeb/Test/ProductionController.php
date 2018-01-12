@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\NewWeb\Test;
 
+use App\Models\Channel;
+use App\Models\ChannelTweet;
 use App\Models\FilmfestsProductions;
 use App\Models\Keywords;
 use App\Models\KeywordTweets;
@@ -9,6 +11,7 @@ use App\Models\Productions;
 use App\Models\Test\TestUser;
 use App\Models\Tweet;
 use App\Models\TweetContent;
+use App\Models\TweetProduction;
 use App\Models\TweetStandbyCover;
 use function GuzzleHttp\default_ca_bundle;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -87,7 +90,7 @@ class ProductionController extends Controller
             }
             $count = $request->get('count',0);
             $status = $request->get('status',null);
-            $dataNum = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+            $dataNum = Tweet::select('id')->where('user_id','=',$user->id)->where('video','!=',null)
                 ->where('type','=',3)
                 ->where('active','!=',3)->where('active','!=',5)->where('browse_times','>=',$count)->ActiveProduction($active)->
                 StatusProduction($status)->orderBy($type,$uod)->get()->count();
@@ -96,14 +99,14 @@ class ProductionController extends Controller
             }elseif ($page > ceil($dataNum/$everyPageNum)){
                 $page = ceil($dataNum/$everyPageNum);
             }
-            $initialData = Tweet::where('user_id','=',$user->id)
+            $initialData = Tweet::select('id')->where('user_id','=',$user->id)
                 ->where('type','=',3)
                 ->where('active','!=',3)->where('active','!=',5)->where('video','!=',null);
             $allProduction = $initialData->get()->count();
-            $failProduction = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+            $failProduction = Tweet::select('id')->where('user_id','=',$user->id)->where('video','!=',null)
                 ->where('type','=',3)
                 ->where('active','!=',3)->where('active','!=',5)->ActiveProduction(9)->get()->count();
-            $checkingProduction = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
+            $checkingProduction = Tweet::select('id')->where('user_id','=',$user->id)->where('video','!=',null)
                 ->where('type','=',3)
                 ->where('active','!=',3)->where('active','!=',5)->ActiveProduction(6)->get()->count();
             $mainData = Tweet::where('user_id','=',$user->id)->where('video','!=',null)
@@ -279,7 +282,10 @@ class ProductionController extends Controller
         try{
             DB::beginTransaction();
             $user = \Auth::guard('api')->user();
-            $data0 = Tweet::where('video','=',null)->where('type','=',3)->where('user_id',$user->id)->first();
+            $data0 = Tweet::where('video','=','')->where('type','=',3)->where('user_id',$user->id)->first();
+            $is_download = $request->get('is_download',1);
+            $is_reply = $request->get('is_reply',1);
+            $visible = $request->get('visible',0);
             if($data0){
                 $id = $data0->id;
             }else{
@@ -288,6 +294,9 @@ class ProductionController extends Controller
                 $data -> created_at = time();
                 $data -> type = 3;
                 $data -> updated_at = time();
+                $data -> is_reply = $is_reply;
+                $data -> is_download = $is_download;
+                $data -> visible = $visible;
                 $data ->save();
                 $id = $data->id;
             }
@@ -313,11 +322,13 @@ class ProductionController extends Controller
             $is_priviate = $request->get('is_priviate',0);
             $is_download = $request->get('is_download',1);
             $is_reply = $request->get('is_reply',1);
+            $visible = $request->get('visible',0);
             $password = $request->get('password',null);
             $size = $request->get('size',0);
             $address = $request->get('address',null);
             $keyword = $request->get('keyword',null);
-            if(is_null($id)||is_null($name)||is_null($address)||is_null($size)){
+            $channel = $request->get('channel',null);
+            if(is_null($id)||is_null($name)||is_null($address)||is_null($size)||is_null($channel)){
                 return response()->json(['error'=>'数据不合法'],200);
             }
             $url = "http://video.ects.cdn.hivideo.com/".$address.'?avinfo';
@@ -348,6 +359,7 @@ class ProductionController extends Controller
             $newProduction -> created_at = time();
             $newProduction -> updated_at = time();
             $newProduction -> duration = $duration;
+            $newProduction -> visible = $visible;
             $newProduction -> save();
             $content = new TweetContent;
             $content -> tweet_id = $id;
@@ -422,7 +434,9 @@ class ProductionController extends Controller
                     $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
                     if($message){
                         $finallyAddress = str_replace($ex,'m3u8',$newAddress);
-                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
+                        $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+//                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
+                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
                         $production -> transcoding_id = $message;
                         $production -> video ='v.cdn.hivideo.com/'.$newAddress;
                         $production -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
@@ -448,6 +462,9 @@ class ProductionController extends Controller
 //                        $production -> transcoding_video = $address.'.m3u8';
                         $finallyAddress = str_replace($ex,'m3u8',$newAddress);
                         $production -> transcoding_id = $message;
+                        $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+//                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
+                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
                         $production -> video ='v.cdn.hivideo.com/'.$newAddress;
                         $production -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
                         $production -> is_transcod = 1;
@@ -465,7 +482,7 @@ class ProductionController extends Controller
                                     $keyword_id = $keyword->id;
                                 }else{
                                     $newkeyword = new Keywords;
-                                    $newkeyword ->keyword = $v;
+                                    $newkeyword ->keyword = $value;
                                     $newkeyword ->create_at = time();
                                     $newkeyword ->update_at = time();
                                     $newkeyword ->save();
@@ -480,6 +497,23 @@ class ProductionController extends Controller
                                 $keywordTweet -> save();
                             }
                         }
+                        $channel = explode('|',$channel);
+                        $channel = array_unique($channel);
+                        $tweet_id = $production->id;
+                        ChannelTweet::where('tweet_id',$tweet_id)->delete();
+                        foreach ($channel as $item => $value) {
+                            $channelTweet = new ChannelTweet;
+                            $channelTweet -> channel_id = $value;
+                            $channelTweet -> tweet_id = $tweet_id;
+                            $channelTweet -> save();
+                        }
+                        $childData = new TweetProduction;
+                        $childData -> tweet_id = $id;
+                        $childData -> is_current = 1;
+                        $childData -> status = 3;
+                        $childData -> time_add = time();
+                        $childData -> time_update = time();
+                        $childData -> save();
                         DB::commit();
                         return response()->json(['message'=>'success'],200);
                     }else{
@@ -505,6 +539,48 @@ class ProductionController extends Controller
             DB::rollBack();
             return response()->json(['error'=>'not_found'],404);
         }
+    }
+
+    public function channel()
+    {
+        try{
+            $data = Channel::where('active',1)->get();
+            $channel = [];
+            if($data){
+
+                foreach ($data as $k => $v)
+                {
+                    $tempData = [
+                        'label'=>$v->id,
+                        'des' => $v->name
+                    ];
+                    array_push($channel,$tempData);
+                }
+            }
+            return response()->json(['data'=>$channel],200);
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
+    public function privacy()
+    {
+        $data = [
+            [
+                'label'=>0,
+                'des'=>'全部人可见'
+            ],
+            [
+                'label'=>1,
+                'des'=>'好友圈可见',
+            ],
+            [
+                'label'=>2,
+                'des'=>'仅自己可见'
+            ]
+        ];
+        return response()->json(['data'=>$data],200);
     }
 
     public function index1(Request $request)

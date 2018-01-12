@@ -69,7 +69,7 @@ class FilterController extends Controller
             if(empty($folder_id))
             {
                 $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$everyPageNum)->get();
-                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->get()->count();
+                $dataNum = MakeFilterFile::select('id')->Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->get()->count();
             }else{
                 $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->forPage($page,$everyPageNum)->get();
                 $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->get()->count();
@@ -140,9 +140,9 @@ class FilterController extends Controller
                 }
                 array_push($data,$tempdata);
             }
-            $sum = MakeFilterFile::get()->count();
+            $sum = MakeFilterFile::select('id')->get()->count();
 
-            $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+            $todaynew = MakeFilterFile::select('id')->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
             return response()->json(['data'=>$data,'sum' => $sum,'todaynew' => $todaynew,'dataNum'=>$dataNum],200);
         }catch (ModelNotFoundException $e){
             return response()->json(['error' => 'not_found'], 404);
@@ -491,7 +491,7 @@ class FilterController extends Controller
             if(empty($folder_id))
             {
                 $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$everyPageNum)->get();
-                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->get()->count();
+                $dataNum = MakeFilterFile::select('id')->Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->get()->count();
             }else{
                 $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->forPage($page,$everyPageNum)->get();
                 $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','1')->where('recommend','=','1')->get()->count();
@@ -541,9 +541,9 @@ class FilterController extends Controller
 
             }
 
-            $sum = MakeFilterFile::get()->count();
+            $sum = MakeFilterFile::select('id')->get()->count();
 
-            $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+            $todaynew = MakeFilterFile::select('id')->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
             return response()->json(['data'=>$data,'dataNum'=>$dataNum,'time' => $time,'sum' => $sum,'todaynew' => $todaynew,],200);
         }catch (ModelNotFoundException $e){
@@ -891,7 +891,7 @@ class FilterController extends Controller
             if(empty($folder_id))
             {
                 $maindata = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
-                $dataNum = MakeFilterFile::Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->get()->count();
+                $dataNum = MakeFilterFile::select('id')->Name($name)->FolderId($folder_id)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->get()->count();
             }else{
                 $maindata = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->forPage($page,$everyPageNum)->get();
                 $dataNum = MakeFilterFolder::find($folder_id)->belongsToManyFilter()->Name($name)->OperatorId($operator_id)->Integral($integral)->Counta($count)->Time($time)->where('active','=','3')->get()->count();
@@ -927,9 +927,9 @@ class FilterController extends Controller
                 array_push($data,$tempdata);
 
             }
-            $sum = MakeFilterFile::get()->count();
+            $sum = MakeFilterFile::select('id')->get()->count();
 
-            $todaynew = MakeFilterFile::where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+            $todaynew = MakeFilterFile::select('id')->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
 
             return response()->json(['data'=>$data,'dataNum'=>$dataNum,'time'=>$time,'sum'=>$sum,'todaynew'=>$todaynew],200);
         }catch (ModelNotFoundException $e){

@@ -150,7 +150,7 @@ class TemplateController extends Controller
             $page = $request->get('page',1);
             DB::beginTransaction();
             $mainData = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
-            $dataNum = MakeTemplateFolder::where('active','=',$active)->orderBy('sort')->get();
+            $dataNum = MakeTemplateFolder::select('id')->where('active','=',$active)->orderBy('sort')->get();
             $data = [];
             $space = MakeTemplateFile::get()->sum('size');
             $max = $mainData->max('sort');
@@ -359,13 +359,13 @@ class TemplateController extends Controller
             $dataNum = $allData->where('recommend','=',1)->get()->count();
         } elseif($status == 2) {
             $mainData = $allData->where('status', '=', 2)->forPage($page,$everyPageNum)->get();
-            $mainData = $allData->where('status', '=', 2)->get()->count();
+            $dataNum = $allData->where('status', '=', 2)->get()->count();
         } elseif($ishot == 1){
             $mainData = $allData->where('ishot','=',1)->forPage($page,$everyPageNum)->get();
-            $mainData = $allData->where('ishot','=',1)->get()->count();
+            $dataNum = $allData->where('ishot','=',1)->get()->count();
         } else{
             $mainData = $allData->where('status','=',1)->forPage($page,$everyPageNum)->get();
-            $mainData = $allData->where('status','=',1)->get()->count();
+            $dataNum = $allData->where('status','=',1)->get()->count();
         }
         $data = [$mainData,$dataNum];
         return $data;
@@ -580,8 +580,8 @@ class TemplateController extends Controller
 
         }
         $dataNum = $mainData[1];
-        $sumnum = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->get()->count();
-        $todaynew = MakeTemplateFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+        $sumnum = MakeTemplateFile::select('id')->where('active','=',1)->where('test_result','=',1)->get()->count();
+        $todaynew = MakeTemplateFile::select('id')->where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
         return response()->json(['dataNum'=>$dataNum,'data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
     }
 
@@ -638,7 +638,7 @@ class TemplateController extends Controller
             $cover = $request->get('cover',null);
             $size = $request->get('size',null);
             $duration = $request->get('duration',null);
-            $vipfree = $request->get('vipfree',null);
+            $vipfree = $request->get('vipfree',1);
             if(is_null($id)||is_null($folder_id)||is_null($name)||is_null($intro)||is_null($address)||is_null($preview_address)||is_null($cover)||is_null($size)||is_null($duration))
             {
                 return response()->json(['message'=>'数据不合法'],200);

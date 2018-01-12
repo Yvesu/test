@@ -56,6 +56,15 @@ class Tweet extends Common
     ];
 
     /**
+     * 动态与作品子表  一对一关系
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function tweetProduction()
+    {
+        return $this->hasOne('App\Models\TweetProduction','tweet_id','id');
+    }
+
+    /**
      * 内容 一对一关系
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -124,6 +133,14 @@ class Tweet extends Common
     public function belongsToUser()
     {
         return $this->belongsTo('App\Models\User','user_id','id');
+    }
+
+    /**
+     * 动态与被关注的用户
+     */
+    public function belongsToSubscriptionFrom()
+    {
+        return $this->belongsTo('App\Models\Subscription','user_id','from');
     }
 
     /**

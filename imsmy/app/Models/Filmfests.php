@@ -19,9 +19,9 @@ class Filmfests extends Model
 
     public $timestamps = false;
 
-    public function productions()
+    public function tweetProduction()
     {
-        return $this->belongsToMany('App\Models\Productions');
+        return $this->belongsToMany('App\Models\TweetProduction','filmfests_tweet_production','filmfests_id','tweet_production_id');
     }
 
     public function filmFestType()

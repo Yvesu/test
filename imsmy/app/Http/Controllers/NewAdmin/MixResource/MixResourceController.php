@@ -430,9 +430,9 @@ class MixResourceController extends Controller
             ->Counta($count);
             if($recommend == 1){
                 $mainData = $allData->where('recommend','=',1)->forPage($page,$everyPageNum)->get();
-                $dataNum = $allData->where('recommend','=',1)->get();
+                $dataNum = $allData->where('recommend','=',1)->get()->count();
             }else{
-                $mainData = $allData->forPage($page,$everyPageNum)->get()->count();
+                $mainData = $allData->forPage($page,$everyPageNum)->get();
                 $dataNum = $allData->get()->count();
             }
             $data = [
@@ -546,8 +546,8 @@ class MixResourceController extends Controller
 
         }
         $dataNum = $mainData[1];
-        $sumnum = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->get()->count();
-        $todaynew = MakeEffectsFile::where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
+        $sumnum = MakeEffectsFile::select('id')->where('active','=',1)->where('test_result','=',1)->get()->count();
+        $todaynew = MakeEffectsFile::select('id')->where('active','=',1)->where('test_result','=',1)->where('time_add','>',strtotime(date('Y-m-d',time())))->get()->count();
         return response()->json(['dataNum'=>$dataNum,'data'=>$data,'batchBehavior'=>$batchBehavior,'sumnum'=>$sumnum,'todaynew'=>$todaynew]);
     }
 
@@ -565,7 +565,7 @@ class MixResourceController extends Controller
             $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
             $mainData = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->forPage($page,$everyPageNum)->get();
-            $dataNum = MakeEffectsFolder::where('active','=',$active)->orderBy('sort')->get()->count();
+            $dataNum = MakeEffectsFolder::select('id')->where('active','=',$active)->orderBy('sort')->get()->count();
             $data = [];
             $space = MakeEffectsFile::get()->sum('size');
             $max = $mainData->max('sort');

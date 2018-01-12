@@ -13,7 +13,7 @@ class TestController extends Controller
     public function test()
     {
 
-        Redis::del('coolrxy');
+        Redis::del('sunwukong');
         Redis::select(5);
 //        Redis::set('name','cool');
 //        $name1 = Redis::exists('naruto');

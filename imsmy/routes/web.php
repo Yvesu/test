@@ -177,6 +177,16 @@ $api -> version('v1',function($api) {
             $api -> post('production/delete','Test\ProductionController@delete');
 
             /**
+             * 获得隐私权限
+             */
+            $api -> post('production/privacy','Test\ProductionController@privacy');
+
+            /**
+             * 上传类别
+             */
+            $api -> post('production/channel','Test\ProductionController@channel');
+
+            /**
              * 点击公有获得的数据
              */
             $api -> post('public','Test\ProductionController@publicStataus');
@@ -203,6 +213,26 @@ $api -> version('v1',function($api) {
                  */
                 $api -> post('getorderby','User\UserCommonController@orderby_function');
 
+                /**
+                 * 主页动态接口
+                 */
+                $api -> post('tweet','User\UserController@tweet');
+
+                /**
+                 * 主页我的视频接口
+                 */
+                $api -> post('myvideo','User\UserController@myVideo');
+
+                /**
+                 * 主页发现接口
+                 */
+                $api -> post('discover','User\UserController@discover');
+
+                /**
+                 * 主页竞赛接口
+                 */
+                $api -> post('match','User\UserController@match');
+
             });
 
             /**
@@ -215,7 +245,40 @@ $api -> version('v1',function($api) {
              */
             $api -> post('getresolutionratio','Play\PlayController@resolution_ratio');
 
+
+            $api -> group(['prefix'=>'filmfestadmin'],function($api){
+
+                /**
+                 * 分析页
+                 */
+                $api -> post('index','User\FilmfestController@index');
+
+                /**
+                 * 表格数据
+                 */
+                $api -> post('index/table','User\FilmfestController@table');
+
+                /**
+                 * 大学统计
+                 */
+                $api -> post('index/university/top','User\FilmfestController@universityTop');
+                $api -> post('index/university','User\FilmfestController@university');
+
+                /**
+                 * 报名
+                 */
+                $api -> group(['prefix'=>'application'],function ($api){
+
+                    $api -> post('page_one','Application\ApplicationController@pageOne');
+                    $api -> post('page_two','Application\ApplicationController@pageTwo');
+
+                });
+
+            });
+
+
         });
+//        $api->get('users/check','User\FilmfestController@xxoo');
     });
 
 });
