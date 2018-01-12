@@ -688,14 +688,6 @@ class AllSearchController extends Controller
             //获取用户信息
             $user = Auth::guard('api')->user();
 
-//            $noExitWord_obj =  NoExitWord::distinct('keyword')->get(['keyword']);
-//
-//            $arr = $noExitWord_obj->toArray();
-//
-//            $noExitWord_arr = array_column($arr, 'keyword');
-//
-//            \Cache::put('noExitWord',$noExitWord_arr,'60');
-
             if( $this->sensitivity($keyword) === 'yes' ){        //不涉及敏感词汇
 
                 $tweet_1 = Tweet::WhereHas('hasOneContent',function ($q) use ($keyword){

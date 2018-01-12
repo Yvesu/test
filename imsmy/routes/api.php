@@ -1197,5 +1197,15 @@ $api->version(['v1'],function($api){
 
         });
 
+        //动态选择分辨率
+        $api ->post('/tweet/ratio/{id}','TweetController@ratio')
+                ->where('id','[0-9]+');
+
+        //赛事作品下载源文件   TODO 是否添加术印
+//        $api -> post('/activity/tweetdown/{id}','ActivityController@download')
+//                ->where('id','[0-9]+');
+
+        $api ->get('yy','YyController@yy');
+
     });
 });

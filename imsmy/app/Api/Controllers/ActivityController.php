@@ -1,6 +1,9 @@
 <?php
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\FilmRecommendTransformer;
+use App\Models\ActivityFilmRecommend;
+use App\Models\Filmfests;
 use App\Models\TweetActivity;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Activity;
@@ -33,6 +36,8 @@ class ActivityController extends BaseController
     protected $tweetsActivityTransformer;
     protected $tweetActivityRepliesTransformer;
 
+    protected $filmRecommendTransformer;
+
     private $paginate = 20;
 
     public function __construct(
@@ -40,7 +45,8 @@ class ActivityController extends BaseController
         TweetsActivityTransformer $tweetsActivityTransformer,
         HotActivityTransformer $hotActivityTransformer,
         ActivityTransformer $activityTransformer,
-        TweetActivityRepliesTransformer $tweetActivityRepliesTransformer
+        TweetActivityRepliesTransformer $tweetActivityRepliesTransformer,
+        FilmRecommendTransformer $filmRecommendTransformer
 
     )
     {
@@ -49,7 +55,7 @@ class ActivityController extends BaseController
         $this->hotActivityTransformer = $hotActivityTransformer;
         $this->activityTransformer = $activityTransformer;
         $this->tweetActivityRepliesTransformer = $tweetActivityRepliesTransformer;
-
+        $this -> filmRecommendTransformer = $filmRecommendTransformer;
     }
 
     /**
@@ -90,11 +96,10 @@ class ActivityController extends BaseController
 
             // 判断是否为推荐
             if(1 == $type) {
-                return $this -> recommend($page);
+                return $this -> activeFilmRecommend($page);
             }
 
             // 缓存,热门和最新
-
                 if ($type == 2){
                     $data = Cache::remember('activity_list_'.$type.'_'.$page, 5, function() use($page, $type) {
                     // 获取赛事（原活动）数据
@@ -160,6 +165,47 @@ class ActivityController extends BaseController
         }
     }
 
+    private function activeFilmRecommend($page)
+    {
+        $time = time();
+
+        //获取推荐
+        $activity_ids_obj = ActivityFilmRecommend::where('type','0')
+            ->where('expires','>',$time)
+            ->pluck('work_id');
+
+        $activity_ids_arr = $activity_ids_obj -> all();
+
+        //赛事
+        $data = Activity::with(['belongsToUser','hasManyTweets.belongsToUser' => function ($q){
+            $q -> select(['id','avatar']);
+        }])
+            ->whereIn('id',$activity_ids_arr)
+            ->get(['id','user_id','bonus','comment','expires','time_add','icon','users_count']);
+        if ($data->count()>10){
+            $data = $data->random(10);
+        }
+
+        //电影节
+        $film_ids_obj = ActivityFilmRecommend::where('type','1')
+            ->where('expires','>',$time)
+            ->pluck('work_id');
+
+        $film_ids_arr = $film_ids_obj -> all();
+
+        $film = Filmfests::whereIn('id',$film_ids_arr)
+            ->get(['id','name','cover','url','cost','count','time_end']);
+
+        if ($film->count()>10){
+            $film = $film->random(10);
+        }
+
+        return [
+            'film'  => $this ->filmRecommendTransformer ->transformCollection($film->all()),
+            'data'  => $this -> activityTransformer -> transformCollection($data->all()),
+        ];
+    }
+
     /**
      * 赛事页面的列表 推荐
      *
@@ -168,10 +214,8 @@ class ActivityController extends BaseController
     private function recommend($page)
     {
         try{
-
             // 缓存
             $data = Cache::remember('activity_list_1_'.$page, 5, function() use($page) {
-
                 // 获取赛事（原活动）数据
                 $data = Activity::with(['belongsToUser','hasManyTweets.belongsToUser' => function ($q){
                     $q -> select(['id','avatar']);

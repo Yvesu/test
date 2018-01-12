@@ -21,7 +21,6 @@ class ActivityTweetsTransformer extends Transformer
             'created_at'    => strtotime($tweet->hasOneTweet->created_at),
             'style'         => 1,  // 待删除字段，等安卓删除后删除
             'content'       => $tweet->hasOneTweet->content,
-            // 视频截图
             'screen_shot'   => CloudStorage::downloadUrl($tweet->hasOneTweet->screen_shot),
             'video'         => CloudStorage::downloadUrl($tweet->hasOneTweet->video),
             'user'          => $this->usersTransformer->transform($tweet->hasOneUser),

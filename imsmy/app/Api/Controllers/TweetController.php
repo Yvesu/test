@@ -793,9 +793,9 @@ class TweetController extends BaseController
                 $shot_width_height = $request->get('shot_width_height');
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
-                if ( $width >= 1280  || $height >= 720){
+                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
                     TweetTrasf::create([
-                        'tweet_id' =>1,
+                        'tweet_id' =>   $tweet->id,
                     ]);
                 }
             }
@@ -839,19 +839,21 @@ class TweetController extends BaseController
 
             if(isset($input['activity_id'])
                 && is_numeric($input['activity_id'])
-                && Activity::where('active',0)->find($input['activity_id'])->user_id == $id){
+                && Activity::where('active',0)->find($input['activity_id'])){
 
-                // 如果之前该用户参与过赛事，则将原赛事进行删除，再添加新的赛事信息
-                TweetActivity::where('user_id',$id)->where('activity_id',$input['activity_id'])->delete();
+                if (Activity::where('active',0)->find($input['activity_id'])->user_id == $id){
+                    // 如果之前该用户参与过赛事，则将原赛事进行删除，再添加新的赛事信息
+                    TweetActivity::where('user_id',$id)->where('activity_id',$input['activity_id'])->delete();
 
-                // 保存
-                TweetActivity::create([
-                    'user_id'   => $id,
-                    'tweet_id'  => $tweet -> id,
-                    'activity_id'=> $input['activity_id'],
-                    'time_add'   => $time,
-                    'time_update'   => $time,
-                ]);
+                    // 保存
+                    TweetActivity::create([
+                        'user_id'   => $id,
+                        'tweet_id'  => $tweet -> id,
+                        'activity_id'=> $input['activity_id'],
+                        'time_add'   => $time,
+                        'time_update'   => $time,
+                    ]);
+                }
 
             }elseif(isset($input['activity_id']) && is_numeric($input['activity_id']) && Activity::where('active',1)->findOrFail($input['activity_id'])){
 
@@ -1475,6 +1477,7 @@ class TweetController extends BaseController
                 } else {
 
                     // 竞赛
+                    $time = time();
                     $activity = Activity::with(['belongsToUser'=>function($q){
                         $q->select(['id','nickname','avatar','signature','verify','verify_info']);
                     }])
@@ -1508,7 +1511,9 @@ class TweetController extends BaseController
                     }])
                     ->orderBy('created_at','DESC')
                     ->whereIn('id',$except->all())
-                    ->get(['id','user_id','created_at','type','screen_shot','duration','location','browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times','video']);
+                    ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                        'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                        'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
                 if ($tweets->count() >= 20 ){
                     $tweets = $tweets ->random(20);
@@ -1533,7 +1538,9 @@ class TweetController extends BaseController
                         ->orderBy('created_at','DESC')
                         ->whereNotIn('id',$except->all())
                         ->forPage($page,$this->paginate)
-                        ->get(['id','user_id','created_at','type','screen_shot','duration','location','browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times','video']);
+                        ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                            'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                            'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
                     $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
 
@@ -2048,7 +2055,7 @@ class TweetController extends BaseController
                         -> status()
                             -> orderBy('like_count', 'DESC')
                             -> select('id', 'user_id', 'tweet_id', 'reply_user_id', 'content');
-                    }]) -> select('id', 'user_id', 'duration', 'video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
+                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video','join_video','duration', 'video','transcoding_video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
                 }])
                     -> where('activity_id',$id)
                     -> orderBy('like_count','desc')
@@ -2088,14 +2095,14 @@ class TweetController extends BaseController
                         -> status()
                             -> orderBy('like_count', 'DESC')
                             -> select('id', 'user_id', 'tweet_id', 'reply_user_id', 'content');
-                    }]) -> select('id', 'user_id', 'duration', 'video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
+                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video','join_video', 'duration','transcoding_video','join_video','video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
                 }])
                     -> where('activity_id',$id)
                     -> orderBy('id','desc')
                     -> forPage($page,$this -> paginate)
                     -> get(['activity_id', 'tweet_id', 'user_id', 'like_count']);
             }
-            dd($tweets->toArray());
+
             // 返回数据
             return response()->json([
 
@@ -2792,6 +2799,37 @@ class TweetController extends BaseController
             'data'=>$data,
         ],200);
 
+    }
+
+    /**
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ratio($id,Request $request)
+    {
+         if ( !is_numeric( $ratio = $request -> get('ratio',0)) ) return response()->json(['message'=>'ratio must be a number'],400);
+
+         switch ($ratio){
+             case 0 :
+                 return response()->json([
+                     'video'  => Tweet::find($id)->transcoding_video ? CloudStorage::downloadUrl(Tweet::find($id)->transcoding_video) : '',
+                 ],200);
+             case 1 :
+                 return response()->json([
+                     'video'  =>  Tweet::find($id)->video_m3u8 ? CloudStorage::downloadUrl(Tweet::find($id)->video_m3u8) : '',
+                 ],200);
+             case 2 :
+                 return response()->json([
+                     'video'  =>  Tweet::find($id)->norm_video ? CloudStorage::downloadUrl(Tweet::find($id)->norm_video) : '' ,
+                 ],200);
+             case 3 :
+                 return response()->json([
+                     'video'  =>  Tweet::find($id)->high_video ? CloudStorage::downloadUrl(Tweet::find($id)->high_video) : '',
+                 ],200);
+             default :
+                 return response()->json(['message'=>'bad request'],400);
+         }
     }
 
 }

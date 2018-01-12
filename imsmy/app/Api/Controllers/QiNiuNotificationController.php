@@ -22,8 +22,6 @@ class QiNiuNotificationController extends BaseController
     {
          $NotifyData = file_get_contents("php://input");
 
-//        $NotifyData = '{"id":"z0.5a3ba18eb946531900ed0af4","pipeline":"1381295464.chijiu","code":0,"desc":"The fop was completed successfully","reqid":"P0wAAOI3xQhOTQIV","inputBucket":"image","inputKey":"test.mp4","items":[{"cmd":"avthumb/mp4/s/640x360/vb/1.4m/wmImage/aHR0cDovLzEwMS4yMDAuNzUuMTYzL2hvbWUvaW1nL2xvZ28ucG5n/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/aW1hZ2U6XzIwMV90ZXN0Lm1wNA==","code":0,"desc":"The fop was completed successfully","hash":"lrXeSh0mgGniri8xcd10KtwmjCuu","key":"&201&&test.mp4","returnOld":0}]}';
-
         //判断结果
         $res = json_decode($NotifyData)->code;
 
@@ -48,23 +46,10 @@ class QiNiuNotificationController extends BaseController
                 TweetMark::where('tweet_id',$tweet_id)->update(['active'=>1]);
                 \DB::rollBack();
             }
-
-        }else{
-
-            $keyword= json_decode($NotifyData)->items[0]->key;
-            $tweet_id=getNeedBetween($keyword, '_' , '__' );
-            $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
-            $time = time();
-
-            MarkTweet::create([
-                'tweet_id'      =>  $tweet_id,
-                'url'           =>  $new_url,
-                'active'        =>  $res,
-                'create_time'   =>  $time,
-            ]);
         }
     }
 
+    //
     public function joinvideo()
     {
         $NotifyData = file_get_contents("php://input");
@@ -74,7 +59,17 @@ class QiNiuNotificationController extends BaseController
             $tweet_id=getNeedBetween($keyword, '&' , '&&' );
             $new_url = 'v.cdn.hivideo.com/'.$keyword;
             $res = Tweet::find($tweet_id)->update(['join_video'=>$new_url]);
-            if ($res){TweetJoin::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
+            if ($res){
+                TweetJoin::where('tweet_id',$tweet_id)->update(['active'=>'1']);
+                $tweet = Tweet::find($tweet_id);
+                $shot_width_height = $tweet->shot_width_height;
+                $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
+                $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
+                if (  $width >= 1280  || $height >= 720   ){
+                    $notice = 'http://www.goobird.com/api/notification/trans';
+                    CloudStorage::join_transcoding('hivideo-video',$keyword,$width,$height,1,$notice);
+                }
+            }
         }
     }
 
@@ -114,5 +109,4 @@ class QiNiuNotificationController extends BaseController
             }
         }
     }
-
 }

@@ -666,7 +666,7 @@ class UserController extends BaseController
             $page = $request -> get('page',1);
 
             // 判断页码，最多5页
-            if(!in_array($page,[1,2,3,4,5])) {
+            if($page > 5) {
 
                 return response()->json([
                     'data'  => [],
@@ -688,16 +688,15 @@ class UserController extends BaseController
                 -> with(['hasManyTweet' => function($query){
                     $query -> active() -> visible() -> orderBy('id','desc') -> get();
                 }])
-                -> whereIn('verify',[1,2])
                 -> where('status',0)
+                -> orderBy('id','desc')
+                -> whereIn('verify',[1,2])
                 -> whereNotNull('avatar')
-                -> whereNotNull('signature')
-                -> orderBy('id','desc');
+                -> whereNotNull('signature');
 
 
             // 如果用户为登录状态，则将自己排除在外
             if($user){
-
                 $nearby_users = $nearby_users -> whereNotIn('id',[$user->id]);
             }
 

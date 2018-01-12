@@ -155,4 +155,5 @@ class Activity extends Common
             ->where('recommend_start', '<', getTime())
             ->where('recommend_expires', '>', getTime());
     }
+
 }

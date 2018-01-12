@@ -4,6 +4,7 @@ namespace App\Api\Controllers;
 
 use App\Facades\CloudStorage;
 use App\Models\Tweet;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,8 @@ class DeleteController extends BaseController
 
             //修改动态的状态为个人删除
             $tweet = Tweet::findOrFail($id);
+
+            $user_id = $tweet->user_id;
 
             //将动态的状态改为用户自己删除
             $mysql_res = $tweet->update(['active' => 3]);
@@ -41,6 +44,7 @@ class DeleteController extends BaseController
                 Log::info('delete tweet is ' . $id . ' failed');
             }
             if ($mysql_res) {
+                User::find($user_id)->decrement('work_count');
                 return response()->json(['message' => 'success'], 200);
             } else {
                 return response()->json(['message' => 'failed'], 500);

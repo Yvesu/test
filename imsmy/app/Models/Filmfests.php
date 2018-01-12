@@ -14,14 +14,14 @@ class Filmfests extends Model
     protected $fillable = [
         'name','time_add','time_update','time_start','time_end',
         'logo','cover','address','cost','submit_end_time','submit_start_time',
-        'period','file_address'
+        'period','file_address','url','count',
     ];
 
     public $timestamps = false;
 
-    public function productions()
+    public function tweetProduction()
     {
-        return $this->belongsToMany('App\Models\Productions');
+        return $this->belongsToMany('App\Models\TweetProduction','filmfests_tweet_production','filmfests_id','tweet_production_id');
     }
 
     public function filmFestType()

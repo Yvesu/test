@@ -27,20 +27,8 @@ class NearbyUsersTransformer extends Transformer
 
         // 将动态遍历
         foreach($user -> hasManyTweet as $key => $tweet){
-
-            // 如果为图片
-            if($tweet->photo){
-
-                // 解析成数组
-                $photo = json_decode($tweet->photo,true);
-
-                // 筛选图片的信息，取第一张
-                $user -> hasManyTweet[$key] = ['tweet_id'=>$tweet->id,'picture'=>CloudStorage::downloadUrl($photo[0])];
-            }else{
-
                 // 视频封面
                 $user -> hasManyTweet[$key] = ['tweet_id'=>$tweet->id,'picture'=>CloudStorage::downloadUrl($tweet->screen_shot)];
-            }
         }
 
         // 判断用户是否为登录状态

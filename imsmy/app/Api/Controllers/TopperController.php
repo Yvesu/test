@@ -184,8 +184,7 @@ class TopperController extends Controller
                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
                             }])
                                 ->whereIn('id', $twe->all())
-                                ->get(['id', 'user_id', 'type', 'created_at', 'duration', 'screen_shot', 'location', 'browse_times', 'like_count', 'reply_count', 'video']);
-
+                                ->get(['id', 'user_id', 'type','video_m3u8','norm_video','high_video','join_video','transcoding_video','created_at', 'duration', 'screen_shot', 'location', 'browse_times', 'like_count', 'reply_count', 'video']);
 
                             // 过滤
                             if ($tweets->count()) {

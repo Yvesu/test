@@ -108,9 +108,11 @@ class PersonController extends BaseController
                 ])
                 ->where('active',1)
                 ->where('visible',0)
-                -> forPage($page, $this -> paginate)
                 ->orderBy('created_at','desc')
-                ->get(['id','user_id','type','location','like_count','reply_count','tweet_grade_total','tweet_grade_times','duration','screen_shot','browse_times','created_at']);
+                -> forPage($page, $this -> paginate)
+                ->get(['id','user_id','type','location','like_count','reply_count',
+                    'tweet_grade_total','tweet_grade_times','duration','screen_shot',
+                    'browse_times','created_at','video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
             return response()->json([
                 'data' => $this->personTweetsTransformer->transformCollection($tweets->all()),

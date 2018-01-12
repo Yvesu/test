@@ -40,6 +40,7 @@ class ActivityTransformer extends Transformer
             'user'          => $this->usersTransformer->transform($data->belongsToUser),
             'avatars'       => $avatars,
         ];
+
     }
 
 

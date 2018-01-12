@@ -55,6 +55,7 @@ class TweetTrans extends Command
 
     public function trans($tweet)
     {
+
         $shot_width_height = $tweet['shot_width_height'];
         $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
         $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
