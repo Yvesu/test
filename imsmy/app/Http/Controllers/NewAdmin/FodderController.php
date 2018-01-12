@@ -80,18 +80,18 @@ class FodderController extends Controller
          * 日官方发布对比量
          */
         //  今日官方发布量
-        $templateDayOfficial1 = MakeTemplateFile::where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $templateDayOfficial1 = MakeTemplateFile::select('id')->where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日官方发布量
-        $templateDayOfficial2 = MakeTemplateFile::where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $templateDayOfficial2 = MakeTemplateFile::select('id')->where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日官方发布对比量
         $templateDayOfficial = $templateDayOfficial1-$templateDayOfficial2;
         /**
          * 日用户发布对比量
          */
         //  今日用户发布量
-        $templateDayUser1 = MakeTemplateFile::where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $templateDayUser1 = MakeTemplateFile::select('id')->where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日用户发布量
-        $templateDayUser2 = MakeTemplateFile::where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $templateDayUser2 = MakeTemplateFile::select('id')->where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日用户发布对比量
         $templateDayUser = $templateDayUser1-$templateDayUser2;
 
@@ -103,7 +103,7 @@ class FodderController extends Controller
         $templateThisDaySize = $templateThisDaySize/(1024*1024*1024);
 
         //  昨日发布量
-        $templateYesterdaySize = MakeTemplateFile::where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $templateYesterdaySize = MakeTemplateFile::select('id')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         $templateYesterdaySize = $templateYesterdaySize/(1024*1024*1024);
 
         //  日发布量对比
@@ -128,9 +128,9 @@ class FodderController extends Controller
          *  周官方发布对比量
          */
         //  本周官方发布量
-        $templateWeekOfficial1 = MakeTemplateFile::where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $templateWeekOfficial1 = MakeTemplateFile::select('id')->where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周官方发布量
-        $templateWeekOfficial2 = MakeTemplateFile::where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $templateWeekOfficial2 = MakeTemplateFile::select('id')->where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  官方发布对比量
         $templateWeekOfficial = $templateWeekOfficial1-$templateWeekOfficial2;
 
@@ -139,9 +139,9 @@ class FodderController extends Controller
          */
 
         //  本周用户发布量
-        $templateWeekUser1 = MakeTemplateFile::where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $templateWeekUser1 = MakeTemplateFile::select('id')->where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周用户发布量
-        $templateWeekUser2 = MakeTemplateFile::where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $templateWeekUser2 = MakeTemplateFile::select('id')->where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  用户发布对比量
         $templateWeekUser = $templateWeekUser1 - $templateWeekUser2;
 
@@ -180,9 +180,9 @@ class FodderController extends Controller
          * 月官方发布比较量
          */
         //  上月官方发布量
-        $templateMonthOfficial2 = MakeTemplateFile::where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $templateMonthOfficial2 = MakeTemplateFile::select('id')->where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
         //  本月官方发布量
-        $templateMonthOfficial1 = MakeTemplateFile::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $templateMonthOfficial1 = MakeTemplateFile::select('id')->Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
         //  本月官方发布比较量
         $templateMonthOfficial = $templateMonthOfficial1 - $templateMonthOfficial2;
 
@@ -192,10 +192,10 @@ class FodderController extends Controller
          */
 
         //  上月用户发布量
-        $templateMonthUser2 = MakeTemplateFile::where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $templateMonthUser2 = MakeTemplateFile::select('id')->where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
 
         //  本月用户发布量
-        $templateMonthUser1 = MakeTemplateFile::Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $templateMonthUser1 = MakeTemplateFile::select('id')->Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
 
         //  月用户发布比较量
         $templateMonthUser = $templateMonthUser1 - $templateMonthUser2;
@@ -213,12 +213,12 @@ class FodderController extends Controller
          * 官方发布总数量
          */
 
-        $templateOfficialSum = MakeTemplateFile::where('official','=','0')->count('id');
+        $templateOfficialSum = MakeTemplateFile::select('id')->where('official','=','0')->count('id');
 
         /**
          * 用户发布总数量
          */
-        $templateUserSum = MakeTemplateFile::where('official','=','1')->count('id');
+        $templateUserSum = MakeTemplateFile::select('id')->where('official','=','1')->count('id');
 
 
         /**
@@ -229,18 +229,18 @@ class FodderController extends Controller
          * 日官方发布对比量
          */
         //  今日官方发布量
-        $fragmentDayOfficial1 = Fragment::where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $fragmentDayOfficial1 = Fragment::select('id')->where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日官方发布量
-        $fragmentDayOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $fragmentDayOfficial2 = Fragment::select('id')->where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日官方发布对比量
         $fragmentDayOfficial = $fragmentDayOfficial1-$fragmentDayOfficial2;
         /**
          * 日用户发布对比量
          */
         //  今日用户发布量
-        $fragmentDayUser1 = Fragment::where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $fragmentDayUser1 = Fragment::select('id')->where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日用户发布量
-        $fragmentDayUser2 = Fragment::where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $fragmentDayUser2 = Fragment::select('id')->where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日用户发布对比量
         $fragmentDayUser = $fragmentDayUser1-$fragmentDayUser2;
 
@@ -248,11 +248,11 @@ class FodderController extends Controller
          * 日发布大小对比
          */
         //  今日发布量
-        $fragmentThisDaySize = Fragment::where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
+        $fragmentThisDaySize = Fragment::select('id')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->sum('size');
         $fragmentThisDaySize = $fragmentThisDaySize/(1024*1024*1024);
 
         //  昨日发布量
-        $fragmentYesterdaySize = Fragment::where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $fragmentYesterdaySize = Fragment::select('id')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         $fragmentYesterdaySize = $fragmentYesterdaySize/(1024*1024*1024);
 
         //  日发布量对比
@@ -277,9 +277,9 @@ class FodderController extends Controller
          *  周官方发布对比量
          */
         //  本周官方发布量
-        $fragmentWeekOfficial1 = Fragment::where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $fragmentWeekOfficial1 = Fragment::select('id')->where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周官方发布量
-        $fragmentWeekOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $fragmentWeekOfficial2 = Fragment::select('id')->where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  官方发布对比量
         $fragmentWeekOfficial = $fragmentWeekOfficial1-$fragmentWeekOfficial2;
 
@@ -288,9 +288,9 @@ class FodderController extends Controller
          */
 
         //  本周用户发布量
-        $fragmentWeekUser1 = Fragment::where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $fragmentWeekUser1 = Fragment::select('id')->where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周用户发布量
-        $fragmentWeekUser2 = Fragment::where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $fragmentWeekUser2 = Fragment::select('id')->where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  用户发布对比量
         $fragmentWeekUser = $fragmentWeekUser1 - $fragmentWeekUser2;
 
@@ -318,19 +318,17 @@ class FodderController extends Controller
         $b = date('Y-m',$lastMonthFinalyDay);
         $lastMonthFirstDay = strtotime($b.'-1 0:0:0');
 
-//        dd(date('Y-m-d H:i:s',$lastMonthFirstDay));
         //  上月今天的时间戳
         $c = date('d H:i:s',time());
 
         $lastMonthToday = strtotime($b.'-'.$c);
-//        dd(date('Y-m-d H:i:s',$lastMonthToday));
         /**
          * 月官方发布比较量
          */
         //  上月官方发布量
-        $fragmentMonthOfficial2 = Fragment::where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $fragmentMonthOfficial2 = Fragment::select('id')->where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
         //  本月官方发布量
-        $fragmentMonthOfficial1 = Fragment::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $fragmentMonthOfficial1 = Fragment::select('id')->Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
         //  本月官方发布比较量
         $fragmentMonthOfficial = $fragmentMonthOfficial1 - $fragmentMonthOfficial2;
 
@@ -340,10 +338,10 @@ class FodderController extends Controller
          */
 
         //  上月用户发布量
-        $fragmentMonthUser2 = Fragment::where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $fragmentMonthUser2 = Fragment::select('id')->where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
 
         //  本月用户发布量
-        $fragmentMonthUser1 = Fragment::Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $fragmentMonthUser1 = Fragment::select('id')->Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
 
         //  月用户发布比较量
         $fragmentMonthUser = $fragmentMonthUser1 - $fragmentMonthUser2;
@@ -361,12 +359,12 @@ class FodderController extends Controller
          * 官方发布总数量
          */
 
-        $fragmentOfficialSum = Fragment::where('official','=','0')->count('id');
+        $fragmentOfficialSum = Fragment::select('id')->where('official','=','0')->count('id');
 
         /**
          * 用户发布总数量
          */
-        $fragmentUserSum = Fragment::where('official','=','1')->count('id');
+        $fragmentUserSum = Fragment::select('id')->where('official','=','1')->count('id');
 
 
 
@@ -379,18 +377,18 @@ class FodderController extends Controller
          * 日官方发布对比量
          */
         //  今日官方发布量
-        $effectDayOfficial1 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $effectDayOfficial1 = MakeEffectsFile::select('id')->where('official','=','0')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日官方发布量
-        $effectDayOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $effectDayOfficial2 = MakeEffectsFile::select('id')->where('official','=','0')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日官方发布对比量
         $effectDayOfficial = $effectDayOfficial1-$effectDayOfficial2;
         /**
          * 日用户发布对比量
          */
         //  今日用户发布量
-        $effectDayUser1 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('name');
+        $effectDayUser1 = MakeEffectsFile::select('id')->where('official','=','1')->where('time_add','>',"$todayDate")->where('time_add','<',"$todayNowDate")->count('id');
         //  昨日用户发布量
-        $effectDayUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $effectDayUser2 = MakeEffectsFile::select('id')->where('official','=','1')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         //  日用户发布对比量
         $effectDayUser = $effectDayUser1-$effectDayUser2;
 
@@ -402,7 +400,7 @@ class FodderController extends Controller
         $effectThisDaySize = $effectThisDaySize/(1024*1024*1024);
 
         //  昨日发布量
-        $effectYesterdaySize = MakeEffectsFile::where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('name');
+        $effectYesterdaySize = MakeEffectsFile::select('id')->where('time_add','>',"$yesterdayDate")->where('time_add','<',"$yesterdayNowDate")->count('id');
         $effectYesterdaySize = $effectYesterdaySize/(1024*1024*1024);
 
         //  日发布量对比
@@ -427,9 +425,9 @@ class FodderController extends Controller
          *  周官方发布对比量
          */
         //  本周官方发布量
-        $effectWeekOfficial1 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $effectWeekOfficial1 = MakeEffectsFile::select('id')->where('official','=','0')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周官方发布量
-        $effectWeekOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $effectWeekOfficial2 = MakeEffectsFile::select('id')->where('official','=','0')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  官方发布对比量
         $effectWeekOfficial = $effectWeekOfficial1-$effectWeekOfficial2;
 
@@ -438,9 +436,9 @@ class FodderController extends Controller
          */
 
         //  本周用户发布量
-        $effectWeekUser1 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
+        $effectWeekUser1 = MakeEffectsFile::select('id')->where('official','=','1')->where('time_add','>',"$thisMonday")->where('time_add','<',"$time")->count('id');
         //  上周用户发布量
-        $effectWeekUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
+        $effectWeekUser2 = MakeEffectsFile::select('id')->where('official','=','1')->where('time_add','>',"$lastMonday")->where('time_add','<',"$lastWeekTime")->count('id');
         //  用户发布对比量
         $effectWeekUser = $effectWeekUser1 - $effectWeekUser2;
 
@@ -479,9 +477,9 @@ class FodderController extends Controller
          * 月官方发布比较量
          */
         //  上月官方发布量
-        $effectMonthOfficial2 = MakeEffectsFile::where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $effectMonthOfficial2 = MakeEffectsFile::select('id')->where('official','=','0')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
         //  本月官方发布量
-        $effectMonthOfficial1 = MakeEffectsFile::Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $effectMonthOfficial1 = MakeEffectsFile::select('id')->Where('official','=','0')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
         //  本月官方发布比较量
         $effectMonthOfficial = $effectMonthOfficial1 - $effectMonthOfficial2;
 
@@ -491,10 +489,10 @@ class FodderController extends Controller
          */
 
         //  上月用户发布量
-        $effectMonthUser2 = MakeEffectsFile::where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
+        $effectMonthUser2 = MakeEffectsFile::select('id')->where('official','=','1')->where('time_add','>',"$lastMonthFirstDay")->where('time_add','<',"lastMonthToday")->count('id');
 
         //  本月用户发布量
-        $effectMonthUser1 = MakeEffectsFile::Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
+        $effectMonthUser1 = MakeEffectsFile::select('id')->Where('official','=','1')->where('time_add','>',"$thisMonthFirstDay")->where('time_add','<',"$time")->count('id');
 
         //  月用户发布比较量
         $effectMonthUser = $effectMonthUser1 - $effectMonthUser2;
@@ -512,12 +510,12 @@ class FodderController extends Controller
          * 官方发布总数量
          */
 
-        $effectOfficialSum = MakeEffectsFile::where('official','=','0')->count('id');
+        $effectOfficialSum = MakeEffectsFile::select('id')->where('official','=','0')->count('id');
 
         /**
          * 用户发布总数量
          */
-        $effectUserSum = MakeEffectsFile::where('official','=','1')->count('id');
+        $effectUserSum = MakeEffectsFile::select('id')->where('official','=','1')->count('id');
 
 
         $data = [

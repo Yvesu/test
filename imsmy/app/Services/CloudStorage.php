@@ -432,6 +432,7 @@ class CloudStorage
     }
 
 
+
     public function join_transcoding($bucket,$key,$width,$height,$choice,$notice)
     {
         $pipeline = 'hivideo_alternative';
@@ -473,6 +474,7 @@ class CloudStorage
         }
 
     }
+
 
     /**
      * @param $image
@@ -898,8 +900,5 @@ class CloudStorage
        }
         list($id, $err) = $pfop->execute($file_url, $fops);
      }
-
-
-
 
 }

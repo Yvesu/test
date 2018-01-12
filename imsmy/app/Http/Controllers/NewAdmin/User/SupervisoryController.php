@@ -28,18 +28,18 @@ class SupervisoryController extends Controller
         try{
 
             //  今日新增的用户以及男女各占的比例
-            $todayNewUser = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->get()->count();
+            $todayNewUser = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->get()->count();
             if($todayNewUser == 0)
             {
                 $todayNewUserWomen ='0'.'%';
                 $todayNewUserMen ='0'.'%';
             }else{
-                $todayNewUserWomen = (round((User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->get()->count())/$todayNewUser,2)*100).'%';
-                $todayNewUserMen = (round((User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->get()->count())/$todayNewUser,2)*100).'%';
+                $todayNewUserWomen = (round((User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->get()->count())/$todayNewUser,2)*100).'%';
+                $todayNewUserMen = (round((User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->get()->count())/$todayNewUser,2)*100).'%';
             }
             //  绑定手机用户以及比例
-            $userNum = User::all()->count();
-            $phoneUserNum = LocalAuth::all()->count();
+            $userNum = User::select('id')->get()->count();
+            $phoneUserNum = LocalAuth::select('id')->get()->count();
             if($phoneUserNum == 0){
                 $phoneUserNumProportion = '';
             }else{
@@ -53,8 +53,8 @@ class SupervisoryController extends Controller
                 $womenUserNum = '0'.'%';
                 $menUserNum = '0'.'%';
             }else{
-                $womenUserNum = User::Where('sex','=',0)->get()->count();
-                $menUserNum = User::Where('sex','=',1)->get()->count();
+                $womenUserNum = User::select('id')->Where('sex','=',0)->get()->count();
+                $menUserNum = User::select('id')->Where('sex','=',1)->get()->count();
                 $womenUserNum = (round($womenUserNum/$userNum,2)*100).'%';
                 $menUserNum = (round($menUserNum/$userNum,2)*100).'%';
             }
@@ -75,7 +75,7 @@ class SupervisoryController extends Controller
                         $todayNum = [];
                         for ($i = 0;$i <24;)
                         {
-                            $num = UserLoginLog::where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->groupBy('ip')->get()->count();
+                            $num = UserLoginLog::select('id')->where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->groupBy('ip')->get()->count();
                             $tempdata = [
                                 'label'=>$i.':00',
                                 'num' => $num
@@ -96,7 +96,7 @@ class SupervisoryController extends Controller
                         {
                             $num = 0;
                             for($j = 0;$j<7;$j++){
-                                $num += UserLoginLog::where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
+                                $num += UserLoginLog::select('id')->where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
                             }
                             $tempdata = [
                                 'label'=>$i.':00',
@@ -177,7 +177,7 @@ class SupervisoryController extends Controller
                     {
                         $num = 0;
                         for($j = 0;$j<$dayNum;$j++){
-                            $num += UserLoginLog::where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
+                            $num += UserLoginLog::select('id')->where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->groupBy('ip')->get()->count();
                         }
                         $tempdata = [
                             'label'=>$i.':00',
@@ -202,7 +202,7 @@ class SupervisoryController extends Controller
                         $todayNum = [];
                         for ($i = 0;$i <24;)
                         {
-                            $num = UserLoginLog::where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->get()->count();
+                            $num = UserLoginLog::select('id')->where('login_time','>',$todayStart+($i*3600))->where('login_time','<',$todayStart+(($i+2)*3600))->get()->count();
                             $tempdata = [
                                 'label'=>$i.':00',
                                 'num' => $num
@@ -211,9 +211,9 @@ class SupervisoryController extends Controller
 //                            array_push($todayNum,[$i.':00'=>$num]);
                             $i = $i+2;
                         }
-                        $todayIosNum = UserLoginLog::where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','ios')->get()->count();
-                        $todayAndroidNum = UserLoginLog::where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','Android')->get()->count();
-                        $todayWebNum = UserLoginLog::where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','Web')->get()->count();
+                        $todayIosNum = UserLoginLog::select('id')->where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','ios')->get()->count();
+                        $todayAndroidNum = UserLoginLog::select('id')->where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','Android')->get()->count();
+                        $todayWebNum = UserLoginLog::select('id')->where('login_time','>',$todayStart)->where('login_time','<',$todayEnd)->where('way','=','Web')->get()->count();
                         $todaysum = array_sum($todayNum);
                         if($todaysum == 0)
                         {
@@ -238,7 +238,7 @@ class SupervisoryController extends Controller
                         {
                             $num = 0;
                             for($j = 0;$j<7;$j++){
-                                $num += UserLoginLog::where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->get()->count();
+                                $num += UserLoginLog::select('id')->where('login_time','>',$weekStart+($j*86400)+($i*3600))->where('login_time','<',$weekStart+($j*86400)+(($i+2)*3600))->get()->count();
                             }
                             $tempdata = [
                                 'label'=>$i.':00',
@@ -249,9 +249,9 @@ class SupervisoryController extends Controller
                             $i = $i+2;
                         }
                         $weekSum = array_sum($weekNum);
-                        $weekIosNum = UserLoginLog::where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','ios')->get()->count();
-                        $weekAndroidNum = UserLoginLog::where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','Android')->get()->count();
-                        $weekWebNum = UserLoginLog::where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','Web')->get()->count();
+                        $weekIosNum = UserLoginLog::select('id')->where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','ios')->get()->count();
+                        $weekAndroidNum = UserLoginLog::select('id')->where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','Android')->get()->count();
+                        $weekWebNum = UserLoginLog::select('id')->where('login_time','>',$weekStart)->where('login_time','=',time())->where('way','=','Web')->get()->count();
                         if($weekSum == 0){
                             $weekIosNum = '0%';
                             $weekAndroidNum = '0%';
@@ -388,7 +388,7 @@ class SupervisoryController extends Controller
                     {
                         $num = 0;
                         for($j = 0;$j<$dayNum;$j++){
-                            $num += UserLoginLog::where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->get()->count();
+                            $num += UserLoginLog::select('id')->where('login_time','>',$startTime+($j*86400)+($i*3600))->where('login_time','<',$startTime+($j*86400)+(($i+2)*3600))->get()->count();
                         }
                         $tempdata = [
                             'label'=>$i.':00',
@@ -399,9 +399,9 @@ class SupervisoryController extends Controller
                         $i = $i+2;
                     }
                     $daysSum = array_sum($daysNum);
-                    $daysIosNum = UserLoginLog::where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','ios')->get()->count();
-                    $daysAndroidNum = UserLoginLog::where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','Android')->get()->count();
-                    $daysWebNum = UserLoginLog::where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','Web')->get()->count();
+                    $daysIosNum = UserLoginLog::select('id')->where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','ios')->get()->count();
+                    $daysAndroidNum = UserLoginLog::select('id')->where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','Android')->get()->count();
+                    $daysWebNum = UserLoginLog::select('id')->where('login_time','>',$startTime)->where('login_time','=',time())->where('way','=','Web')->get()->count();
                     if($daysSum == 0){
                         $daysIosNum = '0%';
                         $daysAndroidNum = '0%';
@@ -425,24 +425,24 @@ class SupervisoryController extends Controller
 
 
             //  用户占比
-            $userSum = User::all()->count();
+            $userSum = User::select('id')->get()->count();
             //  创作者的用户 以及占比
-            $createUserNum = PrivilegeUser::where('type','=',1)->get()->count();
+            $createUserNum = PrivilegeUser::select('id')->where('type','=',1)->get()->count();
             $createUserNumProportion = (round($createUserNum/$userSum,2)*100).'%';
             //  机构数量及占比
-            $organizationNum = User::where('verify','=',2)->get()->count();
+            $organizationNum = User::select('id')->where('verify','=',2)->get()->count();
             $organizationNumProportion = (round($organizationNum/$userSum,2)*100).'%';
             //  vip数量及占比
-            $vipNum = User::where('is_vip','>',0)->get()->count();
+            $vipNum = User::select('id')->where('is_vip','>',0)->get()->count();
             $vipNumProportion = (round($vipNum/$userSum,2)*100).'%';
             //  认证用户及占比
-            $verifyNum = User::where('verify','=',1)->get()->count();
+            $verifyNum = User::select('id')->where('verify','=',1)->get()->count();
             $verifyNumProportion = (round($verifyNum/$userSum,2)*100).'%';
             //  普通用户及占比
-            $generalUserNum = User::where('is_vip','=',0)->get()->count();
+            $generalUserNum = User::select('id')->where('is_vip','=',0)->get()->count();
             $generalUserNumProportion = (round($generalUserNum/$userSum,2)*100).'%';
             //  第三方用户及占比
-            $thirdUserNum = User::where('is_phonenumber','=',0)
+            $thirdUserNum = User::select('id')->where('is_phonenumber','=',0)
                 ->where('is_thirdparty','=',1)->get()->count();
             $thirdUserNumProportion = (round($thirdUserNum/$userSum,2)*100).'%';
             return response()->json(['phoneUserNum'=>$phoneUserNum,'phoneUserNumProportion'=>$phoneUserNumProportion,'todayNewUser'=>$todayNewUser,'todayNewUserWomen'=>$todayNewUserWomen,'todayNewUserMen'=>$todayNewUserMen,'userNum'=>$userNum,'womenUserNum'=>$womenUserNum,'menUserNum'=>$menUserNum,'activeNum'=>$activeNum,'activeSum'=>$activeSum,'activeIosSum'=>$activeIosSum,'activeAndroidSum'=>$activeAndroidSum,'activeWebSum'=>$activeWebSum,'createUserNum'=>$createUserNum,'createUserNumProportion'=>$createUserNumProportion,'organizationNum'=>$organizationNum,'organizationNumProportion'=>$organizationNumProportion,'vipNum'=>$vipNum,'vipNumProportion'=>$vipNumProportion,'verifyNum'=>$verifyNum,'verifyNumProportion'=>$verifyNumProportion,'generalUserNum'=>$generalUserNum,'generalUserNumProportion'=>$generalUserNumProportion,'thirdUserNum'=>$thirdUserNum,'thirdUserNumProportion'=>$thirdUserNumProportion],200);

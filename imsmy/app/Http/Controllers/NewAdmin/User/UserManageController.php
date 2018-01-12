@@ -38,39 +38,39 @@ class UserManageController extends Controller
             $everyPageNum = $request ->get('everypagenum',10);
             DB::beginTransaction();
             //  注册用户  以及男女比例
-            $userNum = User::all()->count();
+            $userNum = User::select('id')->orderBy('id','desc')->get()->count();
             if($userNum == 0){
                 $womenUserNumProportion = '0%';
                 $menUserNumProportion = '0%';
             }else{
-                $womenUserNum = User::where('sex','=',0)->get()->count();
-                $menUserNum =  User::where('sex','=',1)->get()->count();
+                $womenUserNum = User::select('id')->where('sex','=',0)->get()->count();
+                $menUserNum =  User::select('id')->where('sex','=',1)->get()->count();
                 $womenUserNumProportion = (round($womenUserNum/$userNum,2)*100).'%';
                 $menUserNumProportion = (round($menUserNum/$userNum,2)*100).'%';
             }
 
             //  今日新用户及男女比例
-            $todayNewUser = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','<>','0')->where('active','<>',5)->get()->count();
+            $todayNewUser = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','<>','0')->where('active','<>',5)->get()->count();
             if($todayNewUser == 0)
             {
                 $todayNewUserWomen ='0'.'%';
                 $todayNewUserMen ='0'.'%';
             }else{
-                $todayNewUserWomen = (round((User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->where('active','<>',5)->where('active','<>','0')->get()->count())/$todayNewUser,2)*100).'%';
-                $todayNewUserMen = (round((User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->where('active','<>',5)->where('active','<>','0')->get()->count())/$todayNewUser,2)*100).'%';
+                $todayNewUserWomen = (round((User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->where('active','<>',5)->where('active','<>','0')->get()->count())/$todayNewUser,2)*100).'%';
+                $todayNewUserMen = (round((User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->where('active','<>',5)->where('active','<>','0')->get()->count())/$todayNewUser,2)*100).'%';
             }
 
             if($integral == 0)
             {
                 $mainData = User::where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->forPage($page,$everyPageNum)
                     ->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('active','<>',0)->where('active','<>',5)->Name($name)->UserType($userType)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->get()->count();
@@ -254,20 +254,20 @@ class UserManageController extends Controller
 
             DB::beginTransaction();
             //  第三方登录的用户数及各种比例
-            $thirdpartyUserNum = User::where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->get()->count();
+            $thirdpartyUserNum = User::select('id')->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->get()->count();
             if($thirdpartyUserNum == 0)
             {
                 $thirdpartyQQProportion = '0%';
                 $thirdpartyWeixinProportion = '0%';
                 $thirdpartyWeiboProportion = '0%';
             }else{
-                $thirdpartyQQNum = User::where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $thirdpartyQQNum = User::select('id')->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','qq');
                 })->get()->count();
-                $thirdpartyWeixinNum = User::where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $thirdpartyWeixinNum = User::select('id')->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','weixin');
                 })->get()->count();
-                $thirdpartyWeiboNum = User::where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $thirdpartyWeiboNum = User::select('id')->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','weibo');
                 })->get()->count();
                 $thirdpartyQQProportion = (round($thirdpartyQQNum/$thirdpartyUserNum,2)*100).'%';
@@ -278,20 +278,20 @@ class UserManageController extends Controller
 
 
             //  今日新增及各种比例
-            $todayNewUserNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->get()->count();
+            $todayNewUserNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->get()->count();
             if($todayNewUserNum == 0)
             {
                 $todayNewQQProportion = '0%';
                 $todayNewWeixinProportion = '0%';
                 $todayNewWeiboProportion = '0%';
             }else{
-                $todayNewQQNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $todayNewQQNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','qq');
                 })->get()->count();
-                $todayNewWeixinNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $todayNewWeixinNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','weixin');
                 })->get()->count();
-                $todayNewWeiboNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
+                $todayNewWeiboNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->where('active','<>','0')->where('active','<>',5)->whereHas('hasManyOAuth',function ($q){
                     $q->where('oauth_name','=','weibo');
                 })->get()->count();
 
@@ -307,7 +307,7 @@ class UserManageController extends Controller
                 })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->forPage($page,$everyPageNum)
                     ->get();
-                $dataNum = User::whereHas('hasManyOAuth',function ($q) use ($thirdtype){
+                $dataNum = User::select('id')->whereHas('hasManyOAuth',function ($q) use ($thirdtype){
                     $q->where('oauth_name','like',"%$thirdtype%");
                 })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->get()->count();
@@ -319,7 +319,7 @@ class UserManageController extends Controller
                 })->where('active','<>',0)->where('active','<>',5)->where('is_thirdparty','=',1)->where('is_phonenumber','=','0')->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->forPage($page,$everyPageNum)
                     ->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->whereHas('hasManyOAuth',function ($q) use ($thirdtype){
                     $q->where('oauth_name','like',"%$thirdtype%");
@@ -438,40 +438,40 @@ class UserManageController extends Controller
 
             //  vip用户总数和男女比例
             DB::beginTransaction();
-            $vipUserNum = User::where('is_vip','>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->get()->count();
+            $vipUserNum = User::select('id')->where('is_vip','>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->get()->count();
             if($vipUserNum == 0)
             {
                 $vipManUserProportino = '0%';
                 $vipWomenUserProportino = '0%';
             }else{
-                $vipManUserNum = User::where('sex','=',1)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
-                $vipWomenUserNum = User::where('sex','=',0)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
+                $vipManUserNum = User::select('id')->where('sex','=',1)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
+                $vipWomenUserNum = User::select('id')->where('sex','=',0)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
                 $vipManUserProportino = (round($vipManUserNum/$vipUserNum,2)*100).'%';
                 $vipWomenUserProportino = (round($vipWomenUserNum/$vipUserNum,2)*100).'%';
             }
 
             //  今日新增VIP和男女比例
-            $todayNewVipUserNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
+            $todayNewVipUserNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
             if($todayNewVipUserNum == 0){
                 $todayMan = 0;
                 $todayWomen = 0;
             }else{
-                $todayMan = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
-                $todayWomen = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
+                $todayMan = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',1)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
+                $todayWomen = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('sex','=',0)->where('is_vip','>',0)->where('active','<>',5)->where('active','<>',0)->where('is_phonenumber','=',1)->get()->count();
             }
 
             //  主要表格数据
             if($integral == 0)
             {
                 $mainData = User::where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                         $q->where('integral_count','>=',$integral);
                     })->where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                         ->forPage($page,$everyPageNum)
                         ->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('active','<>',0)->where('active','<>',5)->where('is_vip','>',0)->where('is_phonenumber','=',1)->Name($name)->VipLevel($vipLevel)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)
                     ->get()->count();
@@ -585,39 +585,39 @@ class UserManageController extends Controller
 
             //  机构用户数量及男女比例
             DB::beginTransaction();
-            $organizationUserNum = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+            $organizationUserNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
             if($organizationUserNum == 0)
             {
                 $organizationManProportion = '0%';
                 $organizationWomenProportion = '0%';
             }else{
-                $organizationManNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
-                $organizationWomenNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+                $organizationManNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+                $organizationWomenNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
                 $organizationManProportion = (round($organizationManNum/$organizationUserNum,2)*100).'%';
                 $organizationWomenProportion = (round($organizationWomenNum/$organizationUserNum,2)*100).'%';
             }
 
             //  今日新增机构 用户数量和男女数量
-            $todayNewOrganizationNum = User::where('active','<>',0)->where('active','<>',5)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+            $todayNewOrganizationNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
             if($todayNewOrganizationNum == 0)
             {
                 $todayNewOrganizationManNum = 0;
                 $todayNewOrganizationWomenNum = 0;
             }else{
-                $todayNewOrganizationManNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
-                $todayNewOrganizationWomenNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+                $todayNewOrganizationManNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
+                $todayNewOrganizationWomenNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',2)->where('is_phonenumber','=',1)->get()->count();
             }
 
             //  表格主要数据
             if($integral == 0)
             {
                 $mainData = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('verify_checker','=',$checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->where('verify_checker','=',$checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',2)->where('is_phonenumber','=',1)->Checker($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
@@ -691,39 +691,39 @@ class UserManageController extends Controller
 
             //  机构用户数量及男女比例
             DB::beginTransaction();
-            $verifyUserNum = User::where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+            $verifyUserNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
             if($verifyUserNum == 0)
             {
                 $verifyManProportion = '0%';
                 $verifyWomenProportion = '0%';
             }else{
-                $verifyManNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
-                $verifyWomenNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+                $verifyManNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+                $verifyWomenNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
                 $verifyManProportion = (round($verifyManNum/$verifyUserNum,2)*100).'%';
                 $verifyWomenProportion = (round($verifyWomenNum/$verifyUserNum,2)*100).'%';
             }
 
             //  今日新增机构 用户数量和男女数量
-            $todayNewVerifyNum = User::where('active','<>',0)->where('active','<>',5)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+            $todayNewVerifyNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
             if($todayNewVerifyNum == 0)
             {
                 $todayNewVerifyManNum = 0;
                 $todayNewVerifyWomenNum = 0;
             }else{
-                $todayNewVerifyManNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
-                $todayNewVerifyWomenNum = User::where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+                $todayNewVerifyManNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
+                $todayNewVerifyWomenNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('verify','=',1)->where('is_phonenumber','=',1)->get()->count();
             }
 
             //  表格主要数据
             if($integral == 0)
             {
                 $mainData = User::where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->Checker($checker)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Checker($checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Checker($checker)->where('active','<>',0)->where('active','<>',5)->where('verify','=',1)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
@@ -802,17 +802,17 @@ class UserManageController extends Controller
 
             //  创作者用户与男女比例
             DB::beginTransaction();
-            $createrNum = PrivilegeUser::where('type','=',1)->get()->count();
+            $createrNum = PrivilegeUser::select('id')->where('type','=',1)->get()->count();
             if($createrNum == 0)
             {
                 $manCreaterProportion = 0;
                 $womenCreaterProportion = 0;
             }else{
-                $manCreaterNum = PrivilegeUser::whereHas('user',function ($q){
+                $manCreaterNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',1);
                 })->where('type','=',1)->get()->count();
 
-                $womenCreaterNum = PrivilegeUser::whereHas('user',function ($q){
+                $womenCreaterNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',0);
                 })->where('type','=',1)->get()->count();
                 $manCreaterProportion = (round($manCreaterNum/$createrNum,2)*100).'%';
@@ -820,17 +820,17 @@ class UserManageController extends Controller
             }
 
             //  今日新增创造者和男女数量
-            $todayNewCreaterNum = PrivilegeUser::where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',1)->get()->count();
+            $todayNewCreaterNum = PrivilegeUser::select('id')->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',1)->get()->count();
             if($todayNewCreaterNum == 0)
             {
                 $todayNewManCreaterNum = 0;
                 $todayNewWomenCreaterNum = 0;
             }else{
-                $todayNewManCreaterNum = PrivilegeUser::whereHas('user',function ($q){
+                $todayNewManCreaterNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',1);
                 })->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',1)->get()->count();
 
-                $todayNewWomenCreaterNum = PrivilegeUser::whereHas('user',function ($q){
+                $todayNewWomenCreaterNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',0);
                 })->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',1)->get()->count();
             }
@@ -845,7 +845,7 @@ class UserManageController extends Controller
                         $q->where('checker_id','=',$checker)->where('type','=',1);
                     }
                 })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
                     if(is_null($checker)){
                         $q->where('type','=',1);
                     }else{
@@ -941,17 +941,17 @@ class UserManageController extends Controller
 
             //  审查者用户与男女比例
             DB::beginTransaction();
-            $investigateNum = PrivilegeUser::where('type','=',2)->get()->count();
+            $investigateNum = PrivilegeUser::select('id')->where('type','=',2)->get()->count();
             if($investigateNum == 0)
             {
                 $manInvestigateProportion = 0;
                 $womenInvestigateProportion = 0;
             }else{
-                $manInvestigateNum = PrivilegeUser::whereHas('user',function ($q){
+                $manInvestigateNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',1);
                 })->where('type','=',2)->get()->count();
 
-                $womenInvestigatenum = PrivilegeUser::whereHas('user',function ($q){
+                $womenInvestigatenum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',0);
                 })->where('type','=',2)->get()->count();
                 $manInvestigateProportion = (round($manInvestigateNum/$investigateNum,2)*100).'%';
@@ -959,17 +959,17 @@ class UserManageController extends Controller
             }
 
             //  今日新增审查者和男女数量
-            $todayNewInvestigateNum = PrivilegeUser::where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',2)->get()->count();
+            $todayNewInvestigateNum = PrivilegeUser::select('id')->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',2)->get()->count();
             if($todayNewInvestigateNum == 0)
             {
                 $todayNewManInvestigateNum = 0;
                 $todayNewWomenInvestigateNum = 0;
             }else{
-                $todayNewManInvestigateNum = PrivilegeUser::whereHas('user',function ($q){
+                $todayNewManInvestigateNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',1);
                 })->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',2)->get()->count();
 
-                $todayNewWomenInvestigateNum = PrivilegeUser::whereHas('user',function ($q){
+                $todayNewWomenInvestigateNum = PrivilegeUser::select('id')->whereHas('user',function ($q){
                     $q->where('sex','=',0);
                 })->where('checker_time','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('type','=',2)->get()->count();
             }
@@ -984,7 +984,7 @@ class UserManageController extends Controller
                         $q->where('checker_id','=',$checker)->where('type','=',2);
                     }
                 })->where('verify','<>',0)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
+                $dataNum = User::select('id')->where('active','<>',0)->where('active','<>',5)->whereHas('privilegeUser',function ($q) use($checker) {
                     if(is_null($checker)){
                         $q->where('type','=',2);
                     }else{
@@ -1001,7 +1001,7 @@ class UserManageController extends Controller
                         $q->where('checker_id','=',$checker)->where('type','=',2);
                     }
                 })->where('verify','<>',0)->where('active','<>',0)->where('active','<>',5)->where('is_phonenumber','=',1)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->whereHas('privilegeUser',function ($q) use($checker) {
                     if(is_null($checker)){
@@ -1074,38 +1074,38 @@ class UserManageController extends Controller
 
             DB::beginTransaction();
             //  精选用户数以及男女比例
-            $choicenessNum = User::where('active','=',2)->get()->count();
+            $choicenessNum = User::select('id')->where('active','=',2)->get()->count();
             if($choicenessNum == 0)
             {
                 $manChoicenessProportion = '0%';
                 $womenChoicenessProportion = '0%';
             }else{
-                $manChoicenessNum = User::where('active','=',2)->where('sex','=','1')->get()->count();
-                $womenChoicenessNum = User::where('active','=',2)->where('sex','=','0')->get()->count();
+                $manChoicenessNum = User::select('id')->where('active','=',2)->where('sex','=','1')->get()->count();
+                $womenChoicenessNum = User::select('id')->where('active','=',2)->where('sex','=','0')->get()->count();
                 $manChoicenessProportion = (round($manChoicenessNum/$choicenessNum,2)*100).'%';
                 $womenChoicenessProportion = (round($womenChoicenessNum/$choicenessNum,2)*100).'%';
             }
 
 
             //  今日新增精选用户及男女数量
-            $todayNewChoicenessNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
+            $todayNewChoicenessNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
             if($todayNewChoicenessNum == 0){
                 $todayNewChoicenessManNum = 0;
                 $todayNewChoicenessWomenNum = 0;
             }else{
-                $todayNewChoicenessManNum = User::where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
-                $todayNewChoicenessWomenNum = User::where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
+                $todayNewChoicenessManNum = User::select('id')->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
+                $todayNewChoicenessWomenNum = User::select('id')->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',2)->get()->count();
             }
 
             if($integral == 0)
             {
                 $mainData = User::where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','=',2)->Choiceness($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Choiceness($checker)->where('active','=',2)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Choiceness($checker)->where('active','=',2)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }
@@ -1161,38 +1161,38 @@ class UserManageController extends Controller
 
             DB::beginTransaction();
             //  冻结用户数以及男女比例
-            $stopNum = User::where('active','=',0)->get()->count();
+            $stopNum = User::select('id')->where('active','=',0)->get()->count();
             if($stopNum == 0)
             {
                 $manstopProportion = '0%';
                 $womenstopProportion = '0%';
             }else{
-                $manstopNum = User::where('active','=',0)->where('sex','=','1')->get()->count();
-                $womenstopNum = User::where('active','=',0)->where('sex','=','0')->get()->count();
+                $manstopNum = User::select('id')->where('active','=',0)->where('sex','=','1')->get()->count();
+                $womenstopNum = User::select('id')->where('active','=',0)->where('sex','=','0')->get()->count();
                 $manstopProportion = (round($manstopNum/$stopNum,2)*100).'%';
                 $womenstopProportion = (round($womenstopNum/$stopNum,2)*100).'%';
             }
 
 
             //  今日新增精选用户及男女数量
-            $todayNewstopNum = User::where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
+            $todayNewstopNum = User::select('id')->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
             if($todayNewstopNum == 0){
                 $todayNewstopManNum = 0;
                 $todayNewstopWomenNum = 0;
             }else{
-                $todayNewstopManNum = User::where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
-                $todayNewstopWomenNum = User::where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
+                $todayNewstopManNum = User::select('id')->where('sex','=',1)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
+                $todayNewstopWomenNum = User::select('id')->where('sex','=',0)->where('created_at','>',date('Y-m-d H:i:s',strtotime(date('Y-m-d',time()))))->where('active','=',0)->get()->count();
             }
 
             if($integral == 0)
             {
                 $mainData = User::where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
+                $dataNum = User::select('id')->where('active','=',0)->Stop($checker)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }else{
                 $mainData = User::WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Stop($checker)->where('active','=',0)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->forPage($page,$everyPageNum)->get();
-                $dataNum = User::WhereHas('hasManyIntegral',function($q) use ($integral){
+                $dataNum = User::select('id')->WhereHas('hasManyIntegral',function($q) use ($integral){
                     $q->where('integral_count','>=',$integral);
                 })->Stop($checker)->where('active','=',0)->Name($name)->Fans($fans)->PlayCount($playCount)->ProductionNum($productionNum)->get()->count();
             }

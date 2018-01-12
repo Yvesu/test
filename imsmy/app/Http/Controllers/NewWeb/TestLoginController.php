@@ -32,7 +32,6 @@ class TestLoginController extends Controller
             }
 
             $data = Redis::EXISTS($auth->name);
-            Redis::Expire($auth->name,86400);
             if($data){
                 $finallyData = Redis::get($auth->name);
                 if($finallyData){
@@ -40,7 +39,17 @@ class TestLoginController extends Controller
                 }
             }
             Redis::set($auth->name,$token);
+            Redis::Expire($auth->name,86400);
             $token = Redis::get($auth->name);
+            $ip = getIP();
+            \DB::beginTransaction();
+            $loginData = new User\UserLoginLog;
+            $loginData -> ip = $ip;
+            $loginData -> way = 'web';
+            $loginData -> login_time = time();
+            $loginData -> user_id = $auth->id;
+            $loginData -> save();
+            \DB::commit();
             return response()->json(['token'=>$token],200);
 
         } catch (TokenExpiredException $e) {

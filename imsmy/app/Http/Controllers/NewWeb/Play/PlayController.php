@@ -21,7 +21,7 @@ class PlayController extends Controller
                 return response()->json(['message'=>'数据不合法'],200);
             }
             $data = Tweet::find($id);
-            if($data->type != 'production'){
+            if($data->type != 3){
                 $address = $data->video;
             }else{
                 if($resolution_ratio == 1)
