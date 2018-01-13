@@ -147,7 +147,7 @@ class ActivityController extends BaseController
                     $data = Activity::with(['belongsToUser' => function($q){
                         $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
                     }, 'hasManyTweets'=>function($q){
-                        $q->select(['tweet_id','screen_shot']);
+                        $q->select(['tweet_id','screen_shot'])->whereIn('active',[0,1]);
                     }])
                         ->whereIn('id',$arr)
                         ->orderBy('time_add','desc')
@@ -169,9 +169,27 @@ class ActivityController extends BaseController
     {
         $time = time();
 
+        //电影节
+        $film_ids_obj = ActivityFilmRecommend::where('type','1')
+            ->where('expires','>',$time)
+            ->forPage($page,$this->paginate)
+            ->pluck('work_id');
+
+        $film_ids_arr = $film_ids_obj -> all();
+
+        $film = Filmfests::whereIn('id',$film_ids_arr)
+            ->get(['id','name','cover','url','cost','count','time_end']);
+
+//        if ($film->count()>10){
+//            $film = $film->random(10);
+//        }
+
+        $number = $this->paginate - $film->count();
+
         //获取推荐
         $activity_ids_obj = ActivityFilmRecommend::where('type','0')
             ->where('expires','>',$time)
+            ->forPage($page,$number)
             ->pluck('work_id');
 
         $activity_ids_arr = $activity_ids_obj -> all();
@@ -182,23 +200,10 @@ class ActivityController extends BaseController
         }])
             ->whereIn('id',$activity_ids_arr)
             ->get(['id','user_id','bonus','comment','expires','time_add','icon','users_count']);
-        if ($data->count()>10){
-            $data = $data->random(10);
-        }
 
-        //电影节
-        $film_ids_obj = ActivityFilmRecommend::where('type','1')
-            ->where('expires','>',$time)
-            ->pluck('work_id');
-
-        $film_ids_arr = $film_ids_obj -> all();
-
-        $film = Filmfests::whereIn('id',$film_ids_arr)
-            ->get(['id','name','cover','url','cost','count','time_end']);
-
-        if ($film->count()>10){
-            $film = $film->random(10);
-        }
+//        if ($data->count()>10){
+//            $data = $data->random(10);
+//        }
 
         return [
             'film'  => $this ->filmRecommendTransformer ->transformCollection($film->all()),

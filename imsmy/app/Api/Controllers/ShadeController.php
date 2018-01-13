@@ -30,7 +30,6 @@ class ShadeController extends Controller
      */
     public function recommend()
     {
-        $recommend_shade = Cache::remember('texture_recommend','60',function() {
             try {
                 $recommend_shade = Shade::with(['belongToUser' => function ($q) {
                     $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
@@ -48,9 +47,6 @@ class ShadeController extends Controller
             } catch (\Exception $e) {
                 return response()->json(['message' => 'bad_request'], 500);
             }
-        });
-
-        return $recommend_shade;
     }
 
     /**
@@ -58,7 +54,6 @@ class ShadeController extends Controller
      */
     public function folder()
     {
-        $folder = Cache::remember('shade_foler','1440',function(){
             try{
                 $folder = ShadeFolder::where('active','1')
                     ->orderBy('sort','ASC')
@@ -70,10 +65,6 @@ class ShadeController extends Controller
             }catch (\Exception $e){
                 return response()->json(['message'=>'bad_request'],500);
             }
-        });
-
-        return $folder;
-
     }
 
     /**
@@ -131,6 +122,7 @@ class ShadeController extends Controller
             return response()->json(['message'=>'bad_request'],500);
         }
     }
+
 
     /**
      * @return \Illuminate\Http\JsonResponse

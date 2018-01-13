@@ -1058,6 +1058,9 @@ $api->version(['v1'],function($api){
             //动态相关
             $api->post('/tweets/correlation/{id}','TweetController@correlation')
                 ->where('id','[0-9]+');
+            //动态相关
+            $api->get('/tweets/correlation/{id}','TweetController@correlation')
+                ->where('id','[0-9]+');
 
             //搜索
             $api->get('/search/list','AllSearchController@search');
@@ -1156,7 +1159,6 @@ $api->version(['v1'],function($api){
             //分类下的作品
             $api->get('/file/{id}','TextureController@file')
             ->where('id','[0-9]+');
-
         });
 
         //删除动态
@@ -1202,10 +1204,8 @@ $api->version(['v1'],function($api){
                 ->where('id','[0-9]+');
 
         //赛事作品下载源文件   TODO 是否添加术印
-//        $api -> post('/activity/tweetdown/{id}','ActivityController@download')
-//                ->where('id','[0-9]+');
-
-        $api ->get('yy','YyController@yy');
+        $api -> post('/activity/tweetdown/{id}','ActivityController@download')
+                ->where('id','[0-9]+');
 
     });
 });

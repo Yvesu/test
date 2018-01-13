@@ -23,6 +23,7 @@ class FilmRecommendTransformer extends Transformer
             'users_count'   =>   $item->count,
             'expires'       =>   $item->time_end,
             'bonus'         =>   $item->cost,
+            'type'          =>   'film',
         ];
     }
 

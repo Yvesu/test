@@ -25,6 +25,7 @@ class ActivityTweetDetailsTransformer extends Transformer
 
     public function transform($data)
     {
+
         $user = Auth::guard('api')->user();
 
         $tweet = $data->hasOneTweet;
@@ -32,9 +33,9 @@ class ActivityTweetDetailsTransformer extends Transformer
         $replies = $tweet->hasManyTweetReply->take(9);
 
         // 排名，写在缓存，一分钟一更新，写在trait文件里。
-        $ranking = $this -> activityUsersRanking($data->activity_id);
+//        $ranking = $this -> activityUsersRanking($data->activity_id);
 
-        $ranking_array = array_flip($ranking->all());
+//        $ranking_array = array_flip($ranking->all());
 
         $reply = [];
 
@@ -46,6 +47,7 @@ class ActivityTweetDetailsTransformer extends Transformer
                 ];
             }
         }
+
         if ($user){
             $res_1 = Subscription::OfAttention($user->id,$data->hasOneUser->id)->first();
             $res_2 = Subscription::OfAttention($data->hasOneUser->id,$user->id)->first();
@@ -72,7 +74,7 @@ class ActivityTweetDetailsTransformer extends Transformer
 
         return [
             'id'                =>      $data->tweet_id,
-            'rank'              =>      ++$ranking_array[$data->tweet_id],
+//            'rank'              =>      ++$ranking_array[$data->tweet_id],
             'bonus'             =>      $data->bonus,
             'created_at'        =>      strtotime($tweet->created_at),
             'browse_times'      =>      $tweet->browse_times,

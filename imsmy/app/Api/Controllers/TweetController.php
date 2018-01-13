@@ -1595,10 +1595,7 @@ class TweetController extends BaseController
 
             //  判断关键词表中有无该关键词
             $keyword = Keywords::where('keyword','LIKE BINARY', '%' . $name . '%')->first();
-//            dd($keyword->count());
-//            die($name);
-            //  如果没有该关键词则加入过渡表
-//            die($keyword);
+
             if(!$keyword)
             {
                 //  判断过渡表中有无该词
@@ -2043,7 +2040,10 @@ class TweetController extends BaseController
             if (1 == $type) {       // 1 热门  0全部
 
                 // 动态详情
-                $tweets = TweetActivity::with(['hasOneUser'=>function($q){
+                $tweets = TweetActivity::WhereHas('hasOneTweet',function($q){
+                    $q->whereIn('active',[0,1]);
+                })
+                    ->with(['hasOneUser'=>function($q){
                     $q -> select('id','nickname','avatar','verify');
                 }, 'hasOneTweet'=>function($q){
                     $q -> with(['hasOneContent'=>function($q){
@@ -2055,7 +2055,10 @@ class TweetController extends BaseController
                         -> status()
                             -> orderBy('like_count', 'DESC')
                             -> select('id', 'user_id', 'tweet_id', 'reply_user_id', 'content');
-                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video','join_video','duration', 'video','transcoding_video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
+                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video',
+                        'join_video','duration', 'video','transcoding_video','location',
+                        'tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times',
+                        'reply_count','screen_shot', 'created_at' );
                 }])
                     -> where('activity_id',$id)
                     -> orderBy('like_count','desc')
@@ -2083,7 +2086,10 @@ class TweetController extends BaseController
                 // 页码
                 $page = $request -> get('page',1);
 
-                $tweets = TweetActivity::with(['hasOneUser'=>function($q){
+                $tweets = TweetActivity::WhereHas('hasOneTweet',function($q){
+                    $q->whereIn('active',[0,1]);
+                })
+                    ->with(['hasOneUser'=>function($q){
                     $q -> select(['id','nickname','avatar','verify']);
                 }, 'hasOneTweet'=>function($q){
                     $q -> with(['hasOneContent'=>function($q){
@@ -2095,7 +2101,10 @@ class TweetController extends BaseController
                         -> status()
                             -> orderBy('like_count', 'DESC')
                             -> select('id', 'user_id', 'tweet_id', 'reply_user_id', 'content');
-                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video','join_video', 'duration','transcoding_video','join_video','video','location','tweet_grade_total','tweet_grade_times', 'like_count', 'browse_times', 'reply_count','screen_shot', 'created_at' );
+                    }]) -> select('id', 'user_id','video_m3u8','norm_video','high_video',
+                        'join_video', 'duration','transcoding_video','join_video','video',
+                        'location','tweet_grade_total','tweet_grade_times', 'like_count',
+                        'browse_times', 'reply_count','screen_shot', 'created_at' )->whereIn('active',[0,1]);
                 }])
                     -> where('activity_id',$id)
                     -> orderBy('id','desc')
@@ -2698,10 +2707,13 @@ class TweetController extends BaseController
             }])
             ->where('visible',0)
             ->where('active',1)
-            ->where('id','!=',$id)
             ->orderBy('browse_times','DESC')
+            ->where('id','!=',$id)
             ->forPage($page,$this->paginate)
-            ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+//            ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+            ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
         if($user) {
             if ($tweets->count() < $this->paginate) {
@@ -2735,7 +2747,10 @@ class TweetController extends BaseController
                         ->orderBy('created_at', 'desc')
                         ->where('id', '!=', $id)
                         ->forPage($page, $this->paginate)
-                        ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+//                        ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+                        ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                            'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                            'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
                 }else{
                     $friends_tweets = Tweet::where('visible',10)->get();
                 }
@@ -2757,7 +2772,10 @@ class TweetController extends BaseController
                     ->whereIn('active',[0,1])
                     ->where('id', '!=', $id)
                     ->forPage($page, $this->paginate)
-                    ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+//                    ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+                    ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                        'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                        'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
             }
         }
             //合并数据
@@ -2788,7 +2806,10 @@ class TweetController extends BaseController
                 ->orderBy('browse_times','DESC')
                 ->where('id','!=',$id)
                 ->whereIn('id',$except->all())
-                ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+//                ->get(['id', 'type', 'user_id', 'location','browse_times','user_top', 'photo', 'screen_shot', 'video', 'created_at']);
+                ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+                    'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                    'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
             if ($tweets->count()>=2 ){
                 $tweets = $tweets->random(2);
