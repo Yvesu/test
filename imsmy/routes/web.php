@@ -271,6 +271,9 @@ $api -> version('v1',function($api) {
 
                     $api -> post('page_one','Application\ApplicationController@pageOne');
                     $api -> post('page_two','Application\ApplicationController@pageTwo');
+                    $api -> post('page_three','Application\ApplicationController@pageThree');
+                    $api -> post('page_four','Application\ApplicationController@pageFour');
+                    $api -> post('page_submit','Application\ApplicationController@pageSubmit');
 
                 });
 

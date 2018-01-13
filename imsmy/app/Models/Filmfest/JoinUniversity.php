@@ -22,4 +22,10 @@ class JoinUniversity extends Model
     {
         return $this->hasMany('App\Models\TweetProduction','join_university_id','id');
     }
+
+
+    public function filmfests()
+    {
+        return $this->belongsToMany('App\Models\Filmfests','filmfest_university','university_id','filmfest_id');
+    }
 }

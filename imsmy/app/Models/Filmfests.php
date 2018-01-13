@@ -19,13 +19,27 @@ class Filmfests extends Model
 
     public $timestamps = false;
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与作品表 多对多关系
+     */
     public function tweetProduction()
     {
         return $this->belongsToMany('App\Models\TweetProduction','filmfests_tweet_production','filmfests_id','tweet_production_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与电影节单元关系  多对多关系
+     */
     public function filmFestType()
     {
         return $this->belongsToMany('App\Models\FilmfestFilmType','filmfest_filmtype','filmfest_id','type_id');
     }
+
+    public function filmefestProduction()
+    {
+        return $this->hasMany('App\Models\FilmfestsProduction','filmfests_id','id');
+    }
+    
 }

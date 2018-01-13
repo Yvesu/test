@@ -764,6 +764,10 @@ $api->version(['v1'],function($api){
                 $api->get('/','ChannelController@index');
 
                 // 获取频道的动态详情信息  例：http://www.goobird.com/api/channels/2/tweets
+//                $api->get('{id}/tweets','TweetController@channelTweets')
+//                    ->where('id','[0-9]+');
+
+                // 获取频道的动态详情信息  例：http://www.goobird.com/api/channels/2/tweets
                 $api->get('{id}/tweets','TweetController@channelNewTweets')
                     ->where('id','[0-9]+');
 
@@ -1110,7 +1114,7 @@ $api->version(['v1'],function($api){
                 $api->post('/font/testresult','MakeFontController@testResult');
 
                 //各种支付
-                $api->post('/pay', 'PayTypeController@pay');
+                $api->post('/pay', 'MakeFilterController@pay');
 
                 //创建收藏
                 $api->post('/user/collect','UserCollectController@createCollect');
@@ -1134,12 +1138,6 @@ $api->version(['v1'],function($api){
 
         //返回通知
         $api->any('/notification','QiNiuNotificationController@notification');
-
-        //片头尾拼接通知
-        $api -> post('notification/join','QiNiuNotificationController@joinvideo');
-
-        //转码通知
-        $api ->post('notification/trans','QiNiuNotificationController@transcoding');
 
         //视频下载
         $api->get('/download/tweet/{id}','DownloadTweetController@mark')
@@ -1206,6 +1204,8 @@ $api->version(['v1'],function($api){
         //赛事作品下载源文件   TODO 是否添加术印
         $api -> post('/activity/tweetdown/{id}','ActivityController@download')
                 ->where('id','[0-9]+');
+
+
 
     });
 });

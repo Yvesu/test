@@ -16,4 +16,9 @@ class FilmfestFilmType extends Model
     ];
 
     public $timestamps = false;
+
+    public function filmFests()
+    {
+        return $this->belongsToMany('App\Models\Filmfests','filmfest_filmtype','type_id','filmfest_id');
+    }
 }

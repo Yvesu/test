@@ -50,4 +50,13 @@ class Application extends Model
     {
         return $this->belongsTo('App\Models\Filmfests','filmfests_id','id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * 与学校  反向1对多
+     */
+    public function school()
+    {
+        return $this->belongsTo('App\Models\Filmfest\JoinUniversity','university_id','id');
+    }
 }
