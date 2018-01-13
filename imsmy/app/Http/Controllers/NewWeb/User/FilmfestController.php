@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\NewWeb\User;
 
 use App\Models\Filmfest\JoinUniversity;
+use App\Models\FilmfestFilmType;
 use App\Models\Tweet;
 use App\Models\TweetProduction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -13,140 +14,68 @@ use Illuminate\Support\Facades\DB;
 class FilmfestController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
         try{
+            $id = $request->get('id',null);
+            if(is_null($id)){
+                return response()->json(['message'=>'数据异常'],200);
+            }
+
             //  应届作品
-            $currentProductionNum = TweetProduction::select('id')->where('is_current','1')->get()->count();
+            $currentProductionNum = TweetProduction::select('id')->where('is_current','1')
+                ->whereHas('filmfests',function ($q) use($id){
+                    $q->where('id','=',$id);
+                })->get()->count();
             //  历届作品
-            $noCurrentProductionNum = TweetProduction::select('id')->where('is_current','0')->get()->count();
+            $noCurrentProductionNum = TweetProduction::select('id')->where('is_current','0')
+                ->whereHas('filmfests',function ($q) use($id){
+                    $q->where('id','=',$id);
+                })->get()->count();
             //  参与院校
-            $joinUniversityNum = TweetProduction::where('is_current',1)->count('join_university_id');
+            $joinUniversityNum = TweetProduction::where('is_current',1)
+                ->whereHas('filmfests',function ($q) use($id){
+                    $q->where('id','=',$id);
+                })->count('join_university_id');
             //  历届参与院校
-            $historyUniversityNum = JoinUniversity::select('id')->get()->count();
+            $historyUniversityNum = JoinUniversity::select('id')
+                ->whereHas('filmfests',function ($q) use($id){
+                    $q->where('id','=',$id);
+                })->get()->count();
             /**
              * 分类占比
              */
             //  总片数
-            $sumNum = TweetProduction::select('id')->where('status','<>',2)->get()->count();
-            //  剧情片
-            $storyFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','剧情片');
+            $sumNum = TweetProduction::select('id')->whereHas('filmefestProduction',function ($q){
+                $q->where('status','<>',2)->where('status','<>',4);
+            })
+                ->whereHas('filmfests',function ($q) use($id){
+                    $q->where('id','=',$id);
                 })->get()->count();
-            $storyPrivateFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','剧情片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','=',2);
-                })->get()->count();
-            $storyPublicFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','剧情片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','<>',2);
-                })->get()->count();
-            //  剧情片占比
-            if($sumNum == 0){
-                $storyProportion = '0%';
-            }else{
-                $storyProportion = (round($storyFilmNum/$sumNum,2)*100).'%';
-            }
-
-            //  动画片
-            $cartoonFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','动画片');
-                })->get()->count();
-            $cartoonPublicFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','动画片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','<>',2);
-                })->get()->count();
-            $cartoonPrivateFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','动画片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','=',2);
-                })->get()->count();
-            //  动画片占比
-            if($sumNum == 0){
-                $cartoonProportion = "0%";
-            }else{
-                $cartoonProportion = (round($cartoonFilmNum/$sumNum,2)*100).'%';
-            }
-
-            //  纪录片
-            $documentaryFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','纪录片');
-                })->get()->count();
-            $documentaryPublicFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','纪录片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','<>',2);
-                })->get()->count();
-            $documentaryPrivateFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','纪录片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','=',2);
-                })->get()->count();
-            //  纪录片占比
-            if($sumNum == 0){
-                $documentaryProportion = '0%';
-            }else{
-                $documentaryProportion = (round($documentaryFilmNum/$sumNum,2)*100).'%';
-            }
-
-            //  实验短片
-            $experimentFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','实验短片');
-                })->get()->count();
-            $experimentPublicFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','实验短片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','<>',2);
-                })->get()->count();
-            $experimentPrivateFilmNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','实验短片');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible',2);
-                })->get()->count();
-            //  实验短片占比
-            if($sumNum == 0){
-                $experimentProportion = '0%';
-            }else{
-                $experimentProportion = (round($experimentFilmNum/$sumNum,2)*100).'%';
-            }
-
-            //  特别元素
-            $particularFileNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','特别单元');
-                })->get()->count();
-            $particularPublicFileNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','特别单元');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','<>',2);
-                })->get()->count();
-            $particularPrivateFileNum = TweetProduction::select('id')->where('status','<>','2')
-                ->whereHas('filmfestFilmType',function ($q) {
-                    $q->where('name','特别单元');
-                })->whereHas('tweet',function ($q){
-                    $q->where('visible','=',2);
-                })->get()->count();
-            //  特别元素占比
-            if($sumNum == 0){
-                $particularProportion = '0%';
-            }else{
-                $particularProportion = (round($particularFileNum/$sumNum,2)*100).'%';
+            //  该电影节的所有单元
+            $units = FilmfestFilmType::whereHas('filmFests',function ($q)use($id){
+                $q->where('id','=',$id);
+            })->get();
+            $finallyData = [];
+            foreach ($units as $k => $v)
+            {
+                $content = $v->name;
+                $data1 = $this->baseData($id,$content,$visible = 1);
+                $data2 = $this->baseData($id,$content,$visible = 2);
+                $data3 = $this->baseData($id,$content,$visible = 3);
+                if($sumNum == 0){
+                    $data4 = '0%';
+                }else{
+                    $data4 = (round($data3/$sumNum,2)*100).'%';
+                }
+                $tempData = [
+                    'name'=>$content,
+                    'num'=>$data3,
+                    'privateNum'=>$data1,
+                    'publicNum'=>$data2,
+                    'proportion'=>$data4,
+                ];
+                array_push($finallyData,$tempData);
             }
 
 
@@ -155,28 +84,53 @@ class FilmfestController extends Controller
                 'noCurrentProductionNum'=>$noCurrentProductionNum,
                 'joinUniversityNum'=>$joinUniversityNum,
                 'historyUniversityNum'=>$historyUniversityNum,
-                'storyPublicFilmNum'=>$storyPublicFilmNum,
-                'storyPrivateFilmNum'=>$storyPrivateFilmNum,
-                'storyProportion'=>$storyProportion,
-                'cartoonFilmNum'=>$cartoonFilmNum,
-                'cartoonPublicFilmNum'=>$cartoonPublicFilmNum,
-                'cartoonPrivateFilmNum'=>$cartoonPrivateFilmNum,
-                'cartoonProportion'=>$cartoonProportion,
-                'documentaryPublicFilmNum'=>$documentaryPublicFilmNum,
-                'documentaryPrivateFilmNum'=>$documentaryPrivateFilmNum,
-                'documentaryProportion'=>$documentaryProportion,
-                'experimentPublicFilmNum'=>$experimentPublicFilmNum,
-                'experimentPrivateFilmNum'=>$experimentPrivateFilmNum,
-                'experimentProportion'=>$experimentProportion,
-                'particularPublicFileNum'=>$particularPublicFileNum,
-                'particularPrivateFileNum'=>$particularPrivateFileNum,
-                'particularProportion'=>$particularProportion,
             ];
 
-            return response()->json(['data'=>$data],200);
+            return response()->json(['data'=>$data,'data2'=>$finallyData],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
         }
+    }
+
+
+    public function baseData($filmfest_id,$content,$visible)
+    {
+        if($visible==1){
+            $data = TweetProduction::select('id')->whereHas('filmefestProduction',function ($q){
+                $q->where('status','<>',2)->where('status','<>',4);
+            })
+                ->whereHas('filmfests',function ($q) use($filmfest_id){
+                    $q->where('id','=',$filmfest_id);
+                })
+                ->whereHas('filmfestFilmType',function ($q) use($content){
+                    $q->where('name',$content);
+                })->whereHas('tweet',function ($q){
+                    $q->where('visible','=',2);
+                })->get()->count();
+        }elseif($visible == 2){
+            $data = TweetProduction::select('id')->whereHas('filmefestProduction',function ($q){
+                $q->where('status','<>',2)->where('status','<>',4);
+            })
+                ->whereHas('filmfests',function ($q) use($filmfest_id){
+                    $q->where('id','=',$filmfest_id);
+                })
+                ->whereHas('filmfestFilmType',function ($q) use($content){
+                    $q->where('name',$content);
+                })->whereHas('tweet',function ($q){
+                    $q->where('visible','<>',2);
+                })->get()->count();
+        }else{
+            $data = TweetProduction::select('id')->whereHas('filmefestProduction',function ($q){
+                $q->where('status','<>',2)->where('status','<>',4);
+            })
+                ->whereHas('filmfests',function ($q) use($filmfest_id){
+                    $q->where('id','=',$filmfest_id);
+                })
+                ->whereHas('filmfestFilmType',function ($q) use($content){
+                    $q->where('name',$content);
+                })->get()->count();
+        }
+        return $data;
     }
 
 

@@ -32,7 +32,7 @@ class TweetProduction extends Model
      */
     public function filmfest()
     {
-        return $this->belongsToMany('App\Models\Filmfests','filmfests_tweet_production','tweet_production_id','filmfests_id');
+        return $this->belongsToMany('App\Models\Filmfests','filmfests_tweet_production','tweet_productions_id','filmfests_id');
     }
 
     /**
@@ -44,8 +44,24 @@ class TweetProduction extends Model
         return $this->belongsTo('App\Models\Filmfest\JoinUniversity','join_university_id','id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与电影节列表关系  多对多
+     */
     public function filmfestFilmType()
     {
-        return $this->belongsToMany('AppModels\FilmfestFilmType','production_filmtype','production_id','join_type_id');
+        return $this->belongsToMany('App\Models\FilmfestFilmType','production_filmtype','production_id','join_type_id');
     }
+
+
+    public function application()
+    {
+        return $this->belongsToMany('App\Models\Filmfest\Application','tweet_production_application','tweet_production_id','application_id');
+    }
+
+    public function filmefestProduction()
+    {
+        return $this->hasMany('App\Models\FilmfestsProduction','tweet_productions_id','id');
+    }
+    
 }

@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FilmfestsProductions extends Model
+class ProductionFilmType extends Model
 {
     //
-    protected $table = 'filmfests_tweet_productions';
+    protected $table = 'production_filmtype';
 
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'filmfests_id','tweet_productions_id','time_add','time_update',
+        'join_type_id','production_id','time_add','time_update'
     ];
 
     public $timestamps = false;

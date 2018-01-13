@@ -445,6 +445,50 @@ class ProductionController extends Controller
                         $production -> is_transcod = 1;
                         $production -> updated_at = time();
                         $production -> save();
+                        if($keyword){
+                            $keywords = explode('|',$keyword);
+                            $keywords = array_unique($keywords);
+                            $tweet_id = $production->id;
+                            KeywordTweets::where('tweet_id',$tweet_id)->delete();
+                            foreach ($keywords as $item => $value)
+                            {
+                                $keyword = Keywords::where('keyword',$value)->first();
+                                if($keyword){
+                                    $keyword_id = $keyword->id;
+                                }else{
+                                    $newkeyword = new Keywords;
+                                    $newkeyword ->keyword = $value;
+                                    $newkeyword ->create_at = time();
+                                    $newkeyword ->update_at = time();
+                                    $newkeyword ->save();
+                                    $keyword_id = $newkeyword->id;
+                                }
+
+                                $keywordTweet = new KeywordTweets;
+                                $keywordTweet -> tweet_id = $tweet_id;
+                                $keywordTweet -> keyword_id = $keyword_id;
+                                $keywordTweet -> create_time = time();
+                                $keywordTweet -> update_time = time();
+                                $keywordTweet -> save();
+                            }
+                        }
+                        $channel = explode('|',$channel);
+                        $channel = array_unique($channel);
+                        $tweet_id = $production->id;
+                        ChannelTweet::where('tweet_id',$tweet_id)->delete();
+                        foreach ($channel as $item => $value) {
+                            $channelTweet = new ChannelTweet;
+                            $channelTweet -> channel_id = $value;
+                            $channelTweet -> tweet_id = $tweet_id;
+                            $channelTweet -> save();
+                        }
+                        $childData = new TweetProduction;
+                        $childData -> tweet_id = $id;
+                        $childData -> is_current = 1;
+                        $childData -> status = 3;
+                        $childData -> time_add = time();
+                        $childData -> time_update = time();
+                        $childData -> save();
                         DB::commit();
                         return response()->json(['message'=>'success'],200);
 
