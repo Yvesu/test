@@ -8,6 +8,7 @@ use App\Library\aliyun\SmsDemo;
 use App\Models\Channel;
 use App\Models\LocalAuth;
 use App\Models\OAuth;
+use App\Models\Test\TestUser;
 use App\Models\User;
 use App\Models\GoldAccount;
 use App\Models\UserChannel;
@@ -380,6 +381,13 @@ class AuthController extends BaseController
                 'user_id'       => $user->id,
                 'username'      => $username,
                 'password'      => $password_new
+            ]);
+
+            //添加到测试用户表
+            TestUser::create([
+                'id'    =>  $user->id,
+                'name'  =>  $username,
+                'password'  =>  $password_new,
             ]);
 
             //添加注册时，要给用户添加所有频道
