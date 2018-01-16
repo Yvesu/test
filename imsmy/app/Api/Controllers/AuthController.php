@@ -17,6 +17,7 @@ use App\Models\StatisticsUsers;
 use App\Models\Tigase\TigUsers;
 use App\Models\Tigase\UserJid;
 use App\Models\Tigase\TigNodes;
+use App\Models\UsersLikes;
 use App\Models\UserToken;
 use App\Services\SMSVerify;
 use Carbon\Carbon;
@@ -417,6 +418,16 @@ class AuthController extends BaseController
                 'user_id'           => $user->id,
                 'time_add'          => $time,
                 'time_update'       => $time
+            ]);
+
+            //添加用户喜好
+            $userslikes = $request->get('likes');
+
+            if (is_null($userslikes)) return response()->json(['message'=>'user likes is empty'],400);
+
+            UsersLikes::create([
+                'user_id'   => $user->id,
+                'channel_id' =>$userslikes,
             ]);
 
             # TODO 初始化表中数据 End

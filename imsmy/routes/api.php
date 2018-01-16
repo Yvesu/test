@@ -1205,6 +1205,14 @@ $api->version(['v1'],function($api){
         $api -> post('/activity/tweetdown/{id}','ActivityController@download')
                 ->where('id','[0-9]+');
 
+        $api->group(['middleware'=>'app.user'],function ($api){
+            //查看用户喜好
+            $api->get('/users/likes','UserLikes@index');
+
+            //修改用户喜好
+            $api->post('users/likes/edit','UserLikes@edit');
+
+        });
 
 
     });

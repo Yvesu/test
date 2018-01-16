@@ -1438,7 +1438,7 @@ class TweetController extends BaseController
                 $time = getTime();
 
                 // 随机生成选择样式
-                $rand = 0;//array_rand([1, 2, 3]);
+                $rand = array_rand([1, 2, 3]);
 
                 $ads = [];
                 $templates = [];
@@ -1452,7 +1452,7 @@ class TweetController extends BaseController
                         -> active()
                         -> where('from_time','<',$time)
                         -> where('end_time','>',$time)
-                        -> get(['id','user_id','type_id','type','url','count','image','time_add']);
+                        -> get(['id','user_id','type_id','type','url','count','image','time_add','name']);
 
                     // 广告
                     if($ads -> count()) {
@@ -1501,8 +1501,11 @@ class TweetController extends BaseController
                 if ($user){
 
                     $user_channels = UsersLikes::where('user_id',$user->id)->pluck('channel_id');
+
                     if ($user_channels->all()) {
                         $user_channels = explode(',', $user_channels->all()[0]);
+
+                        $user_channels = Channel::where('active',1)->whereIn('id',$user_channels)->pluck('id')->all();
 
                         //获取推荐的动态
                         $hot = TweetHot::with(['hasOneTweet'])
@@ -1513,9 +1516,9 @@ class TweetController extends BaseController
                         $tweets_data = Tweet::WhereHas('hasOneHot', function ($q) use ($hot) {
                             $q->whereIn('tweet_id', $hot->all());
                         })
-//                            ->where('type', 0)
-//                            ->where('active', 1)
-//                            ->where('visible', 0)
+                            ->where('type', 0)
+                            ->where('active', 1)
+                            ->where('visible', 0)
                             ->with(['belongsToManyChannel' => function ($q) {
                                 $q->select(['name']);
                             }, 'hasOneContent' => function ($q) {

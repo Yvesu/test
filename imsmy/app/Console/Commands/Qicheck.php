@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Facades\CloudStorage;
+use App\Models\PrivateLetter;
 use App\Models\Tweet;
+use App\Models\TweetContent;
 use App\Models\TweetQiniuCheck;
 use Illuminate\Console\Command;
 
@@ -76,6 +78,20 @@ class Qicheck extends Command
                             'image_qpulp' => 2,
                             'create_time' => time(),
                         ]);
+
+                        //创建私信
+                        $tweet =  Tweet::find( $tweet->id);
+                        $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+                        $time = time();
+                        $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                        PrivateLetter::create([
+                            'from' => 1000437,
+                            'to'    => $tweet->user_id,
+                            'content'   => $tweet_content,
+                            'created_at' => $time,
+                            'updated_at' =>$time,
+                        ]);
+
                     } else if ($image_qpulp_res['result']['label'] == 1) {
                         // 七牛检测未通过  涉及色情
                         Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
@@ -86,6 +102,22 @@ class Qicheck extends Command
                             'image_qpulp' => 1,
                             'create_time' => time(),
                         ]);
+
+                        //创建私信
+                        $tweet =  Tweet::find( $tweet->id);
+
+                        $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+
+                        $time = time();
+                        $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                        PrivateLetter::create([
+                            'from' => 1000437,
+                            'to'    => $tweet->user_id,
+                            'content'   => $tweet_content,
+                            'created_at' => $time,
+                            'updated_at' =>$time,
+                        ]);
+
                     } else {
                         $tweet_qiniu_check = TweetQiniuCheck::create([
                             'user_id'   => $tweet->user_id,
@@ -119,6 +151,20 @@ class Qicheck extends Command
 
                             //修改状态
                             Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+
+                            //创建私信
+                            $tweet =  Tweet::find( $tweet->id);
+
+                            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+                            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                            $time = time();
+                            PrivateLetter::create([
+                                'from' => 1000437,
+                                'to'    => $tweet->user_id,
+                                'content'   => $tweet_content,
+                                'created_at' => $time,
+                                'updated_at' =>$time,
+                            ]);
                         }
                     }
 
@@ -148,6 +194,20 @@ class Qicheck extends Command
                             ]);
                         }
                         \DB::table('tweet_qiniu_check')->where('id', '=', $tweet_qiniu_check->id)->update(['tupu_video' => 1]);
+
+                            //创建私信
+                            $tweet =  Tweet::find( $tweet->id);
+
+                            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+                            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                            $time = time();
+                            PrivateLetter::create([
+                                'from' => 1000437,
+                                'to'    => $tweet->user_id,
+                                'content'   => $tweet_content,
+                                'created_at' => $time,
+                                'updated_at' =>$time,
+                            ]);
                     }
                 }
             }

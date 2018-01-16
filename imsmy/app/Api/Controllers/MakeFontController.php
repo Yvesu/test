@@ -48,7 +48,7 @@ class MakeFontController extends BaseController
                 // 获取用户自己上传的字体文件夹的id
                 $folder_id = CloudStorageFolder::where('user_id',$user->id)->where('name','字体')->first();
 
-                $fonts_user = CloudStorageFile::where('user_id',$user->id)
+                $fonts_user = CloudStorageFile::where('user_id',$user   ->id)
                     -> where('folder_id',$folder_id->id)
                     -> forPage($page,$this->paginate)
                     -> get(['name','address']);
@@ -99,7 +99,7 @@ class MakeFontController extends BaseController
                 $data[] = [
                     'name' => $value['name'],
                     'cover' => isset($value['cover']) ? CloudStorage::downloadUrl($value['cover']) : '',
-                    'address' => CloudStorage::privateUrl_zip($value['address'])
+                    'address' => CloudStorage::downloadUrl($value['address'])
                 ];
             }
 
@@ -128,7 +128,6 @@ class MakeFontController extends BaseController
             $user = Auth::guard('api')->user();
 
             if($user->tester === 1){
-
 
                 // 获取系统自带的系统字体文件
                 $files = MakeFontFile::where('test_result',0)
