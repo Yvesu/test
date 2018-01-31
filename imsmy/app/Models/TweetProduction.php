@@ -59,9 +59,19 @@ class TweetProduction extends Model
         return $this->belongsToMany('App\Models\Filmfest\Application','tweet_production_application','tweet_production_id','application_id');
     }
 
-    public function filmefestProduction()
+    public function filmfestProduction()
     {
-        return $this->hasMany('App\Models\FilmfestsProduction','tweet_productions_id','id');
+        return $this->hasMany('App\Models\FilmfestsProductions','tweet_productions_id','id');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与竞赛管理员日志关系  1对多
+     */
+    public function filmfestUserReviewLog()
+    {
+        return $this->hasMany('App\Models\FilmfestUserReviewLog','production_id','id');
     }
     
 }

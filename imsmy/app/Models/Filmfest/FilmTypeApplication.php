@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FilmTypeApplication extends Model
 {
     //
-    protected $table = 'file_type_application';
+    protected $table = 'film_type_application';
 
     protected $primaryKey = 'id';
 

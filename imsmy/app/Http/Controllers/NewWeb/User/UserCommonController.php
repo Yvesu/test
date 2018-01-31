@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\NewWeb\User;
 
+use App\Models\Filmfest\FilmfestCategory;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -73,4 +75,58 @@ class UserCommonController extends Controller
         ];
         return response()->json(['data'=>$data],200);
     }
+
+    public function matchType()
+    {
+        try{
+            $data = FilmfestCategory::get();
+            $type = [
+                ['id'=>0,'name'=>'全部']
+            ];
+            foreach ($data as $k =>$v)
+            {
+                $tempData =[
+                  'name'=>$v->name,
+                  'id'=>$v->id,
+                ];
+                array_push($type,$tempData);
+            }
+            array_push($type,['id'=>999,'name'=>'我的']);
+            return response()->json(['data'=>$type],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
+    public function matchTime()
+    {
+        //  时间条件   0 全部  1 最新发布 2 即将开始 3 即将结束 4 进行中  5 已结束
+        $data = [
+            [
+                'id' => 0,
+                'name'=> '全部',
+            ],
+            [
+                'id' => 1,
+                'name'=> '最新发布',
+            ],
+            [
+                'id' => 2,
+                'name'=> '即将开始',
+            ],[
+                'id' => 3,
+                'name'=> '即将结束',
+            ],
+            [
+                'id' => 4,
+                'name'=> '进行中',
+            ],
+            [
+                'id' => 5,
+                'name'=> '已结束',
+            ],
+        ];
+        return response()->json(['data'=>$data],200);
+    }
+
 }

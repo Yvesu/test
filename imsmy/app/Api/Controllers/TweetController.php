@@ -1405,6 +1405,7 @@ class TweetController extends BaseController
             $field_order = 1 == $type ? 'like_count' : 'id';
 
             // 查询动态数据
+
             $tweets= Tweet::with(['hasOneContent','belongsToUser','hasOnePhone'])
                 -> whereHas('hasManyChannelTweet',function($query)use($id){
                     $query->where('channel_id',$id);
@@ -1451,10 +1452,10 @@ class TweetController extends BaseController
 
                 if(0 == $rand){
                     // 广告
+
                     if ($user){
 
                         $user_id = $user->id;
-
 //                        $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','1')->pluck('work_id');
                         $ids_obj = UsersUnlike::whereRaw("user_id={$user_id} and type='1'")->pluck('work_id');
 
@@ -1485,6 +1486,7 @@ class TweetController extends BaseController
                     }
 
                 } elseif(1 == $rand) {
+
                     if ($user){
                         $user_id = $user->id;
                         $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','3')->pluck('work_id');

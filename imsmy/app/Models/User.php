@@ -149,6 +149,14 @@ class User extends Common implements AuthenticatableContract,
     }
 
     /**
+     * 用户与订阅之多对多关系
+     */
+    public function belongsFromManyUser()
+    {
+        return $this->belongsToMany('App\Models\User','subscription','from','to');
+    }
+
+    /**
      * 用户与动态 一对多关系
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -475,6 +483,51 @@ class User extends Common implements AuthenticatableContract,
         }else{
             return $query->where('stop_id','=',$checker);
         }
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与电影节/竞赛角色关系  多对多
+     */
+    public function filmfest_role()
+    {
+        return $this->belongsToMany('App\Models\FilmfestUser\FilmfestUserRole','user_filmfest_user_role','user_id','role_id');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与电影节关系  多对多
+     */
+    public function filmfest()
+    {
+        return $this->belongsToMany('App\Models\Filmfests','filmfest_user_filmfest_user','user_id','filmfest_id');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与竞赛用户组关系 多对多
+     */
+    public function filmfestUserGroup()
+    {
+        return $this->belongsToMany('App\Models\FilmfestUser\FilmfestUserUserGroup','filmfest_user_user_user_group','user_id','group_id');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与竞赛管理员管理日志关系   1对多
+     */
+    public function filmfestUserReviewLog()
+    {
+        return $this->hasMany('App\Models\FilmfestUser\FilmfestUserReviewLog','user_id','id');
+    }
+
+    public function filmfestUserRoleGroup()
+    {
+        return $this->belongsToMany('App\Models\FilmfestUser\FilmfestUserRoleGroup','filmfest_user_user_role_group','user_id','role_group_id');
     }
 
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FilmfestsProductions extends Model
 {
     //
-    protected $table = 'filmfests_tweet_productions';
+    protected $table = 'filmfests_tweet_production';
 
     protected $primaryKey = 'id';
 
