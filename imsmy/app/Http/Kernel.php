@@ -65,6 +65,9 @@ class Kernel extends HttpKernel
 
         'jwt.api.auth' => \App\Http\Middleware\JwtAuthModel::class, //新增注册的中间件
 
+        'filmfestUser' => \App\Http\Middleware\Filmfest::class, //  竞赛管理中简件
+        'filmfestUsserIssue' => \App\Http\Middleware\FilmfestUserIssue::class, //  竞赛管理中间件发起者
+
         /*
          * personal
          */

@@ -20,7 +20,7 @@ class AdsDiscoverTransformer extends Transformer
 
         return [
             'id'            => $data->id,
-            'name'          => $data->name,
+            'name'          => $data->name ?:'',
             'type_id'       => $data->type_id,
             'type'          => $data->type,
             'style'         => 1,

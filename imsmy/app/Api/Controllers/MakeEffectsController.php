@@ -1,6 +1,7 @@
 <?php
 namespace App\Api\Controllers;
 
+use App\Models\MixType;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Validation\ValidationException;
@@ -109,7 +110,9 @@ class MakeEffectsController extends BaseController
             // 拼接地址
             foreach($audio as $key => $value){
 
-                $value -> file_id = Crypt::encrypt($value->id);
+//                $value -> file_id = Crypt::encrypt($value->id);
+
+                $value -> file_id = $value->id;
 
                 // 免费的文件和自己已经下载过的会有下载地址，收费的下载地址为空
                 if(0 == $value->integral
@@ -120,18 +123,19 @@ class MakeEffectsController extends BaseController
                     $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
+                    $value->shade           = CloudStorage::downloadUrl($value->shade);
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
+                    $value -> mix_type_id = is_null($value -> mix_type_id) ? '': MixType::find($value -> mix_type_id)->code;
                 } else {
 
                     $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
+                    $value->shade           = CloudStorage::downloadUrl($value->shade   );
+                    $value -> mix_type_id = is_null($value -> mix_type_id) ? '': MixType::find($value -> mix_type_id)->code;
 
-//                    $value -> address = '';
-//                    $value -> high_address = '';
-//                    $value -> super_address = '';
                 }
-
+                    unset($value -> id);
                 // 效果预览
 //                $value -> address = CloudStorage::privateUrl_zip($value -> address);
 
@@ -140,8 +144,6 @@ class MakeEffectsController extends BaseController
                 // 效果封面
                 $value -> cover = CloudStorage::downloadUrl($value -> cover);
 
-                // 删除原id
-                unset($value -> id);
             }
 
             return response() -> json(['data'=>$audio],200);

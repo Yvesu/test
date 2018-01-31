@@ -319,6 +319,16 @@ class CloudStorage
         return $ret;
     }
 
+    public function copyFile2($key,$srcbucket,$destbucket,$destkey)
+    {
+        $ops = BucketManager::copy($srcbucket,$key,$destbucket,$destkey,true);
+        list($ret,$error) = $this->bucketManager->batch($ops);
+        if($error !== null){
+            throw new \Exception($error->message(),$error->code());
+        }
+        return $ret;
+    }
+
     /**
      * @param $a
      * @return string
@@ -794,6 +804,21 @@ class CloudStorage
 
     }
 
+    public function imgWaterMark($bucket,$key,$markContent)
+    {
+        $pipeline = 'hivideo_transcode';
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline,null,true);
+        $fops = 'watermark/2/text/';
+        $fops .= base64_urlSafeEncode($markContent);
+        $fops .= '/font/';
+        $fops .= base64_urlSafeEncode('微软雅黑');
+        $fops .= '/fontsize/400/fill/';
+        $fops .= base64_urlSafeEncode('#C0C0C0');
+        $fops .= '/dissolve/100/gravity/SouthEast/dx/20/dy/20|saveas/';
+        $fops .= base64_urlSafeEncode("$bucket:$key");
+        list($id, $err) = $pfop->execute($key, $fops);
+    }
+
     public function searchStatus($key)
     {
         $bucket = 'hivideo-video';
@@ -900,5 +925,8 @@ class CloudStorage
        }
         list($id, $err) = $pfop->execute($file_url, $fops);
      }
+
+
+
 
 }

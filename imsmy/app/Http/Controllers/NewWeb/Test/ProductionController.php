@@ -13,6 +13,7 @@ use App\Models\Tweet;
 use App\Models\TweetContent;
 use App\Models\TweetProduction;
 use App\Models\TweetStandbyCover;
+use App\Models\User;
 use function GuzzleHttp\default_ca_bundle;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -277,34 +278,68 @@ class ProductionController extends Controller
         }
     }
 
+    public function initial()
+    {
+        try{
+            $user_id = \Auth::guard('api')->user()->id;
+            $startTime = strtotime(date('Y-m-d', strtotime("this week Monday", time())));
+            $endTime = strtotime(date('Y-m-d', strtotime("this week Monday", time())))+24*3600-1;
+            $size1 = DB::select('select SUM(size)  AS size1 FROM tweet WHERE user_id = ? AND type=3 AND active<=1 AND UNIX_TIMESTAMP(created_at)>?  AND UNIX_TIMESTAMP(created_at)<? ORDER BY id',[$user_id,$startTime,$endTime]);
+//            $size2 = DB::select('select SUM(size)  AS size1 FROM tweet WHERE user_id = 5 AND type=3 AND active<=1 AND UNIX_TIMESTAMP(created_at)>1515945600  AND UNIX_TIMESTAMP(created_at)<1516031999  ORDER BY id');
+            if($size1[0]->size1){
+                $size1 = (int)($size1[0]->size1);
+            }else{
+                $size1 = 0;
+            }
+            $user = User::where('id','=',$user_id)->first();
+            $size = round($size1/(1024*1024*1024),2).'GB';
+            $creater = $user->privilegeUser()->where('type','=',1)->first()?true:false;
+            if($creater){
+                $proportion = '限制？不存在的！！';
+                $size2 = '您是尊贵的无限制用户，您已上传视频'.$size;
+                $des = '1';
+                $difference_value = 9999999999999999999;
+            }else{
+                $proportion = (round($size1/(10*1024*1024*1024),2)*100);
+                $size2 = '本周上传配额10GB，您已使用'.$size;
+                $difference_value = (10*1024*1024*1024)-$size1;
+                $des = '0';
+            }
+            return response()->json(['size'=>$size2,'proportion'=>$proportion,'des'=>$des,'difference_value'=>$difference_value],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
     public function up(Request $request)
     {
         try{
-            DB::beginTransaction();
             $user = \Auth::guard('api')->user();
-            $data0 = Tweet::where('video','=','')->where('type','=',3)->where('user_id',$user->id)->first();
+            $number = $request->get('number',1);
             $is_download = $request->get('is_download',1);
             $is_reply = $request->get('is_reply',1);
             $visible = $request->get('visible',0);
-            if($data0){
-                $id = $data0->id;
-            }else{
-                $data = new Tweet;
-                $data -> user_id = $user->id;
-                $data -> created_at = time();
-                $data -> type = 3;
-                $data -> updated_at = time();
-                $data -> is_reply = $is_reply;
-                $data -> is_download = $is_download;
-                $data -> visible = $visible;
-                $data ->save();
-                $id = $data->id;
+            Tweet::where('video','=','')->where('type','=',3)->where('user_id',$user->id)->delete();
+            $data = [];
+            DB::beginTransaction();
+            for($i = 1;$i<=$number;$i++)
+            {
+                $newTweet = new Tweet;
+                $newTweet -> user_id = $user->id;
+                $newTweet -> created_at = time();
+                $newTweet -> type = 3;
+                $newTweet -> updated_at = time();
+                $newTweet -> is_reply = $is_reply;
+                $newTweet -> is_download = $is_download;
+                $newTweet -> visible = $visible;
+                $newTweet -> save();
+                $id = $newTweet -> id ;
+                array_push($data,['id'=>$id]);
             }
             DB::commit();
-
-            return response()->json(['id'=>$id,'user_id'=>$user->id],200);
+            return response()->json(['data'=>$data,'user_id'=>$user->id],200);
         }catch (ModelNotFoundException $q){
-            return response()->json(['error' => $e->getMessage()], $e->getCode());
+            return response()->json(['error' => $q->getMessage()], $q->getCode());
         }
     }
 
@@ -484,8 +519,6 @@ class ProductionController extends Controller
                         }
                         $childData = new TweetProduction;
                         $childData -> tweet_id = $id;
-                        $childData -> is_current = 1;
-                        $childData -> status = 3;
                         $childData -> time_add = time();
                         $childData -> time_update = time();
                         $childData -> save();
@@ -553,8 +586,6 @@ class ProductionController extends Controller
                         }
                         $childData = new TweetProduction;
                         $childData -> tweet_id = $id;
-                        $childData -> is_current = 1;
-                        $childData -> status = 3;
                         $childData -> time_add = time();
                         $childData -> time_update = time();
                         $childData -> save();

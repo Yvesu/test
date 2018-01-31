@@ -368,7 +368,7 @@ class ActivityController extends BaseController
         }])
             -> where('tweet_id', $tweet_id)
             -> where('status', 0)
-            -> orderBy('id', 'DESC')
+            -> orderBy('like_count', 'DESC')
 //            -> where('reply_id','!=',null)
             -> get();
 
@@ -377,7 +377,7 @@ class ActivityController extends BaseController
                $q -> select(['id','nickname','avatar']);
            }]) -> where('tweet_id', $tweet_id)
                -> where('status', 0)
-               -> orderBy('id', 'DESC')
+               -> orderBy('like_count', 'DESC')
                -> where('reply_id','=',null)
                -> get();
        }

@@ -88,5 +88,10 @@ class AdvertisingRotation extends Common
         return $query->where('type', $type);
     }
 
+    public function advert_category()
+    {
+        return $this->belongsTo('App\Models\AdvertCategory','category_id','id');
+    }
+
 
 }

@@ -14,6 +14,7 @@ class UserLoginLog extends Model
     protected $fillable = [
         'user_id',
         'login_time',
+        'ip','way',
     ];
 
     public $timestamps = false;

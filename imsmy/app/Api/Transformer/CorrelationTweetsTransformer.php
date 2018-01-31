@@ -3,6 +3,7 @@ namespace App\Api\Transformer;
 
 
 use App\Facades\CloudStorage;
+use App\Models\TweetLike;
 use Auth;
 
 class CorrelationTweetsTransformer extends Transformer
@@ -20,6 +21,7 @@ class CorrelationTweetsTransformer extends Transformer
     {
         // 判断用户是否为登录状态
         $user_from = Auth::guard('api')->user();
+
 
         // 评论分数判断
         $grade = $tweet['tweet_grade_total'] ? number_format($tweet['tweet_grade_total']/$tweet['tweet_grade_times'],1) : 0;

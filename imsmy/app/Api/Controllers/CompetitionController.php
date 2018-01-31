@@ -83,6 +83,7 @@ class CompetitionController extends BaseController
             $arr = [
                 'icon'         => $input['icon']?:'',
                 'user_id'      => $id,
+                'theme'        => $request->get('theme'),
                 'comment'      => removeXSS($request -> get('comment')),
                 'bonus'        => $bonus,
                 'location'     => $input['location']===null ?  '' :  $input['location'],

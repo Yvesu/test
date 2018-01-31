@@ -151,6 +151,11 @@ $api -> version('v1',function($api) {
             $api -> post('/filmfest','Test\FilmFestController@index');
 
             /**
+             * 上传初始页面
+             */
+            $api -> post('/initial','Test\ProductionController@initial');
+
+            /**
              * 作品上传页面
              */
             $api -> post('/up','Test\ProductionController@Up');
@@ -233,6 +238,16 @@ $api -> version('v1',function($api) {
                  */
                 $api -> post('match','User\UserController@match');
 
+                /**
+                 * 主页竞赛获得类别
+                 */
+                $api -> post('match/type','User\UserCommonController@matchType');
+
+                /**
+                 * 主页竞赛时间条件
+                 */
+                $api -> post('match/time','User\UserCommonController@matchTime');
+
             });
 
             /**
@@ -246,34 +261,154 @@ $api -> version('v1',function($api) {
             $api -> post('getresolutionratio','Play\PlayController@resolution_ratio');
 
 
-            $api -> group(['prefix'=>'filmfestadmin'],function($api){
+            /**
+             * 电影节部分
+             */
+            $api -> group(['prefix'=>'filmfest'],function($api){
 
-                /**
-                 * 分析页
-                 */
-                $api -> post('index','User\FilmfestController@index');
+                $api->group(['middleware'=>'filmfestUser:id'],function ($api){
+                    /**
+                     * 分析页
+                     */
+                    $api -> post('index','User\FilmfestController@index');
 
-                /**
-                 * 表格数据
-                 */
-                $api -> post('index/table','User\FilmfestController@table');
+                    /**
+                     * 分析仪 倒计时
+                     */
+                    $api -> post('index/dead-time','User\FilmfestController@deadTime');
 
-                /**
-                 * 大学统计
-                 */
-                $api -> post('index/university/top','User\FilmfestController@universityTop');
-                $api -> post('index/university','User\FilmfestController@university');
+                    /**
+                     * 表格数据
+                     */
+                    $api -> post('index/table','User\FilmfestController@table');
+
+                    /**
+                     * 大学统计
+                     */
+                    $api -> post('index/university/top','User\FilmfestController@universityTop');
+                    $api -> post('index/university','User\FilmfestController@university');
+
+                    $api -> post('work-group/menu','User\FilmfestController@menu');
+
+                    $api -> group(['middleware'=>'filmfestUsserIssue:id'],function ($api){
+                        /**
+                         * 工作组页面
+                         */
+                        $api -> post('work-group','User\FilmfestController@workIndex');
+                        /**
+                         * 工作组类别
+                         */
+                        $api -> post('work-group/type','User\FilmfestController@workType');
+                        /**
+                         * 添加成员
+                         */
+                        $api -> post('add-admin','User\FilmfestController@addAdmin');
+
+                        /**
+                         * 执行添加成员
+                         */
+                        $api -> post('do-add','User\FilmfestController@doAdd');
+
+                        /**
+                         * 竞赛管理员详情
+                         */
+                        $api -> post('admin-detail','User\FilmfestController@adminDetail');
+
+                        /**
+                         * 竞赛管理员详情操作
+                         */
+                        $api -> post('handle-admin','User\FilmfestController@handelAdmin');
+
+                        /**
+                         * 更改角色
+                         */
+                        $api -> post('handle-admin-user-group','User\FilmfestController@handleAdminUserGroup');
+                        $api -> post('handle-admin-role-group','User\FilmfestController@handleAdminRoleGroup');
+                        $api -> post('handle-admin-role','User\FilmfestController@handleAdminRole');
+
+                        /**
+                         * 执行更改
+                         */
+                        $api -> post('do-handle-admin-role','User\FilmfestController@doHandleAdminRole');
+
+                        /**
+                         * 冻结成员
+                         */
+                        $api -> post('stop-admin','User\FilmfestController@stopAdmin');
+
+                        /**
+                         * 导出日志
+                         */
+                        $api -> post('log-export','User\FilmfestController@logExport');
+
+                        /**
+                         * 发送私信
+                         */
+                        $api -> post('send-privater-letter','User\FilmfestController@sendPrivaterLetter');
+
+                    });
+
+
+                });
+
+
 
                 /**
                  * 报名
                  */
                 $api -> group(['prefix'=>'application'],function ($api){
-
+                    /**
+                     * 报名表页面
+                     */
+                    $api -> post('into','Application\ApplicationController@into');
                     $api -> post('page_one','Application\ApplicationController@pageOne');
                     $api -> post('page_two','Application\ApplicationController@pageTwo');
                     $api -> post('page_three','Application\ApplicationController@pageThree');
                     $api -> post('page_four','Application\ApplicationController@pageFour');
                     $api -> post('page_submit','Application\ApplicationController@pageSubmit');
+                    /**
+                     * 影片单元选择类别
+                     */
+                    $api -> post('unit','Application\ApplicationController@unit');
+                    /**
+                     * 可以变成参赛作品的动态
+                     */
+                    $api -> post('old_tweet','Application\ApplicationController@oldTweet');
+
+                    /**
+                     * 报名表页面-添加地址-国家
+                     */
+                    $api->post('addresscountry','Application\AddAddressController@addresscountry');
+
+                    /**
+                     * 报名表页面-添加地址-省份
+                     */
+                    $api->post('addressprovince','Application\AddAddressController@addressprovince');
+
+                    /**
+                     * 报名表页面-添加地址-城市（上级为省份）
+                     */
+                    $api->post('addresscity','Application\AddAddressController@addresscity');
+
+                    /**
+                     * 报名表页面-添加地址-城市（上级为国家）
+                     */
+                    $api->post('addressstate','Application\AddAddressController@addressstate');
+
+                    /**
+                     * 报名表页面-添加地址-县区
+                     */
+                    $api->post('addresscounty','Application\AddAddressController@addresscounty');
+
+                    /**
+                     * 报名表页面-选择观看权限
+                     */
+                    $api -> post('visible','Application\ApplicationController@visible');
+
+                    /**
+                     * 报名表页面-选择原视频类别
+                     */
+                    $api -> post('old-tweet-type','Application\ApplicationController@old_tweet_type');
 
                 });
 
