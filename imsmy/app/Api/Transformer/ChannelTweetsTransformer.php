@@ -17,11 +17,15 @@ class ChannelTweetsTransformer extends Transformer
 {
     private $usersSearchTransformer;
 
+    private $tweetPhoneTransformer;
+
     public function __construct(
-        UsersSearchTransformer $usersSearchTransformer
+        UsersSearchTransformer $usersSearchTransformer,
+        TweetPhoneTransformer $tweetPhoneTransformer
     )
     {
         $this->usersSearchTransformer = $usersSearchTransformer;
+        $this->tweetPhoneTransformer = $tweetPhoneTransformer;
     }
 
     public function transform($tweet)
@@ -37,6 +41,8 @@ class ChannelTweetsTransformer extends Transformer
             'type'          => $tweet->type,
             'duration'      => $tweet->duration,
             'location'      => $tweet->location,
+            'lgt'           => $tweet->lgt ?: '',
+            'lat'           => $tweet->lat ?: '',
             'content'       => $tweet->hasOneContent->content,
             'browse_times'  => $tweet->browse_times,
             'like_count'    => $tweet->like_count,
@@ -51,6 +57,8 @@ class ChannelTweetsTransformer extends Transformer
             'user'          => $this->usersSearchTransformer->transform($tweet->belongsToUser),
             'already_like'  => $user_from ? (TweetLike::where('tweet_id',$tweet->id)->where('user_id',$user_from->id)->first() ? 1 : 0) : 0,
             'created_at'    => strtotime($tweet->created_at),
+            'phone'         => $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
+            'phone_id'      => $tweet->phone_id,
         ];
     }
 

@@ -15,7 +15,7 @@ class TweetTopic extends Model
 {
     protected $table = 'tweet_topic';
 
-    protected $fillable = ['topic_id', 'tweet_id'];
+    protected $fillable = ['topic_id', 'tweet_id','is_top','is_handpick','status_compere'];
 
     /**
      * 通过tweet_id查询

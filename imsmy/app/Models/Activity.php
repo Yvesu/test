@@ -11,6 +11,7 @@ class Activity extends Common
         'active',
         'official',
         'bonus',
+        'theme',
         'comment',
         'forwarding_time',
         'comment_time',
@@ -25,7 +26,9 @@ class Activity extends Common
         'recommend_expires',
         'time_add',
         'time_update',
-        'nearby'
+        'nearby',
+        'lgt',
+        'lat',
     ];
 
     public $timestamps = false;

@@ -152,7 +152,7 @@ return [
 	/*
          * umeng
          */
-//	Zzl\Umeng\UmengServiceProvider::class,
+	    Zzl\Umeng\UmengServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -296,10 +296,10 @@ return [
 //        'Form'      => Collective\Html\FormFacade::class,
 //        'Html'      => Collective\Html\HtmlFacade::class,
 	
-	/*
-	 * umeng
-	 */
-//	 'Umeng' => Zzl\Umeng\Facades\Umeng::class,
+        /*
+         * umeng
+         */
+	     'Umeng' => Zzl\Umeng\Facades\Umeng::class,
 
         // 自定义log
         'CommandLog' => App\Facades\CommandLog::class,

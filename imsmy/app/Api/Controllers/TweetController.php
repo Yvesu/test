@@ -60,6 +60,7 @@ use App\Models\UserKeywords;
 use App\Models\UserSearchLog;
 use App\Models\User;
 use App\Models\UsersLikes;
+use App\Models\UsersUnlike;
 use App\Models\Word_filter;
 use Carbon\Carbon;
 use CloudStorage;
@@ -699,6 +700,8 @@ class TweetController extends BaseController
                 'filter_id'         =>  $request->get('filter_id') ?: 0,
                 'template_id'       =>  $request->get('template_id') ?: 0,
                 'lossless'          =>  $request -> get('lossless','0'),
+                'lgt'               =>  $request->get('lgt',''),
+                'lat'               =>  $request->get('lat',''),
             ];
 
 
@@ -708,8 +711,7 @@ class TweetController extends BaseController
             // 判断
             if($newTweet['video']){
 
-                // 判断是否为数字
-
+                // 有视频一定就要有时长
                 if(!$newTweet['duration']) return response()->json(['error'=>'badrequest'],403);
 
             }
@@ -735,7 +737,7 @@ class TweetController extends BaseController
             }
 
             // 处理location信息
-            $location = removeXSS($request->get('location'));
+            $location = $request->get('location');
 
             // 开启事务
             DB::beginTransaction();
@@ -756,8 +758,9 @@ class TweetController extends BaseController
 
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
-//            //TODO 发布动态的手机系统
+//      //TODO 发布动态的手机系统
         if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
+
 
               //手机类型
               $phone_type = $request->get('phone_type', '');
@@ -1169,7 +1172,7 @@ class TweetController extends BaseController
         $friends = Friend::where('from',$id)->get(['to'])->pluck('to')->all();
 
         // 获取动态
-        $tweets = Tweet::with('hasOneContent','belongsToUser')
+        $tweets = Tweet::with('hasOneContent','belongsToUser','hasOnePhone')
             ->ofSubscriptions($subscriptions,$friends, $id, $date)
             ->orderBy('created_at','desc')
             ->able()
@@ -1402,12 +1405,11 @@ class TweetController extends BaseController
             $field_order = 1 == $type ? 'like_count' : 'id';
 
             // 查询动态数据
-            $tweets= Tweet::with(['hasOneContent','belongsToUser'])
-                -> able()
+            $tweets= Tweet::with(['hasOneContent','belongsToUser','hasOnePhone'])
                 -> whereHas('hasManyChannelTweet',function($query)use($id){
                     $query->where('channel_id',$id);
                 })
-                ->whereNotIn('active',[2,5])
+                ->where('active',1)
                 -> orderBy($field_order, 'DESC')
                 -> get();
 
@@ -1444,16 +1446,38 @@ class TweetController extends BaseController
                 $templates = [];
                 $activity = [];
 
+                //获取用户信息
+                $user = Auth::guard('api')->user();
+
                 if(0 == $rand){
                     // 广告
-                    $ads = AdvertisingRotation::with(['belongsToUser'=>function($q){
-                        $q->select(['id','nickname','avatar','signature','verify','verify_info']);
-                    }])
-                        -> active()
-                        -> where('from_time','<',$time)
-                        -> where('end_time','>',$time)
-                        -> get(['id','user_id','type_id','type','url','count','image','time_add','name']);
+                    if ($user){
 
+                        $user_id = $user->id;
+
+//                        $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','1')->pluck('work_id');
+                        $ids_obj = UsersUnlike::whereRaw("user_id={$user_id} and type='1'")->pluck('work_id');
+
+                        $ids_arr = $ids_obj->all();
+
+                        $ads = AdvertisingRotation::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> active()
+                            -> whereNotIn('id',$ids_arr)
+                            -> where('from_time','<',$time)
+                            -> where('end_time','>',$time)
+                            -> get(['id','user_id','type_id','type','url','count','image','time_add','name']);
+
+                    }else{
+
+                        $ads = AdvertisingRotation::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> whereRaw("active=1 and from_time < $time and end_time > $time")
+                            -> get(['id','user_id','type_id','type','url','count','image','time_add','name']);
+
+                    }
                     // 广告
                     if($ads -> count()) {
                         $ads = $ads -> random(1);
@@ -1461,16 +1485,33 @@ class TweetController extends BaseController
                     }
 
                 } elseif(1 == $rand) {
+                    if ($user){
+                        $user_id = $user->id;
+                        $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','3')->pluck('work_id');
+                        $ids_arr = $ids_obj->all();
 
-                    // 模板
-                    $templates = MakeTemplateFile::with(['belongsToUser'=>function($q){
-                        $q->select(['id','nickname','avatar','signature','verify','verify_info']);
-                    }])
-                        -> where('recommend', 1)
-                        -> active()
-                        -> where('status', 1)
-                        -> orderBy('sort')
-                        -> get(['id', 'user_id', 'name','folder_id','intro', 'cover', 'preview_address', 'count', 'time_add']);
+                        // 模板
+                        $templates = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> where('recommend', 1)
+                            -> active()
+                            -> where('status', 1)
+                            -> orderBy('sort')
+                            -> whereNotIn('id',$ids_arr)
+                            -> get(['id', 'user_id', 'name','folder_id','intro', 'cover', 'preview_address', 'count', 'time_add']);
+
+                    }else{
+                        // 模板
+                        $templates = MakeTemplateFile::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> where('recommend', 1)
+                            -> active()
+                            -> where('status', 1)
+                            -> orderBy('sort')
+                            -> get(['id', 'user_id', 'name','folder_id','intro', 'cover', 'preview_address', 'count', 'time_add']);
+                    }
 
                     if($templates -> count()) {
                         $templates = $templates -> random(1);
@@ -1478,29 +1519,53 @@ class TweetController extends BaseController
                     }
 
                 } else {
-
-                    // 竞赛
                     $time = time();
-                    $activity = Activity::with(['belongsToUser'=>function($q){
-                        $q->select(['id','nickname','avatar','signature','verify','verify_info']);
-                    }])
-                        -> recommend()
-                        -> ofExpires()
-                        -> get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
+                    if ($user){
+                        $user_id = $user->id;
+                        $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','2')->pluck('work_id');
+                        $ids_arr = $ids_obj->all();
+                        // 竞赛
+                        $activity = Activity::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> recommend()
+                            -> ofExpires()
+                            ->whereNotIn('id',$ids_arr)
+                            -> get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
+                    }else{
+                        // 竞赛
+                        $activity = Activity::with(['belongsToUser'=>function($q){
+                            $q->select(['id','nickname','avatar','signature','verify','verify_info']);
+                        }])
+                            -> recommend()
+                            -> ofExpires()
+                            -> get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
+                    }
+
 
                     if($activity -> count()) {
-
-                    $activity = $activity -> random(1);
-
+                        $activity = $activity -> random(1);
                         $activity = $this -> activityDiscoverTransformer -> transformCollection($activity->all());
                     }
                 }
 
+                //接收用户信息
                 $user = Auth::guard('api')->user();
 
                 if ($user){
-
+                    //查看用户喜好
                     $user_channels = UsersLikes::where('user_id',$user->id)->pluck('channel_id');
+
+                    //获取用户ID
+                    $user_id = $user->id;
+
+                    //将用户不感兴趣的排除
+                    $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','0')->pluck('work_id');
+                    $ids_arr = $ids_obj->all();
+
+                    //获取用户的黑名单
+                    $users_id_black = Blacklist::where('from',$user_id)->pluck('to');
+                    $users_id_black = $users_id_black->all();
 
                     if ($user_channels->all()) {
                         $user_channels = explode(',', $user_channels->all()[0]);
@@ -1525,26 +1590,49 @@ class TweetController extends BaseController
                                 $q->select(['content', 'tweet_id']);
                             }, 'belongsToUser' => function ($q) {
                                 $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                            },'hasOnePhone' =>function($q){
+                                $q->select(['id','phone_type','phone_os','camera_type']);
                             }])
                             ->orderBy('created_at', 'DESC')
                             ->whereIn('channel_id', $user_channels)
+                            ->whereNotIn('id',$ids_arr)
+                            ->whereNotIn('user_id',$users_id_black)
                             ->forPage($page, $this->paginate)
-                            ->get(['id', 'user_id', 'created_at', 'type', 'screen_shot', 'duration', 'location',
+                            ->get(['id', 'user_id', 'created_at', 'type', 'screen_shot', 'duration', 'location','phone_id','lat','lgt',
                                 'browse_times', 'like_count', 'reply_count', 'tweet_grade_total', 'tweet_grade_times',
                                 'video', 'transcoding_video', 'video_m3u8', 'norm_video', 'high_video', 'join_video']);
 
-                        if (!$tweets_data->count()) {
-                            $tweets_data = $this->hot($page);
-                        } else {
                             $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets_data->all());
 
-                            if (count($tweets_data) < 20) {
-                                $tweets_data_1 = $this->hot($page);
-                                $tweets_data = mult_unique(array_merge($tweets_data_1, $tweets_data));
-                            }
-                        }
                     }else{
-                        $tweets_data = $this->hot($page);
+                        //获取推荐的动态
+                        $except  = TweetHot::with(['hasOneTweet'])
+                            ->where('top_expires','>=',time())
+                            ->orWhere('recommend_expires','>=',time())
+                            ->pluck('tweet_id');
+
+                        $tweets = Tweet::where('type',0)
+                            ->where('active',1)
+                            ->where('visible',0)
+                            ->with(['belongsToManyChannel' =>function($q){
+                                $q -> select(['name']);
+                            },'hasOneContent' =>function($q){
+                                $q->select(['content','tweet_id']);
+                            },'belongsToUser' =>function($q){
+                                $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+                            },'hasOnePhone' =>function($q){
+                                $q->select(['id','phone_type','phone_os','camera_type']);
+                            }])
+                            ->orderBy('created_at','DESC')
+                            ->whereIn('id',$except->all())
+                            ->whereNotIn('id',$ids_arr)
+                            ->whereNotIn('user_id',$users_id_black)
+                            ->forPage($page,$this->paginate)
+                            ->get(['id','user_id','created_at','type','screen_shot','duration','location','phone_id','lat','lgt',
+                                'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
+                                'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
+
+                        $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
                     }
                 }else{
                     $tweets_data = $this -> hot($page);
@@ -1553,7 +1641,7 @@ class TweetController extends BaseController
                 // 返回数据
                 return response()->json([
 
-                    // 数据
+                    // 动态
                     'data'       => $tweets_data,
 
                     // 广告位
@@ -1573,8 +1661,6 @@ class TweetController extends BaseController
             }
     }
 
-
-
     private function hot($page)
     {
         //获取推荐的动态
@@ -1586,51 +1672,24 @@ class TweetController extends BaseController
         $tweets = Tweet::where('type',0)
             ->where('active',1)
             ->where('visible',0)
+            ->orderBy('created_at','DESC')
             ->with(['belongsToManyChannel' =>function($q){
                 $q -> select(['name']);
             },'hasOneContent' =>function($q){
                 $q->select(['content','tweet_id']);
             },'belongsToUser' =>function($q){
                 $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+            },'hasOnePhone' =>function($q){
+                $q->select(['id','phone_type','phone_os','camera_type']);
             }])
-            ->orderBy('created_at','DESC')
             ->whereIn('id',$except->all())
             ->forPage($page,$this->paginate)
-            ->get(['id','user_id','created_at','type','screen_shot','duration','location',
+            ->get(['id','user_id','created_at','type','screen_shot','duration','location','phone_id','lat','lgt',
                 'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
                 'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
-//                if ($tweets->count() >= 20 ){
-//                    $tweets = $tweets ->random(20);
             $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
-//                }else{
-        // 过滤
-//                    $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
-//                }
-        /*
-                        if ($page !== '1'){
-                            $page = $page-1;
-                            $tweets = Tweet::where('type',0)
-                                ->where('active',1)
-                                ->where('visible',0)
-                                ->with(['belongsToManyChannel' =>function($q){
-                                    $q -> select(['name']);
-                                },'hasOneContent' =>function($q){
-                                    $q->select(['content','tweet_id']);
-                                },'belongsToUser' =>function($q){
-                                    $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
-                                }])
-                                ->orderBy('created_at','DESC')
-                                ->whereNotIn('id',$except->all())
-                                ->forPage($page,$this->paginate)
-                                ->get(['id','user_id','created_at','type','screen_shot','duration','location',
-                                    'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
-                                    'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
-                            $tweets_data = $this->channelTweetsTransformer->transformCollection($tweets->all());
-
-                        }
-        */
         return $tweets_data;
     }
 
@@ -1699,12 +1758,10 @@ class TweetController extends BaseController
                 $keyword->count_day = ++$keyword->count_day;
                 $keyword->count_week = ++$keyword->count_week;
                 $keyword->update_at = time();
-//                dd($keyword->count_sum);
                 $keyword->save();
             }
 
             $hotsearchword = HotSearch::where('hot_word',$name)->first();
-//            dd($hotsearchword);
             if($hotsearchword)
             {
                $hotsearchword->sort  = ++$hotsearchword->sort;
@@ -1975,7 +2032,7 @@ class TweetController extends BaseController
             $field_order = 1 == $type ? 'like_count' : 'id';
 
             // 查询动态数据
-            $tweets= Tweet::with(['hasOneContent','belongsToUser'])
+            $tweets= Tweet::with(['hasOneContent','belongsToUser','hasOnePhone'])
                 -> able()
                 -> whereHas('belongsToManyTopic',function($query)use($id){
                     $query->where('topic_id',$id);
@@ -2874,8 +2931,8 @@ class TweetController extends BaseController
                     'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
                     'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
 
-            if ($tweets->count()>=2 ){
-                $tweets = $tweets->random(2);
+            if ($tweets->count()>= 5 ){
+                $tweets = $tweets->random(5);
             }
             $data = $this->correlationTweetsTransformer->transformCollection($tweets->toArray());
         }

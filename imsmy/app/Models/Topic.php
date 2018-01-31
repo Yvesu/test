@@ -26,7 +26,8 @@ class Topic extends Common
         'hash_icon',
         'recommend_expires',
         'size',
-        'color'
+        'color',
+        'compere_id',
     ];
 
     /**
@@ -207,6 +208,11 @@ class Topic extends Common
 
             return $query;
         }
+    }
+
+    public function hasOneCompere()
+    {
+        return $this->hasOne('App\Models\User','id','compere_id');
     }
 
 }

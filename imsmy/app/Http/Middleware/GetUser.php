@@ -40,6 +40,7 @@ class GetUser extends BaseMiddleware
     // 测试使用，上面的为原代码
     public function handle($request, Closure $next)
     {
+//        dd($request);
         if ($token = $this->auth->setRequest($request)->getToken()) {
             try {
                 $user = $this->auth->authenticate($token);

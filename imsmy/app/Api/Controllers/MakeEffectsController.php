@@ -1,6 +1,8 @@
 <?php
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\MakeEffectsTransformer;
+use App\Models\MixType;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +21,16 @@ class MakeEffectsController extends BaseController
     use CommonTrait;
 
     protected $paginate = 20;
+
+    private $makeEffectsTransformer;
+
+    public function __construct
+    (
+        MakeEffectsTransformer $makeEffectsTransformer
+    )
+    {
+        $this -> makeEffectsTransformer = $makeEffectsTransformer;
+    }
 
     /**
      * 编辑视频，效果文件详情 免费版 以后收费再另开接口,目前把目录下的搜索功能去掉了，代码暂时保留
@@ -73,20 +85,24 @@ class MakeEffectsController extends BaseController
 
                 $audio = MakeEffectsFile::where('test_result',1)->ofType($type,$folder_id)
 
-                    ->selectListPageByWithAndWhereAndWhereHas([['belongsToUser',['nickname']]], [], [['folder_id', $folder_id],['active',1]], [], [$page, $this->paginate]);
+                    ->selectListPageByWithAndWhereAndWhereHas([['belongsToUser',['nickname','avatar','cover','verify','signature','verify_info']]], [], [['folder_id', $folder_id],['active',1]], [], [$page, $this->paginate]);
 
             } else {
 
                 // 获取数据
-                $with = [['belongsToUser',['nickname']],['belongsToFolder',['name']]];
+                $with = [['belongsToUser',['nickname','avatar','cover','verify','signature','verify_info']],['belongsToFolder',['name']]];
 
                 $audio = MakeEffectsFile::where('test_result',1)->ofType($type)
                     -> ofSearch($search)
                     -> selectListPageByWithAndWhereAndWhereHas($with, [], [['active',1]], [], [$page, $this->paginate]);
+
             }
 
             // 调用内部函数，返回数据
-            return $this -> file($audio, 2, $integral_ids);
+//            return $this -> file($audio, 2, $integral_ids);
+            return response()->json([
+                'data'  => $this->makeEffectsTransformer->transformCollection($audio->all()),
+            ]);
 
         } catch (ModelNotFoundException $e) {
             return response()->json(['error'=>'not_found'],404);
@@ -105,11 +121,12 @@ class MakeEffectsController extends BaseController
     private function file($audio, $type, $integral_ids=[])
     {
         try{
-
             // 拼接地址
             foreach($audio as $key => $value){
 
-                $value -> file_id = Crypt::encrypt($value->id);
+//                $value -> file_id = Crypt::encrypt($value->id);
+
+                $value -> file_id = $value->id;
 
                 // 免费的文件和自己已经下载过的会有下载地址，收费的下载地址为空
                 if(0 == $value->integral
@@ -120,18 +137,19 @@ class MakeEffectsController extends BaseController
                     $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
+                    $value->shade           = CloudStorage::downloadUrl($value->shade);
                     $value -> integral = 0; // 已经下载过的则将下载所需金币变为0
+                    $value -> mix_type_id = is_null($value -> mix_type_id) ? '': MixType::find($value -> mix_type_id)->code;
                 } else {
 
                     $value -> address = CloudStorage::downloadUrl($value -> address);
                     $value -> high_address = CloudStorage::downloadUrl($value -> high_address);
                     $value -> super_address = CloudStorage::downloadUrl($value -> super_address);
+                    $value->shade           = CloudStorage::downloadUrl($value->shade   );
+                    $value -> mix_type_id = is_null($value -> mix_type_id) ? '': MixType::find($value -> mix_type_id)->code;
 
-//                    $value -> address = '';
-//                    $value -> high_address = '';
-//                    $value -> super_address = '';
                 }
-
+                    unset($value -> id);
                 // 效果预览
 //                $value -> address = CloudStorage::privateUrl_zip($value -> address);
 
@@ -140,8 +158,6 @@ class MakeEffectsController extends BaseController
                 // 效果封面
                 $value -> cover = CloudStorage::downloadUrl($value -> cover);
 
-                // 删除原id
-                unset($value -> id);
             }
 
             return response() -> json(['data'=>$audio],200);
@@ -182,7 +198,8 @@ class MakeEffectsController extends BaseController
     {
         try{
             // 获取效果的id
-            $file_id = Crypt::decrypt($request -> get('file_id'));
+//            $file_id = Crypt::decrypt($request -> get('file_id'));
+            $file_id = $request -> get('file_id');
 
             // 获取详情
 

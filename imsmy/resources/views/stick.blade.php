@@ -53,7 +53,7 @@
             });
         </script>
         <div style="height: 380px;"></div>
-        <p class="text-center low-color"><a href="http://www.goobird.com">Copyright © 北京谷鸟科技有限公司</a> <a href="http://www.miibeian.gov.cn" target="_blank"> | 京ICP备15066211号 </a> <a href="http://www.cssmoban.com/" target="_blank"></a></p>
+        <p class="text-center low-color"><a href="https://www.goobird.com">Copyright © 北京谷鸟科技有限公司</a> <a href="www.miibeian.gov.cn" target="_blank"> | 京ICP备15066211号 </a> <a href="" target="_blank"></a></p>
     </body>
     <script>
         /*

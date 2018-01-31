@@ -1212,6 +1212,24 @@ $api->version(['v1'],function($api){
             //修改用户喜好
             $api->post('users/likes/edit','UserLikes@edit');
 
+            //不感兴趣
+            $api->post('/users/unlike/{type}/{id}','UserUnlikeController@add')
+            ->where('id','[0-9]+')
+            ->where('type','[0-9]+');
+
+            //获取话题详情
+            $api -> get('topic/details/{id}','RelatedController@topicDetails')
+                ->where('id','[0-9]+');
+
+            //根据动态的信息获取相关
+            $api->get('/tweets/related/{id?}','RelatedController@index')
+                ->where('id','[0-9]+');
+
+            //话题的操作
+            $api->post('/tweet/topic/operate','RelatedController@toHandpick');
+
+            //浏览精华
+            $api->get('/tweet/topic/addhandpick/{topic_id}','RelatedController@handpickIndex');
         });
 
 

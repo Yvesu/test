@@ -59,6 +59,8 @@ class Tweet extends Common
         'norm_video',
         'high_video',
         'transcoding_video',
+        'lgt',
+        'lat',
     ];
 
     /**
@@ -905,6 +907,19 @@ class Tweet extends Common
     public function standbyCover()
     {
         return $this->hasMany('App\Models\TweetSandbtCover','tweet_id','id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function hasOnePhone()
+    {
+        return $this->hasOne('App\Models\TweetPhone','id','phone_id');
+    }
+
+    public function hasOneTweetTopic()
+    {
+        return $this->hasOne('App\Models\TweetTopic','tweet_id','id');
     }
 
 

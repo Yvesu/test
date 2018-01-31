@@ -13,6 +13,7 @@ use App\Models\Activity;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Validator;
+use Auth;
 
 /**
  * 赛事相关接口
@@ -61,6 +62,9 @@ class CompetitionController extends BaseController
     public function insert($id,Request $request)
     {
         try{
+            //扣除用户的积分
+
+
             // 验证接收数据格式是否正确
             $validator = Validator::make($request->all(), [
                 'comment'  => 'required|max:255',
@@ -83,6 +87,9 @@ class CompetitionController extends BaseController
             $arr = [
                 'icon'         => $input['icon']?:'',
                 'user_id'      => $id,
+                'theme'        => removeXSS($request->get('theme','')),
+                'lgt'          => removeXSS($request->get('lgt','')),
+                'lat'          => removeXSS($request->get('lat','')),
                 'comment'      => removeXSS($request -> get('comment')),
                 'bonus'        => $bonus,
                 'location'     => $input['location']===null ?  '' :  $input['location'],

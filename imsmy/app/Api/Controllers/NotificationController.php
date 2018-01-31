@@ -144,7 +144,7 @@ class NotificationController extends BaseController
                 case 3:
                     $type = [1];
                     break;
-                // 新增粉丝
+
                 case 4:
                     $type = [5];
                     break;

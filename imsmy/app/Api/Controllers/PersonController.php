@@ -27,14 +27,11 @@ class PersonController extends BaseController
     public function tweet(Request $request)
     {
         try{
-//            过滤数据
-            if( !is_numeric($request->get('page',1))   || !is_numeric($request->get('id')) )  return response()->json(['message'=>'bad_request'],403);
-
             //页码
-            $page = $request -> get('page');
+            $page = (int)$request -> get('page');
 
             //被查看用户的id
-            $be_watch_userid = $request->get('id');
+            $be_watch_userid = (int)$request->get('id');
 
             //判断用户是否登录
             $user = Auth::guard('api')->user();

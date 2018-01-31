@@ -732,6 +732,8 @@ class AllSearchController extends Controller
                                 $friends[] = $v;
                             }
                         }
+                    }else{
+                        $friends = [];
                     }
                     $number_1 = $number - $tweet_2->count();
 
@@ -1057,6 +1059,8 @@ class AllSearchController extends Controller
                             $friends[] = $v;
                         }
                     }
+                }else{
+                    $friends = [];
                 }
                 $number_1 = $number - $tweet_2->count();
 

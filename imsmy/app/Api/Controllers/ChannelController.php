@@ -100,15 +100,14 @@ class ChannelController extends BaseController
         try{
 
             // 获取用户在数据库的频道信息
-            $channels = UserChannel::where('user_id',$id)->firstOrFail(['channel_id']);
+//            $channels = UserChannel::where('user_id',$id)->firstOrFail(['channel_id']);
 
             // 获取频道id数组
-            $channel_ids = explode(',',$channels->channel_id);
+//            $channel_ids = explode(',',$channels->channel_id);
 
             // 获取各频道具体信息
-            $channels_data = Channel::whereIn('id',$channel_ids)
-                -> active()
-                -> orderByRaw("field (id, ".$channels->channel_id.")")
+            $channels_data = Channel:: active()
+                ->orderBy('sort')
                 -> get(['id', 'name', 'ename', 'icon']);
 
             // 获取用户是否有关注好友

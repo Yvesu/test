@@ -368,7 +368,7 @@ class ActivityController extends BaseController
         }])
             -> where('tweet_id', $tweet_id)
             -> where('status', 0)
-            -> orderBy('id', 'DESC')
+            -> orderBy('like_count', 'DESC')
 //            -> where('reply_id','!=',null)
             -> get();
 
@@ -377,7 +377,7 @@ class ActivityController extends BaseController
                $q -> select(['id','nickname','avatar']);
            }]) -> where('tweet_id', $tweet_id)
                -> where('status', 0)
-               -> orderBy('id', 'DESC')
+               -> orderBy('like_count', 'DESC')
                -> where('reply_id','=',null)
                -> get();
        }
@@ -396,14 +396,23 @@ class ActivityController extends BaseController
      */
     public function nearbyActivity(Request $request)
     {
-        if (is_null( $nearby = $request->get('nearby')))    return response()->json(['message'=>'bad_request'],403);
+        if (is_null($lgt = $request->get('lgt'))   ||  is_null( $lat = $request ->get('lat'))) return response()->json(['message'=>'bad_request'],403);
+
+        $big_lgt = $lgt + 0.5;
+
+        $small_lgt = $lgt - 0.5;
+
+        $big_lat = $lat + 0.5;
+
+        $small_lat = $lat - 0.5;
 
         $page = $request->get('page',1);
 
         $data_1 = Activity::ofExpires()
-            ->where('nearby',$nearby)
             -> ofType(2)
             -> active()
+            -> whereBetween('lgt',[$small_lgt,$big_lgt])
+            -> whereBetween('lat',[$small_lat,$big_lat])
             -> forPage($page,$this->paginate)
             -> pluck('id');
 
@@ -413,10 +422,11 @@ class ActivityController extends BaseController
 
             if ($user){
                 $data_2 = Activity::where('user_id',$user->id)
-                    ->where('nearby',$nearby)
                     -> ofExpires()
                     -> ofType(3)
                     -> where('active',0)
+                    -> whereBetween('lgt',[$small_lgt,$big_lgt])
+                    -> whereBetween('lat',[$small_lat,$big_lat])
                     -> forPage($page,$this->paginate)
                     -> pluck('id');
                 $arr = array_merge($data_2->all(),$data_1->all());
