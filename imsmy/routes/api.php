@@ -1139,6 +1139,12 @@ $api->version(['v1'],function($api){
         //返回通知
         $api->any('/notification','QiNiuNotificationController@notification');
 
+        //转码通知
+        $api->any('/notification/trans','QiNiuNotificationController@transcoding');
+
+        //拼接通知
+        $api->any('/notification/join','QiNiuNotificationController@joinvideo');
+
         //视频下载
         $api->get('/download/tweet/{id}','DownloadTweetController@mark')
             ->where('id','[0-9]+');
@@ -1230,8 +1236,19 @@ $api->version(['v1'],function($api){
 
             //浏览精华
             $api->get('/tweet/topic/addhandpick/{topic_id}','RelatedController@handpickIndex');
+
+            //访问记录
+             $api->get('/visit/{from}/{to}','VisitController@add');
+
+             //查看访问记录
+            $api->get('/visit/{id}','VisitController@index');
+
+            //删除访问记录
+            $api->post('/visit/delete','VisitController@delete');
         });
 
+        $api->post('/yellowcheck','YellowNoticeController@notice');
 
+        $api->get('/yy','YyController@index');
     });
 });

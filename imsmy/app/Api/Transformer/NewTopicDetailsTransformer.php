@@ -49,7 +49,7 @@ class NewTopicDetailsTransformer extends Transformer
             'name'              => $topic->name,
             'color'             => $topic->color,
             'size'              => $topic->size,
-            'compere'           => $topic->hasOneCompere ? ($this->usersTransformer->transform($topic->hasOneCompere)) : '',
+            'compere'           => $topic->hasOneCompere ? ($this->usersTransformer->transform($topic->hasOneCompere)) : null,
             'icon'              => CloudStorage::downloadUrl($topic->icon),
             'photo'             => $video ? ($video->photo ? CloudStorage::downloadUrl($video->photo) : '') : '',
             'screen_shot'       => $video ? ($video->screen_shot ? CloudStorage::downloadUrl($video->screen_shot) : '') : '',

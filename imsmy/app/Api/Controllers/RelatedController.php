@@ -265,7 +265,6 @@ class RelatedController extends Controller
                         }
                         $hot_topic_tweet =  $this->topicTweetTransformer->transformCollection( $hot_topic_tweet->all() );
                     }
-
                     $nohot_topic_tweet = $this->topicTweetTransformer->transformCollection( $nohot_topic_tweet->all() );
 
                     $data =  mult_unique( array_merge($handpicks,$hot_topic_tweet,$nohot_topic_tweet) );

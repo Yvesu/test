@@ -42,6 +42,7 @@ class Qicheck extends Command
      */
     public function handle()
     {
+        \App\Models\NoExitWord::create(['keyword'=>'2018']);
 //        set_time_limit(0);
 
         $ids = \DB::table('tweet_to_qiniu')->take(2)->where('active',1)->pluck('tweet_id');

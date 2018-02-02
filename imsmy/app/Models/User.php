@@ -530,4 +530,9 @@ class User extends Common implements AuthenticatableContract,
         return $this->belongsToMany('App\Models\FilmfestUser\FilmfestUserRoleGroup','filmfest_user_user_role_group','user_id','role_group_id');
     }
 
+    public function hasOneVisit()
+    {
+        return $this -> hasOne('App\Models\VisitHistory','to','from');
+    }
+
 }

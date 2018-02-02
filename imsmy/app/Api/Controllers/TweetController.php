@@ -33,6 +33,7 @@ use App\Models\KeywordTweets;
 use App\Models\Make\MakeTemplateFile;
 use App\Models\Mark;
 use App\Models\NoExitWord;
+use App\Models\PrivateLetter;
 use App\Models\TweetActivity;
 use App\Models\TweetContent;
 use App\Models\TweetHot;
@@ -706,7 +707,7 @@ class TweetController extends BaseController
 
 
             // 内容 过滤内容
-            $content = $request->get('content') ? removeXSS($request->get('content')) : '';
+            $content = $request->get('content') ? removeXSS($request->get('content')) : '分享视频';
 
             // 判断
             if($newTweet['video']){
@@ -799,10 +800,13 @@ class TweetController extends BaseController
                 $shot_width_height = $request->get('shot_width_height');
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
-                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
-                    TweetTrasf::create([
-                        'tweet_id' =>   $tweet->id,
-                    ]);
+//                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
+                if (  $width >= 1280  || $height >= 720  ){
+//                    TweetTrasf::create([
+//                        'tweet_id' =>   $tweet->id,
+//                    ]);
+//                    $trans = [$tweet->id,$newTweet['video'],$newTweet['shot_width_height'],];
+                    $this->trans($tweet->id,$newTweet['video'],$newTweet['shot_width_height']);
                 }
             }
 
@@ -881,7 +885,8 @@ class TweetController extends BaseController
             if ($request->get('joinvideo') === '1' ){
                 if (is_null( $join_id = $request->get('joinid'))) return response()->json(['message'=>'joinid empty'],400);
                 JoinVideo::find($join_id)->increment('down_count');
-                TweetJoin::create(['tweet_id' => $tweet->id,'join_id'  => $join_id,]);
+//                TweetJoin::create(['tweet_id' => $tweet->id,'join_id'  => $join_id,]);
+                $this->join($tweet->id,$join_id);
             }
 
             // 根据用户ID及话题数组数据，创建不存在的话题，并返回所有话题的ID
@@ -943,14 +948,14 @@ class TweetController extends BaseController
 
             DB::commit();
 
-//            大于10分钟  人工审核
-            if( (int)$request->get('duration') <= 600){
-                //写入待检测
-                DB::table('tweet_to_qiniu')->insert([
-                    'tweet_id'    => $tweet->id,
-                    'create_time' => time(),
-                ]);
-            }
+////            大于10分钟  人工审核
+//            if( (int)$request->get('duration') <= 600){
+//                //写入待检测
+//                DB::table('tweet_to_qiniu')->insert([
+//                    'tweet_id'    => $tweet->id,
+//                    'create_time' => time(),
+//                ]);
+//            }
 
             //是否添加水印
             if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);
@@ -971,7 +976,9 @@ class TweetController extends BaseController
                     'create_time'   =>  time(),
                 ]);
             }
-
+            //鉴黄
+//            YyController::check($tweet->id);
+            $this->check($tweet -> id);
             return response()->json($this->tweetsTransformer->transform($tweet),201);
 
         }catch(ModelNotFoundException $e){
@@ -2974,6 +2981,170 @@ class TweetController extends BaseController
              default :
                  return response()->json(['message'=>'bad request'],400);
          }
+    }
+
+    /**
+     * @param $id
+     */
+    private function check($id)
+    {
+        //        //获取动态信息
+        $tweet = Tweet::find($id);
+//        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
+        //如果被删除则标记为检测通过
+        if ($tweet->active === 3 || $tweet->active === 5 ){
+            YellowCheck::where('tweet_id',$id)->update(['active'=>2]);
+            die();
+        }
+        //封面路径
+        $url = CloudStorage::ImageCheck($tweet->screen_shot);
+
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
+                    "Referer:http://www.goobird.com",
+            ],
+        ];
+
+        $context = stream_context_create($opts);
+        $image_qpulp = file_get_contents($url, false, $context);
+
+        $image_qpulp_res = json_decode($image_qpulp, true);
+
+        if ($image_qpulp_res['result']['label'] == 0) {
+            // 七牛检测未通过  涉及色情
+            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+
+            //创建记录
+            $tweet_qiniu_check = TweetQiniuCheck::create([
+                'user_id'   => $tweet->user_id,
+                'tweet_id' => $tweet->id,
+                'image_qpulp' => 2,
+                'create_time' => time(),
+            ]);
+
+            //创建私信
+            $tweet =  Tweet::find( $tweet->id);
+            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+            $time = time();
+            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+            PrivateLetter::create([
+                'from' => 1000437,
+                'to'    => $tweet->user_id,
+                'content'   => $tweet_content,
+                'created_at' => $time,
+                'updated_at' =>$time,
+            ]);
+
+        } else if ($image_qpulp_res['result']['label'] == 1) {
+            // 七牛检测未通过  涉及色情
+            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+            //创建记录
+            $tweet_qiniu_check = TweetQiniuCheck::create([
+                'user_id'   => $tweet->user_id,
+                'tweet_id' => $tweet->id,
+                'image_qpulp' => 1,
+                'create_time' => time(),
+            ]);
+
+//            创建私信
+            $tweet =  Tweet::find( $tweet->id);
+//
+            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+
+            $time = time();
+            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+            PrivateLetter::create([
+                'from' => 1000437,
+                'to'    => $tweet->user_id,
+                'content'   => $tweet_content,
+                'created_at' => $time,
+                'updated_at' =>$time,
+            ]);
+
+        } else {
+            $tweet_qiniu_check = TweetQiniuCheck::create([
+                'user_id'   => $tweet->user_id,
+                'tweet_id' => $tweet->id,
+                'image_qpulp' => 0,
+                'create_time' => time(),
+            ]);
+        }
+
+        //政治人物检测
+        $url_z = CloudStorage::qpolitician($tweet->screen_shot);  //tupian
+
+        $opts_2 = [
+            'http' => [
+                'method' => 'GET',
+                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
+                    "Referer:http://www.goobird.com",
+            ],
+        ];
+        $context = stream_context_create($opts_2);
+        $qpolitician = file_get_contents($url_z, false, $context);
+
+        //取数据
+        $qpolitician_result = json_decode($qpolitician, true);
+
+        //写入检测记录
+        foreach ($qpolitician_result['result']['detections'] as $v) {
+            if (array_key_exists("sample", $v)) {
+                //写入记录
+                TweetQiniuCheck::where('id', '=', $tweet_qiniu_check->id)->update(['qpolitician' => 1]);
+
+                //修改状态
+                Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+
+                //创建私信
+                $tweet =  Tweet::find( $tweet->id);
+
+                $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+                $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                $time = time();
+
+                PrivateLetter::create([
+                    'from' => 1000437,
+                    'to'    => $tweet->user_id,
+                    'content'   => $tweet_content,
+                    'created_at' => $time,
+                    'updated_at' =>$time,
+                ]);
+            }
+        }
+
+        $notice = "http://hivideo.com/api/yellowcheck";
+        CloudStorage::yellowCheck($id,$tweet->video,$notice);
+    }
+
+    /**
+     * @param $tweet_id
+     * @param $join_id
+     */
+    public function join($tweet_id,$join_id)
+    {
+        $json_id = $join_id;         //$tweet['join_id'];
+        $id =  $tweet_id;          //$tweet['tweet_id'];
+        $notice = 'http://www.hivideo.com/api/notification/join';
+        CloudStorage::joint($id,$json_id,$notice);
+    }
+
+    /**
+     * @param $tweet_id
+     * @param $video
+     * @param $width_height
+     */
+    public function trans($tweet_id,$video,$width_height)
+    {
+        $shot_width_height =$width_height;    //$tweet['shot_width_height'];
+        $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
+        $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
+        $url = CloudStorage::downloadUrl($video);
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        $notice = 'http://www.hivideo.com/api/notification/trans';
+        $tid = $tweet_id;
+        CloudStorage::transcoding_tweet($tid,'hivideo-video',$file_url,$width,$height,1,$notice);
     }
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Controllers;
+namespace App\Console\Commands;
 
 use App\Facades\CloudStorage;
 use App\Models\PrivateLetter;
@@ -8,12 +8,40 @@ use App\Models\Tweet;
 use App\Models\TweetContent;
 use App\Models\TweetQiniuCheck;
 use App\Models\YellowCheck;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Console\Command;
 
-class YyController extends Controller
+class TweetYellowCheck extends Command
 {
-    public function index()
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'Yellow:check';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
     {
         //寻找待检测数据
         $tweet_ids = YellowCheck::where('active',1)->take(5)->pluck('tweet_id');
@@ -31,7 +59,7 @@ class YyController extends Controller
     {
 //        //获取动态信息
         $tweet = Tweet::find($id);
-//        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
+        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
         //如果被删除则标记为检测通过
         if ($tweet->active === 3 || $tweet->active === 5 ){
             YellowCheck::where('tweet_id',$id)->update(['active'=>2]);
@@ -158,5 +186,4 @@ class YyController extends Controller
         CloudStorage::yellowCheck($id,$tweet->video,$notice);
 
     }
-
 }

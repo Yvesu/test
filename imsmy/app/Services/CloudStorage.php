@@ -926,7 +926,15 @@ class CloudStorage
         list($id, $err) = $pfop->execute($file_url, $fops);
      }
 
-
-
-
+    public function yellowCheck($id,$url,$notice = null)
+    {
+        $bucket = 'hivideo-video';
+        $pipeline = 'hivideo_alternative';
+        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+        $url = $this->downloadUrl($url);
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        $save = base64_urlSafeEncode($bucket .":&" .$id.'&&');
+        $fops = "tupu-video/nrop/f/5/s/30"."|saveas/".$save;
+        list($id, $err) = $pfop->execute($file_url, $fops);
+    }
 }

@@ -49,7 +49,9 @@ class QiNiuNotificationController extends BaseController
         }
     }
 
-    //
+    /**
+     *
+     */
     public function joinvideo()
     {
         $NotifyData = file_get_contents("php://input");
@@ -66,7 +68,7 @@ class QiNiuNotificationController extends BaseController
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
                 if (  $width >= 1280  || $height >= 720   ){
-                    $notice = 'http://www.goobird.com/api/notification/trans';
+                    $notice = 'http://www.hivideo.com/api/notification/trans';
                     CloudStorage::join_transcoding('hivideo-video',$keyword,$width,$height,1,$notice);
                 }
             }

@@ -15,7 +15,7 @@ class DeleteController extends BaseController
     public function tweet(Request $request)
     {
         try {
-            if (!is_numeric($id = $request->get('id'))) return response()->json(['message' => 'bad_request'], 403);
+            $id = $request->get('id');
 
             //修改动态的状态为个人删除
             $tweet = Tweet::findOrFail($id);
@@ -45,6 +45,7 @@ class DeleteController extends BaseController
             }
             if ($mysql_res) {
                 User::find($user_id)->decrement('work_count');
+                \DB::table('tweet_to_qiniu')->where('tweet_id',$id)->update(['active'=>2]);
                 return response()->json(['message' => 'success'], 200);
             } else {
                 return response()->json(['message' => 'failed'], 500);
