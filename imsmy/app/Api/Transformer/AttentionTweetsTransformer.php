@@ -10,14 +10,16 @@ class AttentionTweetsTransformer extends Transformer
 {
     protected $usersTransformer;
     protected $tweetSimplyRepliesTransformer;
-
+    private $tweetPhoneTransformer;
     public function __construct(
         UsersTransformer $usersTransformer,
-        TweetSimplyRepliesTransformer $tweetSimplyRepliesTransformer
+        TweetSimplyRepliesTransformer $tweetSimplyRepliesTransformer,
+        TweetPhoneTransformer $tweetPhoneTransformer
     )
     {
         $this->usersTransformer = $usersTransformer;
         $this->tweetSimplyRepliesTransformer = $tweetSimplyRepliesTransformer;
+        $this->tweetPhoneTransformer = $tweetPhoneTransformer;
     }
 
     public function transform($tweet)
@@ -47,8 +49,12 @@ class AttentionTweetsTransformer extends Transformer
             'user'              =>      $this->usersTransformer->transform($tweet->belongsToUser),
             'shot_width_height' =>      $tweet->shot_width_height,
             'location'          =>      $tweet->location,
+            'lgt'               =>      $tweet->lgt ?: '',
+            'lat'               =>      $tweet->lat ?: '',
             'duration'          =>      $tweet->duration,
             'created_at'        =>      strtotime($tweet->created_at),
+            'phone'             =>      $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
+            'phone_id'          =>      $tweet->phone_id,
         ];
     }
 

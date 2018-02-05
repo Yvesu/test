@@ -46,11 +46,11 @@ class YellowNoticeController extends Controller
                     'from' => 1000437,
                     'to'    => $tweet->user_id,
                     'content'   => $tweet_content,
+                    'user_type' => '1',
                     'created_at' => $time,
                     'updated_at' =>$time,
                 ]);
             }
         }
-        NoExitWord::create(['keyword'=>'2018']);
     }
 }

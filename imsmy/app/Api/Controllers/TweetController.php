@@ -801,7 +801,7 @@ class TweetController extends BaseController
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
 //                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
-                if (  $width >= 1280  || $height >= 720  ){
+                if (  $width >= 1280  || $height >= 1280  ){
 //                    TweetTrasf::create([
 //                        'tweet_id' =>   $tweet->id,
 //                    ]);
@@ -1132,6 +1132,8 @@ class TweetController extends BaseController
                 $q->with('belongsToUser')->status()->where('anonymity',0)->orderBy('like_count','DESC');
             },'belongsToManyChannel' => function($q){
                 $q -> select('name');
+            },'hasOnePhone' =>function($q){
+                $q->select(['id','phone_type','phone_os','camera_type']);
             }])
                 ->ofAttention($subscriptions,$friends, $id)
                 ->orderBy('id','DESC')
@@ -3033,6 +3035,7 @@ class TweetController extends BaseController
                 'from' => 1000437,
                 'to'    => $tweet->user_id,
                 'content'   => $tweet_content,
+                'user_type' => '1',
                 'created_at' => $time,
                 'updated_at' =>$time,
             ]);
@@ -3059,6 +3062,7 @@ class TweetController extends BaseController
                 'from' => 1000437,
                 'to'    => $tweet->user_id,
                 'content'   => $tweet_content,
+                'user_type' => '1',
                 'created_at' => $time,
                 'updated_at' =>$time,
             ]);
@@ -3108,6 +3112,7 @@ class TweetController extends BaseController
                     'from' => 1000437,
                     'to'    => $tweet->user_id,
                     'content'   => $tweet_content,
+                    'user_type' => '1',
                     'created_at' => $time,
                     'updated_at' =>$time,
                 ]);

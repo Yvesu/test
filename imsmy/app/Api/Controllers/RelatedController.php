@@ -185,8 +185,8 @@ class RelatedController extends Controller
                 $tweets = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
                 $count  = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }else{
-                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
+                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }
         }
         return  response()->json([

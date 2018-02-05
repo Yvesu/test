@@ -78,6 +78,8 @@ class PrivateLetterController extends BaseController
             // 获取要查询的类型，0=>未读，1=>已读,默认为0
             $type = $request->input('type',0);
 
+            $user_type = $request->get('user_type','0');
+
             // 自定义函数，判断是否为数字，并返回包含 时间date和条数limit 的数组
             list($date, $limit) = $this->transformerTimeAndLimit($request);
 
@@ -85,12 +87,29 @@ class PrivateLetterController extends BaseController
             $user = Auth::guard('api')->user();
 
             // 按时间倒序获取前20条数据
-            $letters = PrivateLetter::with('belongsToUser')
-                        ->ofData($type,$date)
-                        ->orderBy('created_at','desc')
-                        ->where('to',$user->id)
-                        ->take($limit)
-                        ->get();
+            if ($user_type === '0'){            //用户的私信
+                $letters = PrivateLetter::with('belongsToUser')
+//                        ->ofData($type,$date)
+                    ->where('user_type','0')
+                    ->orderBy('created_at','desc')
+                    ->where('to',$user->id)
+                    ->take($limit)
+                    ->get();
+            }else{              //官方的私信
+
+                $letters = PrivateLetter::with('belongsToUser')
+//                        ->ofData($type,$date)
+                    ->where('user_type','1')
+                    ->orderBy('created_at','desc')
+                    ->where('to',$user->id)
+                    ->take($limit)
+                    ->get();
+            }
+
+            $official_count = PrivateLetter::where('user_type','1')
+                ->where('type',0)
+                ->where('to',$user->id)
+                ->count();
 
             // 统计或获取数据的数量
             $count = $letters->count();
@@ -113,12 +132,14 @@ class PrivateLetterController extends BaseController
                 // 本次获取数据的总数量
                 'count'      => $count,
 
+                'official_count'    => $official_count,
+
                 // 下次请求的链接，如果本次获取条数不为0，将请求条件附带上
-                'link'       => $count
-                    ? $request->url() .
-                    '?limit=' . $limit .
-                    '&timestamp=' . strtotime($letters->last()->created_at)  // 最后一条信息的时间戳
-                    : null      // 如果数量为0，则不附带搜索条件
+//                'link'       => $count
+//                    ? $request->url() .
+//                    '?limit=' . $limit .
+//                    '&timestamp=' . strtotime($letters->last()->created_at)  // 最后一条信息的时间戳
+//                    : null      // 如果数量为0，则不附带搜索条件
             ];
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
@@ -172,7 +193,8 @@ class PrivateLetterController extends BaseController
                 // 防止SQL注入处理
                 'content' => removeXSS($request->get('content') === null ? null : $request->get('content')),
                 'created_at' => $time,
-                'updated_at' => $time
+                'updated_at' => $time,
+                'pid'       =>$request->get('pid','0'),
             ];
 
             // 查询user表中是否有收发私信者的信息

@@ -15,7 +15,10 @@ class PrivateLetter extends Model
         'from',
         'to',
         'content',
-        'type'
+        'type',
+        'user_type',
+        'is_tweet',
+        'pid',
     ];
 
     /**

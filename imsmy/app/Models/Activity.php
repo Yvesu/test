@@ -35,7 +35,7 @@ class Activity extends Common
 
     /**
      * 活动与活动介绍视频扩展表 一对一关系
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return \Illuminate\Database\Eloquent\   Relations\BelongsToMany
      */
     public function hasOneExtension()
     {
