@@ -132,6 +132,7 @@ class RelatedController extends Controller
      */
     private function phone( $tweets_nohot,$tweets_hot,$info,$is_hot,$id,$user_info )
     {
+        $user_likes = explode(',',$user_info['channels'][0]);
         if ($id === '0'){
             if ( $is_hot === '0' ){
                 $tweets = $tweets_nohot->where('phone_id',$info)->get();
@@ -142,11 +143,11 @@ class RelatedController extends Controller
             }
         }else{
             if ( $is_hot === '0' ){
-                $tweets = $tweets_nohot->where('phone_id',$info)->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-                $count = $tweets_nohot->where('phone_id',$info)->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
+                $tweets = $tweets_nohot->where('phone_id',$info)->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count = $tweets_nohot->where('phone_id',$info)->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }else{
-                $tweets = $tweets_hot->where('phone_id',$info)->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-                $count = $tweets_hot->where('phone_id',$info)->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
+                $tweets = $tweets_hot->where('phone_id',$info)->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count = $tweets_hot->where('phone_id',$info)->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }
         }
         return  response()->json([
@@ -171,22 +172,22 @@ class RelatedController extends Controller
         $small_lgt = $lgt_lat_obj->lgt - 0.1;
         $big_lat = $lgt_lat_obj->lat + 0.1;
         $small_lat = $lgt_lat_obj->lat - 0.1;
-
+        $user_likes = explode(',',$user_info['channels'][0]);
         if ($id === '0'){
             if ( $is_hot === '0' ){
                 $tweets = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->get();
                 $count  = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->count();
             }else{
-                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->get();
-                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->count();
+                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }
         }else{
             if ( $is_hot === '0' ){
-                $tweets = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-                $count  = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
+                $tweets = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count  = $tweets_nohot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }else{
-                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
+                $tweets = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $count  = $tweets_hot-> whereBetween('lgt',[$small_lgt,$big_lgt])-> whereBetween('lat',[$small_lat,$big_lat])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->count();
             }
         }
         return  response()->json([
@@ -202,6 +203,7 @@ class RelatedController extends Controller
         $top = [];
         $handpicks = [];
         $hot_topic_tweet = [];
+        $user_likes = explode(',',$user_info['channels'][0]);
         if ($id === '0'){
             if ( $topic->compere_id === 0){
                 //话题动态
@@ -286,7 +288,7 @@ class RelatedController extends Controller
                 $topic_arr = TweetTopic::where('topic_id',$info)->pluck('tweet_id');
 
                 //热门动态
-                $tweets_1 = $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$topic_arr->all())->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $tweets_1 = $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$topic_arr->all())->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
 
                 //随机 5 个
                 if ($tweets_1->count() >= 5 ){
@@ -296,7 +298,7 @@ class RelatedController extends Controller
                 $tweets_1 = $this->topicTweetTransformer->transformCollection($tweets_1->all());
 
                 //非热门
-                $tweets_2 = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$topic_arr->all())->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $tweets_2 = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$topic_arr->all())->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
 
                 $tweets_2 = $this->topicTweetTransformer->transformCollection($tweets_2->all());
 
@@ -317,7 +319,7 @@ class RelatedController extends Controller
                 //非热门
                 $nohot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->pluck('tweet_id');
 
-                $nohot_topic_tweet   =  $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$nohot_topic_tweet_ids->all())->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                $nohot_topic_tweet   =  $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$nohot_topic_tweet_ids->all())->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
 
 //                $tweet_3_ids = $this ->friendsTweets((int)$id ,$page);
 
@@ -330,7 +332,7 @@ class RelatedController extends Controller
                     $top_id = TweetTopic::where('topic_id',$info)->where('is_top','1')->pluck('tweet_id');
 
                     if ( $top_id->all() ){
-                        $top = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->where('id',$top_id->all()[0])->first();
+                        $top = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->where('id',$top_id->all()[0])->first();
                         $top =  $this->topicTweetTransformer->transform( $top );
                     }
 
@@ -338,7 +340,7 @@ class RelatedController extends Controller
                     $handpicks_ids = TweetTopic::where('topic_id',$info)->where('is_handpick','1')->pluck('tweet_id');
 
                     if ( $handpicks_ids->all() ){
-                        $handpicks = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$handpicks_ids->all() )->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                        $handpicks = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$handpicks_ids->all() )->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
                         if ($handpicks->count() >=5 ){
                             $handpicks = $handpicks->random(5);
                         }
@@ -349,7 +351,7 @@ class RelatedController extends Controller
                     $hot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->pluck('tweet_id');
 
                     if ($hot_topic_tweet_ids ->all() ){
-                        $hot_topic_tweet   =  $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$hot_topic_tweet_ids->all())->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
+                        $hot_topic_tweet   =  $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$hot_topic_tweet_ids->all())->whereIn('channel_id', $user_likes)->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
                         if ($hot_topic_tweet->count() >=5 ){
                             $hot_topic_tweet = $hot_topic_tweet->random(5);
                         }

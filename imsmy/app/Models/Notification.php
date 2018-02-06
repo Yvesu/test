@@ -32,4 +32,9 @@ class Notification extends Model
     {
         return $this->belongsTo('App\Models\User', 'user_id', 'id');
     }
+
+    public function belongsToTweet()
+    {
+        return $this->belongsTo('App\Models\Tweet','type_id','id');
+    }
 }

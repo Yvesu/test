@@ -1211,6 +1211,16 @@ class AuthController extends BaseController
 
     }
 
+    public function bound(Request $request)
+    {
+        //获取用户信息
+        $user = \Auth::guard('api')->user();
+
+        //获取用户的手机号
+        $phone = removeXSS( $request -> get('phone') );
+
+//        if ( strlen())
+    }
 }
 
 

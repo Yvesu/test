@@ -168,7 +168,7 @@ class NotificationController extends BaseController
                 ->take($limit)
                 ->get();
 
-            // 将获取的数据标记为已读
+           // 将获取的数据标记为已读
             $notifications -> each(function($notification){
 
                 // 判断是否为未读消息，如果为未读消息，标记为已读

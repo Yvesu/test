@@ -12,6 +12,7 @@ namespace App\Api\Transformer;
 use App\Models\Tweet;
 use App\Models\TweetReply;
 use App\Models\TweetTrophyLog;
+use App\Models\User;
 
 class NotificationsTransformer extends  Transformer
 {
@@ -41,14 +42,28 @@ class NotificationsTransformer extends  Transformer
     
     public function transform($notification)
     {
+        if ( in_array($notification->type,[0,1,3],TRUE)){
+            $tweet = Tweet::find($notification->type_id);
+        }else{
+            $tweet_id = TweetReply::find($notification->type_id)->tweet_id;
+            $tweet = Tweet::find($tweet_id);
+        }
+        $user = User::find($notification->user_id);
+        //查看用户状态
+        $user_status =  (in_array($user->status,[1],TRUE) || in_array($user->active,[5],TRUE));
+        //查看动态的状态
+        $tweet_status  = in_array($tweet->active,[0,1],TRUE);
         return [
             'id'             => $notification->id,
             'type'           => $notification->type,
             'type_id'        => $notification->type_id,
             'created_at'     => strtotime($notification->created_at),
             'data'           => $this->getData($notification->type,$notification->type_id),
-            'user'           => $this->usersTransformer->transform($notification->belongsToUser)
+            'user'           => $this->usersTransformer->transform($notification->belongsToUser),
+            'user_status'    => $user_status ? '0' : '1',
+            'tweet_status'   => $tweet_status ? '1' : '0',
         ];
+
     }
 
     // 根据不同类型获取数据
