@@ -42,11 +42,11 @@ class AuthTransformer extends Transformer
         //redis方法
         $key ='STRING:TOKEN:'.$auth->id;
 
-        if ($old_token = \Redis::get($key)){
+        if ($old_token = Redis::get($key)){
             JWTAuth::invalidate($old_token);
-            \Redis::del($key);
+            Redis::del($key);
         }
-        \Redis::setex($key,60*1440 ,$auth->token);
+        Redis::setex($key,60*1440 ,$auth->token);
 
         return [
             'id'           => (string)$auth->id,

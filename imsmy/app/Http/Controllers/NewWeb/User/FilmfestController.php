@@ -162,7 +162,7 @@ class FilmfestController extends Controller
                 if($sumNum == 0){
                     $data4 = '0%';
                 }else{
-                    $data4 = (round($data3/$sumNum,2)*100).'%';
+                    $data4 = (round($data3/$sumNum,2)*100);
                 }
                 $tempData = [
                     'name'=>$content,
@@ -301,9 +301,9 @@ class FilmfestController extends Controller
             if($type == 1){
                 if($range){
                     //  开始时间
-                    $startDay = trim(explode('-',$range)[0]);
+                    $startDay = trim(explode(' - ',$range)[0]);
                     //  结束时间
-                    $endDay = trim(explode('-',$range)[1]);
+                    $endDay = trim(explode(' - ',$range)[1]);
                     //  开始时间时间戳
                     $startTime = strtotime($startDay.' 00:00:00');
                     //  结束时间时间戳
@@ -311,40 +311,37 @@ class FilmfestController extends Controller
                     //  总时间秒数
                     $time = $endTime - $startTime;
                     //  总天数
-                    $sumDays = floor($time/86400);
+                    $sumDays = (int)floor($time/86400);
                     //  每份天数
-                    $everyDays = floor($sumDays/12);
+                    $everyDays = ((int)floor($sumDays/12))==0?1:(int)floor($sumDays/12);
                     //  开始时间数组
-                    $startDayArray = explode('.',$startDay);
+                    $startDayArray = explode('-',$startDay);
                     //  结束时间数组
-                    $endDayArray = explode('.',$endDay);
+                    $endDayArray = explode('-',$endDay);
                     //  下标数组
                     $date = [];
                     //  长月数组
                     $longMonth =  [1,3,5,7,8,10,12];
                     //  短月数组
-                    $shortMonth = [4,6,8,11];
+                    $shortMonth = [4,6,9,11];
                     for($i=0;$i<12;$i++)
                     {
                         //  临时天数
-                        $tempDay = $startDayArray[2]+$everyDays;
-                        if($tempDay>31 && in_array($startDayArray[1],$longMonth)){          //  临时天数大于31天，且开始为长月
+                        $tempDay = (int)($startDayArray[2])+$everyDays;
+                        if($tempDay>31 && in_array((int)$startDayArray[1],$longMonth)){          //  临时天数大于31天，且开始为长月
                             $endDayArray[2] = $tempDay-31;
-                            if($startDayArray[1]==12){                                      //  当前月是否为12月
+                            if((int)$startDayArray[1]==12){                                      //  当前月是否为12月
                                 $endDayArray[1] = 1;
+                                $endDayArray[0] = (int)$startDayArray[0] +1;
                             }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
+                                $endDayArray[1] = (int)$startDayArray[1] + 1;
                             }
-                        }elseif ($tempDay<=31 && in_array($startDayArray[1],$longMonth)){   //  临时天数小于31天，且当前月为长月
+                        }elseif ($tempDay<=31 && in_array((int)$startDayArray[1],$longMonth)){   //  临时天数小于31天，且当前月为长月
                             $endDayArray[2] = $tempDay;
-                            if($startDayArray[1]==12){                                      //  当前月是否为12月
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
-                        }elseif ($startDayArray[1]==2){                                     //  如果是2月
+                            $endDayArray[1] = (int)$startDayArray[1];
+                        }elseif ((int)$startDayArray[1]==2){                                     //  如果是2月
                             //  如果是闰年
-                            if((($startDayArray[0]%4==0 && $startDayArray[0]%100 != 0) || $startDayArray[0]%400 == 0)){
+                            if((((int)$startDayArray[0]%4==0 && (int)$startDayArray[0]%100 != 0) || (int)$startDayArray[0]%400 == 0)){
                                 if($tempDay>29){
                                     $endDayArray[2] = $tempDay-29;
                                     $endDayArray[1] = 3;
@@ -361,22 +358,17 @@ class FilmfestController extends Controller
                                     $endDayArray[1] = 2;
                                 }
                             }
-                        }elseif ($tempDay>30 && in_array($startDayArray[1],$shortMonth)){   //  如果是小月
+                        }elseif ($tempDay>30 && in_array((int)$startDayArray[1],$shortMonth)){   //  如果是小月
                             $endDayArray[2] = $tempDay-30;
-                            if($startDayArray[1]==12){
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
-                        }elseif ($tempDay<=30 && in_array($startDayArray[1],$shortMonth)){
+                            $endDayArray[1] = (int)$startDayArray[1] + 1;
+                        }elseif ($tempDay<=30 && in_array((int)$startDayArray[1],$shortMonth)){
                             $endDayArray[2] = $tempDay;
-                            if($startDayArray[1]==12){
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
+                            $endDayArray[1] = (int)$startDayArray[1];
                         }
-                        $date[$i] = $startDayArray[0].'.'.$startDayArray[1].'.'.$startDayArray[2].'.'.' - '.$endDayArray[0].'.'.$endDayArray[1].'.'.$endDayArray[2];
+                        $date[$i] = (int)$startDayArray[0].'.'.(int)$startDayArray[1].'.'.(int)$startDayArray[2].'.'.' - '.(int)$endDayArray[0].'.'.(int)$endDayArray[1].'.'.(int)$endDayArray[2];
+                        $startDayArray[0] = $endDayArray[0];
+                        $startDayArray[1] = $endDayArray[1];
+                        $startDayArray[2] = $endDayArray[2];
                     }
 
                     $data = [];
@@ -520,40 +512,38 @@ class FilmfestController extends Controller
                     //  总时间秒数
                     $time = $endTime - $startTime;
                     //  总天数
-                    $sumDays = floor($time/86400);
+                    $sumDays = (int)floor($time/86400);
                     //  每份天数
-                    $everyDays = floor($sumDays/12);
+                    $everyDays = ((int)floor($sumDays/12))==0?1:(int)floor($sumDays/12);
                     //  开始时间数组
-                    $startDayArray = explode('.',$startDay);
+                    $startDayArray = explode('-',$startDay);
                     //  结束时间数组
-                    $endDayArray = explode('.',$endDay);
+                    $endDayArray = explode('-',$endDay);
                     //  下标数组
                     $date = [];
                     //  长月数组
                     $longMonth =  [1,3,5,7,8,10,12];
                     //  短月数组
-                    $shortMonth = [4,6,8,11];
+                    $shortMonth = [4,6,9,11];
                     for($i=0;$i<12;$i++)
                     {
                         //  临时天数
-                        $tempDay = $startDayArray[2]+$everyDays;
-                        if($tempDay>31 && in_array($startDayArray[1],$longMonth)){          //  临时天数大于31天，且开始为长月
+                        $endDayArray[0] = (int)$startDayArray[0];
+                        $tempDay = (int)($startDayArray[2])+$everyDays;
+                        if($tempDay>31 && in_array((int)$startDayArray[1],$longMonth)){          //  临时天数大于31天，且开始为长月
                             $endDayArray[2] = $tempDay-31;
-                            if($startDayArray[1]==12){                                      //  当前月是否为12月
+                            if((int)$startDayArray[1]==12){                                      //  当前月是否为12月
                                 $endDayArray[1] = 1;
+                                $endDayArray[0] = (int)$startDayArray[0] +1;
                             }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
+                                $endDayArray[1] = (int)$startDayArray[1] + 1;
                             }
-                        }elseif ($tempDay<=31 && in_array($startDayArray[1],$longMonth)){   //  临时天数小于31天，且当前月为长月
+                        }elseif ($tempDay<=31 && in_array((int)$startDayArray[1],$longMonth)){   //  临时天数小于31天，且当前月为长月
                             $endDayArray[2] = $tempDay;
-                            if($startDayArray[1]==12){                                      //  当前月是否为12月
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
-                        }elseif ($startDayArray[1]==2){                                     //  如果是2月
+                            $endDayArray[1] = (int)$startDayArray[1];
+                        }elseif ((int)$startDayArray[1]==2){                                     //  如果是2月
                             //  如果是闰年
-                            if((($startDayArray[0]%4==0 && $startDayArray[0]%100 != 0) || $startDayArray[0]%400 == 0)){
+                            if((((int)$startDayArray[0]%4==0 && (int)$startDayArray[0]%100 != 0) || (int)$startDayArray[0]%400 == 0)){
                                 if($tempDay>29){
                                     $endDayArray[2] = $tempDay-29;
                                     $endDayArray[1] = 3;
@@ -570,22 +560,17 @@ class FilmfestController extends Controller
                                     $endDayArray[1] = 2;
                                 }
                             }
-                        }elseif ($tempDay>30 && in_array($startDayArray[1],$shortMonth)){   //  如果是小月
+                        }elseif ($tempDay>30 && in_array((int)$startDayArray[1],$shortMonth)){   //  如果是小月
                             $endDayArray[2] = $tempDay-30;
-                            if($startDayArray[1]==12){
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
-                        }elseif ($tempDay<=30 && in_array($startDayArray[1],$shortMonth)){
+                            $endDayArray[1] = (int)$startDayArray[1] + 1;
+                        }elseif ($tempDay<=30 && in_array((int)$startDayArray[1],$shortMonth)){
                             $endDayArray[2] = $tempDay;
-                            if($startDayArray[1]==12){
-                                $endDayArray[1] = 1;
-                            }else{
-                                $endDayArray[1] = $startDayArray[1] + 1;
-                            }
+                            $endDayArray[1] = (int)$startDayArray[1] + 1;
                         }
-                        $date[$i] = $startDayArray[0].'.'.$startDayArray[1].'.'.$startDayArray[2].'.'.' - '.$endDayArray[0].'.'.$endDayArray[1].'.'.$endDayArray[2];
+                        $date[$i] = (int)$startDayArray[0].'.'.(int)$startDayArray[1].'.'.(int)$startDayArray[2].' - '.(int)$endDayArray[0].'.'.(int)$endDayArray[1].'.'.(int)$endDayArray[2];
+                        $startDayArray[0] = $endDayArray[0];
+                        $startDayArray[1] = $endDayArray[1];
+                        $startDayArray[2] = $endDayArray[2];
                     }
 
                     $data = [];
@@ -602,7 +587,7 @@ class FilmfestController extends Controller
                                 $id = $value->id;
                                 $date1 = $startTime+($time/12)*$k;
                                 $tempData1 = FilmfestsProductions::where('filmfests_id',$filmfest_id)->where('time_update','<',$date1)->count('like_count');
-                                $date1 = $startTime+($time/12)*$k;
+                                $date2 = $startTime+($time/12)*$k;
                                 $tempData2 = FilmfestsProductions::where('filmfests_id',$filmfest_id)->where('time_update','<',$date2)->count('like_count');
                                 $tempData = ($tempData2 - $tempData1);
                             }else{
@@ -897,7 +882,9 @@ class FilmfestController extends Controller
                     $q->where('filmfest_user_user_group.id',$userGroupId);
                 })->get();
             //  用来放置顶部数据
-            $topData = [];
+            $topData = [
+                'group'=>[],
+            ];
             $sumPeopleNum = 0;
             //  判断角色组是否为空，不为空则取出所有角色组下人的数量
             if($roleGroup->count()>0){
@@ -917,7 +904,7 @@ class FilmfestController extends Controller
                                 continue;
                             }
                         }
-                        array_push($topData,['des'=>$v->name,'num'=>$tempAuditions,]);
+                        array_push($topData['group'],['des'=>$v->name,'num'=>$tempAuditions,]);
                         if(strstr($v->name,'冻结')){
                            continue;
                         }else{
@@ -998,6 +985,7 @@ class FilmfestController extends Controller
                         }
 
                         $tempMainData = [
+                            'id'=>$tempUserId,
                             'avatar'=>$tempAvatar,
                             'nickname'=>$tempNickName,
                             'phone'=>$tempPhone,
@@ -1038,12 +1026,11 @@ class FilmfestController extends Controller
                                 })->whereHas('group',function ($q)use($type){
                                     $q->where('filmfest_user_role_group.id',$type);
                                 })->get();
-
                             $role = [];
                             if($tempRole->count()>0){
                                 foreach($tempRole as $kk => $vv)
                                 {
-                                    array_push($role,['role'=>$vv->name]);
+                                    array_push($role,['role'=>$vv->role_name]);
                                 }
                             }
 
@@ -1075,6 +1062,7 @@ class FilmfestController extends Controller
                             }
 
                             $tempMainData = [
+                                'id'=>$tempUserId,
                                 'avatar'=>$tempAvatar,
                                 'nickname'=>$tempNickName,
                                 'phone'=>$tempPhone,
@@ -1123,7 +1111,8 @@ class FilmfestController extends Controller
                     'icon'=>'user',
                     'key'=>'sub1',
                     'des'=>'审片室',
-                    'uri'=>''
+                    'uri'=>'',
+                    'children'=>[],
                 ],
             ];
             $role = FilmfestUserRole::where('role_name','not like','%冻结%')
@@ -1141,7 +1130,7 @@ class FilmfestController extends Controller
                         'key'=>$v->pass()->first()?$v->pass()->first()->key:'',
                         'uri'=>$v->pass()->first()?$v->pass()->first()->pass:'',
                     ];
-                    array_push($menu[1],$tempData);
+                    array_push($menu[1]['children'],$tempData);
                 }
             }
             $userGroup = FilmfestUserUserGroup::where('filmfest_id',$filmfest_id)->get();
@@ -1158,7 +1147,7 @@ class FilmfestController extends Controller
                     array_push($menu,$tempData);
                 }
             }
-            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'set']);
+            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'setting']);
         }else{
             $menu = [
                 [
@@ -1171,7 +1160,8 @@ class FilmfestController extends Controller
                     'icon'=>'user',
                     'key'=>'sub1',
                     'des'=>'审片室',
-                    'uri'=>''
+                    'uri'=>'',
+                    'children'=>[],
                 ],
             ];
             $role = FilmfestUserRole::where('filmfest_id',$filmfest_id)
@@ -1192,7 +1182,7 @@ class FilmfestController extends Controller
                         'key'=>$v->pass()->first()?$v->pass()->first()->key:'',
                         'uri'=>$v->pass()->first()?$v->pass()->first()->pass:'',
                     ];
-                    array_push($menu[1],$tempData);
+                    array_push($menu[1]['children'],$tempData);
                 }
             }
         }
@@ -1292,18 +1282,23 @@ class FilmfestController extends Controller
                 foreach ($users as $k => $v)
                 {
                     if(($v->verify!=0) && ($v->hasOneLocalAuth()->first())){
-                        $user_id = $v->id;
-                        $avatar = $v->avatar;
-                        $nickName = $v->nickname;
-                        $fansNum = $v->hasManySubscriptions()->get()->count();
-                        $tempData = [
-                            'user_id'=>$user_id,
-                            'avatar'=>$avatar,
-                            'nickname'=>$nickName,
-                            'fansNum'=>$fansNum,
-                        ];
-                        array_push($data,$tempData);
-                        $usabelNum = $usabelNum+1;
+                        if($v->filmfest_role()->first() && ($v->filmfest_role()->first()->filmfest_id == $filmfest_id)){
+                            continue;
+                        }else{
+                            $user_id = $v->id;
+                            $avatar = $v->avatar;
+                            $nickName = $v->nickname;
+                            $fansNum = $v->hasManySubscriptions()->get()->count();
+                            $tempData = [
+                                'user_id'=>$user_id,
+                                'avatar'=>$avatar,
+                                'nickname'=>$nickName,
+                                'fansNum'=>$fansNum,
+                            ];
+                            array_push($data,$tempData);
+                            $usabelNum = $usabelNum+1;
+                        }
+
                     }else{
                         continue;
                     }
@@ -1336,43 +1331,55 @@ class FilmfestController extends Controller
             if(count($id)>$vacancyNum){
                 return response()->json(['message'=>'您添加的用户数量已经超出限制'],200);
             }
-
+            $role = FilmfestUserRole::where('filmfest_id',$filmfest_id)
+                ->where('status',1)
+                ->whereHas('group',function ($q) use($role_group_id){
+                    $q->where('filmfest_user_role_group.id',$role_group_id);
+                })->get();
+            DB::beginTransaction();
             foreach ($id as $k => $v)
             {
                 $is_subscription = Subscription::where('from',$user_id)->where('to',$v)->first();
                 if($is_subscription){
-                    $newRoleUser = new UserFilmfestUserRole;
-                    $newRoleUser -> user_id = $v;
-                    $newRoleUser -> role_id = $v->id;
-                    $newRoleUser -> time_add = time();
-                    $newRoleUser -> time_update = time();
-                    $newRoleUser -> save();
 
-                    $newUserFilmfest = new FilmfestUserFilmfestUser;
-                    $newUserFilmfest -> user_id = $v;
-                    $newUserFilmfest -> filmfest_id = $filmfest_id;
-                    $newUserFilmfest -> time_add = time();
-                    $newUserFilmfest -> time_update = time();
-                    $newUserFilmfest -> save();
+                    if($role->count()>0){
+                        foreach($role as $kk => $vv)
+                        {
+                            $newRoleUser = new UserFilmfestUserRole;
+                            $newRoleUser -> user_id = $v;
+                            $newRoleUser -> role_id = $vv->id;
+                            $newRoleUser -> time_add = time();
+                            $newRoleUser -> time_update = time();
+                            $newRoleUser -> save();
+                        }
 
-                    $newUserUserRoleGroup = new FilmfestUserUserRoleGroup;
-                    $newUserUserRoleGroup -> user_id = $v;
-                    $newUserUserRoleGroup -> role_group_id = $role_group_id;
-                    $newUserUserRoleGroup -> time_add = time();
-                    $newUserUserRoleGroup -> time_update = time();
-                    $newUserUserRoleGroup -> save();
+                        $newUserFilmfest = new FilmfestUserFilmfestUser;
+                        $newUserFilmfest -> user_id = $v;
+                        $newUserFilmfest -> filmfest_id = $filmfest_id;
+                        $newUserFilmfest -> time_add = time();
+                        $newUserFilmfest -> time_update = time();
+                        $newUserFilmfest -> save();
+
+                        $newUserUserRoleGroup = new FilmfestUserUserRoleGroup;
+                        $newUserUserRoleGroup -> user_id = $v;
+                        $newUserUserRoleGroup -> role_group_id = $role_group_id;
+                        $newUserUserRoleGroup -> time_add = time();
+                        $newUserUserRoleGroup -> time_update = time();
+                        $newUserUserRoleGroup -> save();
 
 
-                    $newUserUserGroup = new FilmfestUserUserGroup;
-                    $newUserUserGroup -> group_id = $userGroupId;
-                    $newUserUserGroup -> user_id = $v;
-                    $newUserUserGroup -> time_add = time();
-                    $newUserUserGroup -> time_update = time();
-                    $newUserUserGroup -> save();
-
+                        $newUserUserGroup = new FilmfestUserUserUserGroup;
+                        $newUserUserGroup -> group_id = $userGroupId;
+                        $newUserUserGroup -> user_id = $v;
+                        $newUserUserGroup -> time_add = time();
+                        $newUserUserGroup -> time_update = time();
+                        $newUserUserGroup -> save();
                     }else{
-                        return response()->json(['message'=>'数据不合法']);
+                        return response()->json(['message'=>'您目前无可用的角色可以添加'],200);
                     }
+                }else{
+                    return response()->json(['message'=>'数据不合法']);
+                }
 
 
 
@@ -1396,7 +1403,10 @@ class FilmfestController extends Controller
             $filmfest_id = $request->get('id');
             $user_id = \Auth::guard('api')->user()->id;
             $is_subscription = Subscription::where('from',$user_id)->where('to',$id)->first();
-            if($is_subscription){
+            $is_filmfest = User::select('id')->where('id',$id)->whereHas('filmfest',function ($q) use($filmfest_id){
+                $q->where('filmfests.id',$filmfest_id);
+            })->first();
+            if($is_subscription && $is_filmfest){
                 $user = User::find($id);
                 $avatar = $user->avatar;
                 $nickName = $user->nickname;
@@ -1411,7 +1421,7 @@ class FilmfestController extends Controller
                 if($roles->count()>0){
                     foreach($roles as $kk => $vv)
                     {
-                        array_push($role,['role'=>$vv->name]);
+                        array_push($role,['role'=>$vv->role_name]);
                     }
                 }
                 $num = FilmfestUserReviewLog::where('filmfest_id',$filmfest_id)->where('user_id',$id)
@@ -1429,9 +1439,16 @@ class FilmfestController extends Controller
                 $again_watch_num = FilmfestUserReviewLog::where('watch_num','>',1)
                     ->where('filmfest_id',$filmfest_id)->where('user_id',$id)->count('production_id');
 
-                $complete_watch_num_proportion = ((round($complete_watch_num/$num,2))*100).'%';
+                if($num == 0){
+                    $complete_watch_num_proportion = '0%';
 
-                $again_watch_num_proportion = ((round($again_watch_num/$num,2))*100).'%';
+                    $again_watch_num_proportion = '0%';
+                }else{
+                    $complete_watch_num_proportion = ((round($complete_watch_num/$num,2))*100).'%';
+
+                    $again_watch_num_proportion = ((round($again_watch_num/$num,2))*100).'%';
+                }
+
 
                 $logs = FilmfestUserReviewChildLog::where('user_id',$id)->where('filmfest_id',$filmfest_id)
                     ->orderBy('time_add','desc')->get();
@@ -1512,7 +1529,7 @@ class FilmfestController extends Controller
     {
         try{
             $filmfest_id = $request->get('id');
-            $data = FilmfestUserUserGroup::where('filmfest_id',$filmfest_id)->get();
+            $data = FilmfestUserUserGroup::where('filmfest_id',$filmfest_id)->where('status',1)->get();
             if($data->count()>0){
                 $group = [];
                 foreach ($data as $k => $v)
@@ -1521,7 +1538,7 @@ class FilmfestController extends Controller
                         'id'=>$v->id,
                         'name'=>$v->name,
                     ];
-                    array_merge($group,$tempData);
+                    array_push($group,$tempData);
                 }
             }else{
                 return response()->json(['message'=>'您还没有添加用户组'],200);
@@ -1537,14 +1554,15 @@ class FilmfestController extends Controller
     {
         try{
             $filmfest_id = $request->get('id');
-            $user_group = $request->get('user_grpoup',null);
+            $user_group = $request->get('user_group',null);
             if(is_null($user_group)){
                 return response()->json(['message'=>'数据不合法']);
             }
             $role_group = FilmfestUserRoleGroup::where('filmfest_id',$filmfest_id)
                 ->where('status',1)
+                ->where('name','not like','%冻结%')
                 ->whereHas('userGroup',function ($q) use($user_group){
-                    $q->where('filmfest_user_user_group.id',$user_group);
+                    $q->where('filmfest_user_user_group.id',$user_group)->where('status',1);
                 })->get();
             if($role_group->count()>0){
                 $group = [];
@@ -1554,7 +1572,7 @@ class FilmfestController extends Controller
                         'id'=>$v->id,
                         'name'=>$v->name,
                     ];
-                    array_merge($group,$tempData);
+                    array_push($group,$tempData);
                 }
             }else{
                 return response()->json(['message'=>'您还没有添加角色组'],200);
@@ -1569,29 +1587,29 @@ class FilmfestController extends Controller
     {
         try{
             $filmfest_id = $request->get('id');
-            $user_group = $request->get('role_group',null);
-            if($user_group){
+            $role_group = $request->get('role_group',null);
+            if(is_null($role_group)){
                 return response()->json(['message'=>'数据不合法'],200);
             }
             $role = FilmfestUserRole::where('filmfest_id',$filmfest_id)
                 ->where('status',1)
-                ->whereHas('group',function ($q) use($user_group){
-                    $q->where('filmfest_user_role_group.id',$user_group);
+                ->whereHas('group',function ($q) use($role_group){
+                    $q->where('filmfest_user_role_group.id',$role_group)->where('status',1);
                 })->get();
             if($role->count()>0){
-                $role = [];
+                $group = [];
                 foreach ($role as $k => $v)
                 {
                     $tempData = [
                         'id'=>$v->id,
-                        'name'=>$v->name,
+                        'name'=>$v->role_name,
                     ];
-                    array_push($role,$tempData);
+                    array_push($group,$tempData);
                 }
             }else{
                 return response()->json(['message'=>'您还没有添加角色'],200);
             }
-            return response()->json(['data'=>$role],200);
+            return response()->json(['data'=>$group],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],200);
         }
@@ -1702,7 +1720,7 @@ class FilmfestController extends Controller
         try{
             $filmfest_id = $request->get('id');
             $user_id = $request->get('user_id',null);
-            if($user_id){
+            if(is_null($user_id)){
                 return response()->json(['message'=>'数据不合法'],200);
             }
             $user = User::find($user_id);
@@ -1713,7 +1731,7 @@ class FilmfestController extends Controller
                 {
                     if($v->filmfest_id == $filmfest_id){
                         $role_id = $v->id;
-                        if(strstr($v->name,'发起')){
+                        if(strstr($v->role_name,'发起')){
                             return response()->json(['message'=>'这个用户不可以冻结'],200);
                         }
                         UserFilmfestUserRole::where('user_id',$user_id)->where('role_id',$role_id)->delete();
@@ -1740,9 +1758,9 @@ class FilmfestController extends Controller
             }
             $newRoleGroupId = FilmfestUserRoleGroup::where('name','like','%冻结%')
                 ->where('filmfest_id',$filmfest_id)->first()->id;
-            $newRoleId = FilmfestUserRole::where('name','like','%冻结%')
+            $newRoleId = FilmfestUserRole::where('role_name','like','%冻结%')
                 ->where('filmfest_id',$filmfest_id)->first()->id;
-            $newUserRoleGroup = new FilmfestUserRoleGroup;
+            $newUserRoleGroup = new FilmfestUserUserRoleGroup;
             $newUserRoleGroup -> user_id = $user_id;
             $newUserRoleGroup -> role_group_id = $newRoleGroupId;
             $newUserRoleGroup -> time_add = time();
@@ -1813,22 +1831,88 @@ class FilmfestController extends Controller
     {
         try{
             $filmfest_id = $request->get('id');
+            $type = $request->get('type',1);
             $user = \Auth::guard('api')->user()->id;
             $user_id = $request->get('user_id',null);
-            if(is_null($user_id)){
-                return response()->json(['message'=>'数据不合法'],200);
-            }
             $content = $request->get('content',null);
             if(is_null($content)){
                 return response()->json(['message'=>'私信不能为空'],200);
             }
-            $newPrivaterLetter = new PrivateLetter;
-            $newPrivaterLetter -> from = $user;
-            $newPrivaterLetter -> to = $user_id;
-            $newPrivaterLetter -> content = $content;
-            $newPrivaterLetter -> created_at = time();
-            $newPrivaterLetter -> updated_at = time();
-            $newPrivaterLetter -> save();
+            DB::beginTransaction();
+            if($type == 1){             //  给一个或指定用户发私信，知道用户id
+                if(is_null($user_id)){
+                    return response()->json(['message'=>'数据不合法'],200);
+                }
+                $user_id = rtrim($user_id,'|');
+                $user_id = explode('|',$user_id);
+                foreach ($user_id as $k => $v)
+                {
+                    $newPrivaterLetter = new PrivateLetter;
+                    $newPrivaterLetter -> from = $user;
+                    $newPrivaterLetter -> to = $v;
+                    $newPrivaterLetter -> content = $content;
+                    $newPrivaterLetter -> created_at = time();
+                    $newPrivaterLetter -> updated_at = time();
+                    $newPrivaterLetter -> save();
+                }
+
+            }elseif($type==2){
+                //  给角色组统一群发消息
+                $role_group_id = $request->get('role_group_id',null);
+                if(is_null($role_group_id)){
+                    return response()->json(['message'=>'数据不合法'],200);
+                }
+                $role_group_id = rtrim($role_group_id,'|');
+                $role_group_id = explode('|',$role_group_id);
+                foreach ($role_group_id as $k => $v)
+                {
+                    $user_id = User::whereHas('filmfestUserRoleGroup',function ($q) use($v,$filmfest_id){
+                        $q->where('filmfest_user_role_group.id',$v)->where('filmfest_user_role_group.filmfest_id',$filmfest_id);
+                    })->get();
+                    if($user_id->count()>0){
+                        foreach ($user_id as $kk => $vv)
+                        {
+                            $newPrivaterLetter = new PrivateLetter;
+                            $newPrivaterLetter -> from = $user;
+                            $newPrivaterLetter -> to = $vv->id;
+                            $newPrivaterLetter -> content = $content;
+                            $newPrivaterLetter -> created_at = time();
+                            $newPrivaterLetter -> updated_at = time();
+                            $newPrivaterLetter -> save();
+                        }
+                    }
+                }
+
+            }elseif($type == 3){
+                //  给用户组统一发消息
+                $user_group_id = $request->get('user_group_id',null);
+                if(is_null($user_group_id)){
+                    return response()->json(['message'=>'数据不合法'],200);
+                }
+                $user_group_id = rtrim($user_group_id,'|');
+                $user_group_id = explode('|',$user_group_id);
+                foreach ($user_group_id as $k => $v)
+                {
+                    $user_id = User::whereHas('filmfestUserGroup',function ($q)use($v,$filmfest_id){
+                        $q->where('filmfest_user_user_group.id',$v)->where('filmfest_user_user_group.filmfest_id',$filmfest_id);
+                    })->get();
+                    if($user_id->count()>0){
+                        foreach ($user_id as $kk => $vv)
+                        {
+                            $newPrivaterLetter = new PrivateLetter;
+                            $newPrivaterLetter -> from = $user;
+                            $newPrivaterLetter -> to = $vv->id;
+                            $newPrivaterLetter -> content = $content;
+                            $newPrivaterLetter -> created_at = time();
+                            $newPrivaterLetter -> updated_at = time();
+                            $newPrivaterLetter -> save();
+                        }
+                    }
+                }
+            }else{
+                return response()->json(['message'=>"Hey! Brother, don't be funny!"]);
+            }
+            DB::commit();
 
             return response()->json(['message'=>'发送成功'],200);
         }catch (ModelNotFoundException $q){
