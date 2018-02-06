@@ -27,6 +27,11 @@ class LettersTransformer extends Transformer
 
             $object = PrivateLetter::where('pid',$letter->id)->get();
 
+            foreach ($object as $v){
+                if ($v->type === 0){
+                    PrivateLetter::find($v->id)->update(['type'=>1]);
+                }
+            }
             return [
                 'id'            =>  $letter -> id,
                 'content'       =>  $letter -> content,
@@ -77,15 +82,4 @@ class LettersTransformer extends Transformer
         }
     }
 
-    protected function findSubTree($cates,$id=0,$lev=1){
-        $subtree = [];//子孙数组
-        foreach ($cates as $v) {
-            if($v->pid==$id){
-                $v->lev = $lev;
-                $subtree[] = $v;
-                $subtree = array_merge($subtree,$this->findSubTree($cates,$v->id,$lev+1));
-            }
-        }
-        return $subtree;
-    }
 }

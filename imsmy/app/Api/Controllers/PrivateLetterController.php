@@ -90,6 +90,7 @@ class PrivateLetterController extends BaseController
             if ($user_type === '0'){            //用户的私信
                 $letters = PrivateLetter::with('belongsToUser')
 //                        ->ofData($type,$date)
+                    ->where('pid',0)
                     ->where('user_type','0')
                     ->orderBy('created_at','desc')
                     ->where('to',$user->id)
@@ -100,6 +101,7 @@ class PrivateLetterController extends BaseController
                 $letters = PrivateLetter::with('belongsToUser')
 //                        ->ofData($type,$date)
                     ->where('user_type','1')
+                    ->where('pid',0)
                     ->orderBy('created_at','desc')
                     ->where('to',$user->id)
                     ->take($limit)
@@ -115,10 +117,16 @@ class PrivateLetterController extends BaseController
             $count = $letters->count();
 
             // 将所取数据状态设置为已读     调试期间，暂时注释，调试结束打开
-            $letters -> each(function($letter){
-                $letter -> type = 1;
-                $letter -> save();
-            });
+//            $letters -> each(function($letter){
+//                $letter -> type = 1;
+//                $letter -> save();
+//            });
+
+            foreach ($letters as $v){
+                if ($v->type === 0){
+                    PrivateLetter::find($v->id)->update(['type'=>1]);
+                }
+            }
 
             // 返回数据
             return [

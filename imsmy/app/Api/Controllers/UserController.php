@@ -429,8 +429,10 @@ class UserController extends BaseController
                         $data['like'] += $value -> total;
                         break;
                     case 2:
+                    case 4:
                         $data['reply'] += $value -> total;
                         break;
+
                 }
             }
 

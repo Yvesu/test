@@ -1219,7 +1219,7 @@ class AuthController extends BaseController
         //获取用户的手机号
         $phone = removeXSS( $request -> get('phone') );
 
-//        if ( strlen())
+        //TODO
     }
 }
 

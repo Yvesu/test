@@ -48,7 +48,7 @@ class RelatedController extends Controller
         $page = $request ->get('page',1);
 
         //是否热门
-        $is_hot = $request->get('is_hot');
+        $is_hot = $request->get('is_hot','0');
 
         //接收匹配的信息
         if ( is_null( $info = $request->get('info')) ) return response()->json(['message'=>'bad_request'],403);

@@ -42,7 +42,7 @@ class NotificationsTransformer extends  Transformer
     
     public function transform($notification)
     {
-        if ( in_array($notification->type,[0,1,3],TRUE)){
+        if ( in_array($notification->type,[0,1],TRUE)){
             $tweet = Tweet::find($notification->type_id);
         }else{
             $tweet_id = TweetReply::find($notification->type_id)->tweet_id;
