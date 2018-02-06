@@ -801,6 +801,7 @@ class TweetController extends BaseController
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
 //                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
+
                 if (  $width >= 1280  || $height >= 1280  ){
 //                    TweetTrasf::create([
 //                        'tweet_id' =>   $tweet->id,

@@ -444,7 +444,6 @@ class ApplicationController extends Controller
                 ){
                     return response()->json(['message'=>'有数据为空'],200);
                 }
-                $duration = '1:38:49';
                 $duration = explode(':',$duration);
                 $duration = ($duration[0]*3600)+($duration[1]*60)+($duration[2]);
                 DB::beginTransaction();

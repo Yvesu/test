@@ -73,5 +73,15 @@ class TweetProduction extends Model
     {
         return $this->hasMany('App\Models\FilmfestUserReviewLog','production_id','id');
     }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与作品在竞赛中评分关联
+     */
+    public function productionGrade()
+    {
+        return $this->hasMany('App\Models\FilmfestUser\FilmfestUserProdcutionGrade','production_id','id');
+    }
     
 }

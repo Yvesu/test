@@ -90,6 +90,7 @@ Route::group(['namespace'=>'NewWeb'],function (){
     Route::get('/testuser','Office\WebIndexController@userIndex');
 
     Route::get('test','TestController@test');
+    Route::get('test2','TestController@aaa111');
 
 });
 
@@ -346,7 +347,79 @@ $api -> version('v1',function($api) {
                          */
                         $api -> post('send-privater-letter','User\FilmfestController@sendPrivaterLetter');
 
+
+
                     });
+
+                    $api -> group(['middleware'=>'filmfestUsserRole:id,role_id'],function ($api){
+
+                        /**
+                         * 审片室下面的展示
+                         */
+                        $api -> post('role-power','User\FilmfestUserController@rolePower');
+
+                        /**
+                         * 审片室内容类别
+                         */
+                        $api -> post('role-power/type','User\FilmfestUserController@productionType');
+
+                        /**
+                         * 审片室国家类别
+                         */
+                        $api -> post('role-power/country','User\FilmfestUserController@productionCountry');
+
+                        /**
+                         * 审片室语言   暂无
+                         */
+                        $api -> post('role-power/language','User\FilmfestUserController@productionLanguage');
+
+                        /**
+                         * 审片室时长
+                         */
+                        $api -> post('role-power/duration','User\FilmfestUserController@productionDuration');
+
+                        /**
+                         * 审片室状态
+                         */
+                        $api -> post('role-power/status','User\FilmfestUserController@productionStatus');
+
+                        /**
+                         * 审片室学校
+                         */
+                        $api -> post('role-power/school','User\FilmfestUserController@productionSchool');
+
+                        /**
+                         * 审片室排序
+                         */
+                        $api -> post('role-power/school','User\FilmfestUserController@productionDuration');
+
+                        /**
+                         * 审片详情
+                         */
+                        $api -> post('role-power/detail','User\FilmfestUserController@detail');
+
+                        /**
+                         * 审片视频
+                         */
+                        $api -> post('role-power/detail-video','User\FilmfestUserController@video');
+
+                        /**
+                         * 审片详情-下部分内容
+                         */
+                        $api -> post('role-power/detail-bottom','User\FilmfestUserController@bottom');
+
+                        /**
+                         * 审片详情-操作
+                         */
+                        $api -> post('role-power/detail-handle','User\FilmfestUserController@detailHandle');
+
+                        /**
+                         * 审片室报名表
+                         */
+                        $api -> post('role-power/detail-application','User\FilmfestUserController@applicationFrom');
+
+                    });
+
 
 
                 });

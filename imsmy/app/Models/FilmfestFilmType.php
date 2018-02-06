@@ -21,4 +21,9 @@ class FilmfestFilmType extends Model
     {
         return $this->belongsToMany('App\Models\Filmfests','filmfest_filmtype','type_id','filmfest_id');
     }
+
+    public function application()
+    {
+        return $this->belongsToMany('App\Models\Filmfest\Application','film_type_application','type_id','application_id');
+    }
 }

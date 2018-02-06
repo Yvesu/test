@@ -15,5 +15,5 @@ class FilmfestUserRoleRoleGroup extends Model
         'role_id','group_id','time_add','time_update'
     ];
 
-    protected $timestamps = false;
+    public $timestamps = false;
 }

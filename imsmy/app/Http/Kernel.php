@@ -67,6 +67,7 @@ class Kernel extends HttpKernel
 
         'filmfestUser' => \App\Http\Middleware\Filmfest::class, //  竞赛管理中简件
         'filmfestUsserIssue' => \App\Http\Middleware\FilmfestUserIssue::class, //  竞赛管理中间件发起者
+        'filmfestUserRole'=>\App\Http\Middleware\FilmfestUserRole::class,      //   竞赛管理中间件角色
 
         /*
          * personal
