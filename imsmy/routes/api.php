@@ -68,6 +68,8 @@ $api->version(['v1'],function($api){
 
             $api->post('third-party-auth','AuthController@thirdPartyAuth');
 
+            $api->post('bound/check','AuthController@boundcheck');
+
             //绑定手机号
             $api->post('/bound','AuthController@bound');
 
@@ -1260,10 +1262,8 @@ $api->version(['v1'],function($api){
         //触发用户动态的鉴黄
         $api->get('/yy','YyController@index');
 
-
-
-
-
+        //绑定第三方
+        $api->post('/add/third','AuthController@thirdRelatedAdd_third');
 
 
 

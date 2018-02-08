@@ -689,7 +689,7 @@ class AuthController extends BaseController
 
             //------------------------------------------------------------
             if ($user === null) {
-                return response()->json(['message'=>'the user isn`t register'],404);
+                return response()->json(['message'=>'unregistered'],404);
             }else{
                 $oauth = OAuth::where('user_id',$user->id)->first();
                 $oauth->oauth_access_token = $input['oauth_access_token'];
@@ -1224,6 +1224,11 @@ class AuthController extends BaseController
 
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     */
     public function bound(Request $request)
     {
         try {
@@ -1411,6 +1416,97 @@ class AuthController extends BaseController
         }catch (\Exception $e){
             DB::rollBack();
             return response()->json(['message'=>'bad request'],500);
+        }
+    }
+
+    public function boundcheck(Request $request)
+    {
+        try{
+            //接收手机号
+            $phone = (int)removeXSS( $request->get('phone') );
+
+            $user_phone = LocalAuth::where('username',$phone)->where('status',0)->first();
+
+            if ( !$user_phone ){
+                return response()->json(['message'=>'Can be bound'],201);
+            }else{
+                $oauth_name = $request->get('oauth_name');
+
+                $oauth_id = $request->get('oauth_id');
+
+                $oauth_access_token = $request->get('oauth_access_token');
+
+                $oauth_expires = $request->get('oauth_expires');
+
+                $user_third = OAuth::where('user_id',$user_phone->user_id)->where('oauth_name',$oauth_name)->first();
+
+                if ( !$user_third ){
+                    return response()->json(['message'=>'the phone can bound'],202);
+                }else{
+                    if ( $user_third->oauth_id == $oauth_id ){
+                        $time = getTime();
+                        $now = new Carbon();
+                        $user_third->oauth_access_token = $oauth_access_token;
+                        $user_third->oauth_expires  = Carbon::createFromTimestampUTC( $oauth_expires );
+                        $user_third->save();
+                        $user = User::find($user_phone->user_id);
+                        $user->last_token = $now;
+                        $user->save();
+                        $user->token = JWTAuth::fromUser($user);
+                        // 获取用户关注人数
+                        $user -> attention = Subscription::where('from',$user->id)->count();
+                        return response()->json($this->authTransformer->transform($user),200);
+                    }else{
+                        return response()->json(['message'=>'the phone has been bound'],403);
+                    }
+                }
+            }
+        }catch (\Exception $e){
+            return response()->json(['message'=>'bad request'],500);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function thirdRelatedAdd_third(Request $request)
+    {
+        try{
+            // 获取所有输入数据
+            $input = $request->all();
+
+            $phone = (int)$request->get('phone');
+
+            $user = LocalAuth::where('username',$phone)->first();
+
+            // 将用户信息存入 oauth 表中
+            $user = OAuth::create([
+                'user_id'            => $user->user_id,
+                'oauth_name'         => $input['oauth_name'],
+                'oauth_nickname'     => $input['oauth_nickname'],
+                'oauth_id'           => $input['oauth_id'],
+                'oauth_access_token' => $input['oauth_access_token'],
+                'oauth_expires'      => Carbon::createFromTimestampUTC($input['oauth_expires'])
+            ]);
+
+            $time = getTime();
+            $now = new Carbon();
+            $user->oauth_access_token = $input['oauth_access_token'];
+            $user->oauth_expires  = Carbon::createFromTimestampUTC( $input['oauth_expires'] );
+            $user->save();
+            $user = User::find($user->user_id);
+            $user->last_token = $now;
+            $user->save();
+            $user->token = JWTAuth::fromUser($user);
+            // 获取用户关注人数
+            $user -> attention = Subscription::where('from',$user->id)->count();
+            return response()->json($this->authTransformer->transform($user),200);
+
+        } catch (ModelNotFoundException $e){
+            return response()->json(['error'=>'bad_request'],400);
+        } catch (\Exception $e){
+            return response()->json(['error'=>'bad_request'],400);
         }
     }
 }

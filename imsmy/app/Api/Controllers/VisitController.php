@@ -67,7 +67,6 @@ class VisitController extends Controller
     {
         $page = $request -> get('page','1');
 
-        $times = VisitHistory::where('to',$id)->distinct()->forPage($page,$this->paginate)->pluck('class_time');
         $times = VisitHistory::where('to',$id)->orderBy('class_time','DESC')->distinct()->forPage($page,$this->paginate)->pluck('class_time');
 
         //统计
