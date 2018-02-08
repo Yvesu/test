@@ -29,6 +29,8 @@ use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Illuminate\Support\Facades\Log;
 use DB;
+use Tymon\JWTAuth\Middleware\BaseMiddleware;
+use Tymon\JWTAuth\Middleware\GetUserFromToken;
 use Validator;
 use Illuminate\Support\Facades\Cache;
 //use EaseMob;  // 暂停环信业务 搜索号：备忘录
@@ -661,7 +663,7 @@ class AuthController extends BaseController
 
             // 验证失败，返回错误信息
             if ($validator->fails()) {
-                throw new \Exception('bad_request',400);
+                throw new \Exception('bad_request',401);
             }
 
             $time = getTime();
@@ -680,173 +682,184 @@ class AuthController extends BaseController
 
             // 判断用户是否已经存在
             $user = User::with('hasManyOAuth')->WhereHas('hasManyOAuth',function($q) use ($input) {
-                $q->where('oauth_name',$input['oauth_name'])
+                $q
+                    ->where('oauth_name',$input['oauth_name'])
                     ->where('oauth_id',$input['oauth_id']);
             })->first();
 
-            // 如果用户可以注册，执行将数据存入数据库的操作
+            //------------------------------------------------------------
             if ($user === null) {
-
-                // 开启事务
-                DB::beginTransaction();
-
-                // 将用户信息存入 user 表
-                $user = User::create([
-                    'last_token' => $now,
-                    'nickname' => $input['oauth_nickname'],
-                    'location' => $request->get('location'),
-                    'is_thirdparty' => 1,
-                ]);
-
-                // 判断接收信息是否为空，如果不为空，执行下面操作  用于下次判断用户是否更换手机登录APP，需要再完善为空的操作
-                if($request->get('phone_id')) {
-
-                    // 将json格式的 phone_id 解析成变量
-                    $phone_data = json_decode($input['phone_id'], true);
-
-                    // 将用户信息存入 user 集合
-                    $user -> phone_model = $phone_data['model'];
-                    $user -> phone_serial = $phone_data['serial'];
-                    $user -> phone_sdk_int = $phone_data['sdk_int'];
-                }
-
-                // 保存
-                $user->save();
-
-                // 生成token
-//                $user->token = JWTAuth::fromUser($user);
-
-                // 将用户信息存入 oauth 表中
-                OAuth::create([
-                    'user_id'            => $user->id,
-                    'oauth_name'         => $input['oauth_name'],
-                    'oauth_id'           => $input['oauth_id'],
-                    'oauth_access_token' => $input['oauth_access_token'],
-                    'oauth_expires'      => Carbon::createFromTimestampUTC($input['oauth_expires'])
-                ]);
-
-                //添加注册时，要给用户添加所有频道
-                $channels_data = Channel::active()->pluck('id')->all();
-
-                // 处理成字符串
-                $channels = implode(',',$channels_data);
-
-                // 存入日志
-                \Log::info('Register => oauth_id: ' . $input['oauth_id'] . 'Location: '.$request -> get('location'));
-                \Log::info($channels);
-
-                // 为新注册用户添加频道信息
-                UserChannel::create([
-                    'user_id'       => $user->id,
-                    'channel_id'    => $channels,
-                    'time_add'      => $time,
-                    'time_update'   => $time
-                ]);
-
-                //添加IM用户信息
-//                EaseMob::createUser($user->id,$input['oauth_id']); // 暂停环信业务
-
-                # 将用户信息存入tigase表中 start
-                // 将用户相关信息存入tig_user表
-                $sha1_user_id = sha1($user->id.'@goobird');
-                $tig_user_data = [
-                    'user_id' => $user->id.'@goobird',
-                    'sha1_user_id' => $sha1_user_id,
-                    'user_pw' => bcrypt($user->id),
-                    'acc_create_time' => $now,
-                ];
-
-                $tigase_user = DB::table('tig_users')->insertGetId($tig_user_data);
-
-                // 将用户信息存入user_jid表
-//            UserJid::create([
-//                'jid_sha' => sha1($user->id.'@goobird'),
-//                'jid' => $user->id.'@goobird'
-//            ]);
-
-                // 将用户信息存入user_jid表，返回jid_id
-                $jid_id = DB::table('user_jid')->insertGetId([
-                    'jid_sha' => $sha1_user_id,
-                    'jid' => $user->id.'@goobird',
-                ]);
-
-                // 将用户信息存入 tig_nodes 表
-                // 1. node字段值为 root
-//                $nid_root = DB::table('tig_nodes')->insertGetId([
-//                    'uid' => $tigase_user,
-//                    'node' => 'root',
-//                ]);
-
-                // 2. node字段值为 privacy
-//                $nid_privacy = DB::table('tig_nodes')->insertGetId([
-//                    'uid' => $tigase_user,
-//                    'parent_nid' => $nid_root,
-//                    'node' => 'privacy',
-//                ]);
-
-                // 3. node字段值为 invisible
-//                $nid_invisible = DB::table('tig_nodes')->insertGetId([
-//                    'uid' => $tigase_user,
-//                    'parent_nid' => $nid_privacy,
-//                    'node' => 'invisible',
-//                ]);
-
-                // 将管理员 100000@goobird 信息写入用户的 tig_pairs 表
-                // 1. pkey字段值为 roster
-//                DB::table('tig_pairs')->insert([
-//                    'nid' => $nid_root,
-//                    'uid' => $tigase_user,
-//                    'pkey' => 'roster',
-//                    'pval' => "<contact jid='100000@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='100000'/>",
-//                ]);
-
-                // 2. pkey字段值为 privacy-list
-//                DB::table('tig_pairs')->insert([
-//                    'nid'  => $nid_invisible,
-//                    'uid'  => $tigase_user,
-//                    'pkey' => 'privacy-list',
-//                    'pval' => '<list name="invisible"><item action="deny" order="1"><presence-out/></item></list>',
-//                ]);
-
-                // 管理员 方面写入用户信息 tig_pairs 表 100000@goobird pkey字段值为 roster
-//                $pval = DB::table('tig_pairs')->where('nid','811')->first();
-
-//                DB::table('tig_pairs')->where('nid','811')->update([
-//                    'pval' => $pval->pval."<contact jid='".$user->id."@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='".$user->id."'/>",
-//                ]);
-
-                // 将注册成功信息写入 msg_history 表
-//                $time_now = Carbon::now()->toDateTimeString();  // 获取格式化后的时间，使用两次
-//                DB::table('msg_history')->insert([
-//                    'ts'           => $time_now,
-//                    'sender_uid'   => 80,
-//                    'receiver_uid' => $jid_id, // user_jid表中的jid_id
-//                    'msg_type'     => 1,
-//                    'message'      => '<message to="'.$user->id.'@goobird" type="chat" id="ZT3lV-23" xmlns="jabber:client" from="100000@goobird/Smack"><body>{&quot;content&quot;:&quot;欢迎使用！&quot;,&quot;time&quot;:&quot;'.$time_now.' +0800&quot;,&quot;type&quot;:0}</body><thread>70131a01-4ab7-4f95-98ed-cca8e2505b97</thread><delay from="goobird" stamp="2016-11-19T05:58:21.994Z" xmlns="urn:xmpp:delay">Offline Storage - localhost</delay></message>'
-//                ]);
-                # 将用户信息存入tigase表中 end
-
-                // 为用户添加至 zx_user_golds 表
-                GoldAccount::create([
-                    'user_id'       => $user->id,
-                    'time_add'      => $time,
-                    'time_update'   => $time
-                ]);
-
-                // 为用户创建 statistics_users 表中数据
-                StatisticsUsers::create([
-                    'user_id'           => $user->id,
-                    'time_add'          => $time,
-                    'time_update'       => $time
-                ]);
-
-                DB::commit();
-            } else {
+                return response()->json(['message'=>'the user isn`t register'],404);
+            }else{
                 $oauth = OAuth::where('user_id',$user->id)->first();
                 $oauth->oauth_access_token = $input['oauth_access_token'];
                 $oauth->oauth_expires      = Carbon::createFromTimestampUTC($input['oauth_expires']);
                 $oauth->save();
             }
+
+            // 如果用户可以注册，执行将数据存入数据库的操作
+//            if ($user === null) {
+//
+//                // 开启事务
+//                DB::beginTransaction();
+//
+//                // 将用户信息存入 user 表
+//                $user = User::create([
+//                    'last_token' => $now,
+//                    'nickname' => $input['oauth_nickname'],
+//                    'location' => $request->get('location'),
+//                    'is_thirdparty' => 1,
+//                ]);
+//
+//                // 判断接收信息是否为空，如果不为空，执行下面操作  用于下次判断用户是否更换手机登录APP，需要再完善为空的操作
+//                if($request->get('phone_id')) {
+//
+//                    // 将json格式的 phone_id 解析成变量
+//                    $phone_data = json_decode($input['phone_id'], true);
+//
+//                    // 将用户信息存入 user 集合
+//                    $user -> phone_model = $phone_data['model'];
+//                    $user -> phone_serial = $phone_data['serial'];
+//                    $user -> phone_sdk_int = $phone_data['sdk_int'];
+//                }
+//
+//                // 保存
+//                $user->save();
+//
+//                // 生成token
+////                $user->token = JWTAuth::fromUser($user);
+//
+//                // 将用户信息存入 oauth 表中
+//                OAuth::create([
+//                    'user_id'            => $user->id,
+//                    'oauth_name'         => $input['oauth_name'],
+//                    'oauth_id'           => $input['oauth_id'],
+//                    'oauth_access_token' => $input['oauth_access_token'],
+//                    'oauth_expires'      => Carbon::createFromTimestampUTC($input['oauth_expires'])
+//                ]);
+//
+//                //添加注册时，要给用户添加所有频道
+//                $channels_data = Channel::active()->pluck('id')->all();
+//
+//                // 处理成字符串
+//                $channels = implode(',',$channels_data);
+//
+//                // 存入日志
+//                \Log::info('Register => oauth_id: ' . $input['oauth_id'] . 'Location: '.$request -> get('location'));
+//                \Log::info($channels);
+//
+//                // 为新注册用户添加频道信息
+//                UserChannel::create([
+//                    'user_id'       => $user->id,
+//                    'channel_id'    => $channels,
+//                    'time_add'      => $time,
+//                    'time_update'   => $time
+//                ]);
+//
+//                //添加IM用户信息
+////                EaseMob::createUser($user->id,$input['oauth_id']); // 暂停环信业务
+//
+//                # 将用户信息存入tigase表中 start
+//                // 将用户相关信息存入tig_user表
+//                $sha1_user_id = sha1($user->id.'@goobird');
+//                $tig_user_data = [
+//                    'user_id' => $user->id.'@goobird',
+//                    'sha1_user_id' => $sha1_user_id,
+//                    'user_pw' => bcrypt($user->id),
+//                    'acc_create_time' => $now,
+//                ];
+//
+//                $tigase_user = DB::table('tig_users')->insertGetId($tig_user_data);
+//
+//                // 将用户信息存入user_jid表
+////            UserJid::create([
+////                'jid_sha' => sha1($user->id.'@goobird'),
+////                'jid' => $user->id.'@goobird'
+////            ]);
+//
+//                // 将用户信息存入user_jid表，返回jid_id
+//                $jid_id = DB::table('user_jid')->insertGetId([
+//                    'jid_sha' => $sha1_user_id,
+//                    'jid' => $user->id.'@goobird',
+//                ]);
+//
+//                // 将用户信息存入 tig_nodes 表
+//                // 1. node字段值为 root
+////                $nid_root = DB::table('tig_nodes')->insertGetId([
+////                    'uid' => $tigase_user,
+////                    'node' => 'root',
+////                ]);
+//
+//                // 2. node字段值为 privacy
+////                $nid_privacy = DB::table('tig_nodes')->insertGetId([
+////                    'uid' => $tigase_user,
+////                    'parent_nid' => $nid_root,
+////                    'node' => 'privacy',
+////                ]);
+//
+//                // 3. node字段值为 invisible
+////                $nid_invisible = DB::table('tig_nodes')->insertGetId([
+////                    'uid' => $tigase_user,
+////                    'parent_nid' => $nid_privacy,
+////                    'node' => 'invisible',
+////                ]);
+//
+//                // 将管理员 100000@goobird 信息写入用户的 tig_pairs 表
+//                // 1. pkey字段值为 roster
+////                DB::table('tig_pairs')->insert([
+////                    'nid' => $nid_root,
+////                    'uid' => $tigase_user,
+////                    'pkey' => 'roster',
+////                    'pval' => "<contact jid='100000@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='100000'/>",
+////                ]);
+//
+//                // 2. pkey字段值为 privacy-list
+////                DB::table('tig_pairs')->insert([
+////                    'nid'  => $nid_invisible,
+////                    'uid'  => $tigase_user,
+////                    'pkey' => 'privacy-list',
+////                    'pval' => '<list name="invisible"><item action="deny" order="1"><presence-out/></item></list>',
+////                ]);
+//
+//                // 管理员 方面写入用户信息 tig_pairs 表 100000@goobird pkey字段值为 roster
+////                $pval = DB::table('tig_pairs')->where('nid','811')->first();
+//
+////                DB::table('tig_pairs')->where('nid','811')->update([
+////                    'pval' => $pval->pval."<contact jid='".$user->id."@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='".$user->id."'/>",
+////                ]);
+//
+//                // 将注册成功信息写入 msg_history 表
+////                $time_now = Carbon::now()->toDateTimeString();  // 获取格式化后的时间，使用两次
+////                DB::table('msg_history')->insert([
+////                    'ts'           => $time_now,
+////                    'sender_uid'   => 80,
+////                    'receiver_uid' => $jid_id, // user_jid表中的jid_id
+////                    'msg_type'     => 1,
+////                    'message'      => '<message to="'.$user->id.'@goobird" type="chat" id="ZT3lV-23" xmlns="jabber:client" from="100000@goobird/Smack"><body>{&quot;content&quot;:&quot;欢迎使用！&quot;,&quot;time&quot;:&quot;'.$time_now.' +0800&quot;,&quot;type&quot;:0}</body><thread>70131a01-4ab7-4f95-98ed-cca8e2505b97</thread><delay from="goobird" stamp="2016-11-19T05:58:21.994Z" xmlns="urn:xmpp:delay">Offline Storage - localhost</delay></message>'
+////                ]);
+//                # 将用户信息存入tigase表中 end
+//
+//                // 为用户添加至 zx_user_golds 表
+//                GoldAccount::create([
+//                    'user_id'       => $user->id,
+//                    'time_add'      => $time,
+//                    'time_update'   => $time
+//                ]);
+//
+//                // 为用户创建 statistics_users 表中数据
+//                StatisticsUsers::create([
+//                    'user_id'           => $user->id,
+//                    'time_add'          => $time,
+//                    'time_update'       => $time
+//                ]);
+//
+//                DB::commit();
+//            } else {
+//                $oauth = OAuth::where('user_id',$user->id)->first();
+//                $oauth->oauth_access_token = $input['oauth_access_token'];
+//                $oauth->oauth_expires      = Carbon::createFromTimestampUTC($input['oauth_expires']);
+//                $oauth->save();
+//            }
 
             $user->last_token = $now;
             $user->save();
@@ -1213,13 +1226,192 @@ class AuthController extends BaseController
 
     public function bound(Request $request)
     {
-        //获取用户信息
-        $user = \Auth::guard('api')->user();
+        try {
+            // 如果用户可以注册，执行将数据存入数据库的操作
+            $time = getTime();
+            $now = new Carbon();
 
-        //获取用户的手机号
-        $phone = removeXSS( $request -> get('phone') );
+            // 获取所有输入数据
+            $input = $request->all();
+            // 开启事务
+            DB::beginTransaction();
 
-        //TODO
+            // 将用户信息存入 user 表
+            $user = User::create([
+                'last_token' => $now,
+                'nickname' => $input['oauth_nickname'],
+                'location' => $request->get('location'),
+                'is_thirdparty' => 1,
+                'is_phonenumber' => 1,
+            ]);
+
+            // 对密码进行哈希加密
+            $password_new = bcrypt($request->password);
+
+            // 将信息存入 local_auth 表
+            LocalAuth::create([
+                'user_id' => $user->id,
+                'username' => removeXSS($request->phone),
+                'password' => $password_new
+            ]);
+
+            //添加到测试用户表
+            TestUser::create([
+                'id' => $user->id,
+                'name' => removeXSS($request->phone),
+                'password' => $password_new,
+            ]);
+
+            // 判断接收信息是否为空，如果不为空，执行下面操作  用于下次判断用户是否更换手机登录APP，需要再完善为空的操作
+            if ($request->get('phone_id')) {
+
+                // 将json格式的 phone_id 解析成变量
+                $phone_data = json_decode($input['phone_id'], true);
+
+                // 将用户信息存入 user 集合
+                $user->phone_model = $phone_data['model'];
+                $user->phone_serial = $phone_data['serial'];
+                $user->phone_sdk_int = $phone_data['sdk_int'];
+            }
+
+            // 保存
+            $user->save();
+
+
+            // 将用户信息存入 oauth 表中
+            OAuth::create([
+                'user_id' => $user->id,
+                'oauth_name' => $input['oauth_name'],
+                'oauth_id' => $input['oauth_id'],
+                'oauth_access_token' => $input['oauth_access_token'],
+                'oauth_expires' => Carbon::createFromTimestampUTC($input['oauth_expires'])
+            ]);
+
+            //添加注册时，要给用户添加所有频道
+            $channels_data = Channel::active()->pluck('id')->all();
+
+            // 处理成字符串
+            $channels = implode(',', $channels_data);
+
+            // 存入日志
+            \Log::info('Register => oauth_id: ' . $input['oauth_id'] . 'Location: ' . $request->get('location'));
+            \Log::info($channels);
+
+            // 为新注册用户添加频道信息
+            UserChannel::create([
+                'user_id' => $user->id,
+                'channel_id' => $channels,
+                'time_add' => $time,
+                'time_update' => $time
+            ]);
+
+            //添加IM用户信息
+//                EaseMob::createUser($user->id,$input['oauth_id']); // 暂停环信业务
+
+            # 将用户信息存入tigase表中 start
+            // 将用户相关信息存入tig_user表
+            $sha1_user_id = sha1($user->id . '@goobird');
+            $tig_user_data = [
+                'user_id' => $user->id . '@goobird',
+                'sha1_user_id' => $sha1_user_id,
+                'user_pw' => bcrypt($user->id),
+                'acc_create_time' => $now,
+            ];
+
+            $tigase_user = DB::table('tig_users')->insertGetId($tig_user_data);
+
+            // 将用户信息存入user_jid表
+//            UserJid::create([
+//                'jid_sha' => sha1($user->id.'@goobird'),
+//                'jid' => $user->id.'@goobird'
+//            ]);
+
+            // 将用户信息存入user_jid表，返回jid_id
+            $jid_id = DB::table('user_jid')->insertGetId([
+                'jid_sha' => $sha1_user_id,
+                'jid' => $user->id . '@goobird',
+            ]);
+
+            // 将用户信息存入 tig_nodes 表
+            // 1. node字段值为 root
+//                $nid_root = DB::table('tig_nodes')->insertGetId([
+//                    'uid' => $tigase_user,
+//                    'node' => 'root',
+//                ]);
+
+            // 2. node字段值为 privacy
+//                $nid_privacy = DB::table('tig_nodes')->insertGetId([
+//                    'uid' => $tigase_user,
+//                    'parent_nid' => $nid_root,
+//                    'node' => 'privacy',
+//                ]);
+
+            // 3. node字段值为 invisible
+//                $nid_invisible = DB::table('tig_nodes')->insertGetId([
+//                    'uid' => $tigase_user,
+//                    'parent_nid' => $nid_privacy,
+//                    'node' => 'invisible',
+//                ]);
+
+            // 将管理员 100000@goobird 信息写入用户的 tig_pairs 表
+            // 1. pkey字段值为 roster
+//                DB::table('tig_pairs')->insert([
+//                    'nid' => $nid_root,
+//                    'uid' => $tigase_user,
+//                    'pkey' => 'roster',
+//                    'pval' => "<contact jid='100000@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='100000'/>",
+//                ]);
+
+            // 2. pkey字段值为 privacy-list
+//                DB::table('tig_pairs')->insert([
+//                    'nid'  => $nid_invisible,
+//                    'uid'  => $tigase_user,
+//                    'pkey' => 'privacy-list',
+//                    'pval' => '<list name="invisible"><item action="deny" order="1"><presence-out/></item></list>',
+//                ]);
+
+            // 管理员 方面写入用户信息 tig_pairs 表 100000@goobird pkey字段值为 roster
+//                $pval = DB::table('tig_pairs')->where('nid','811')->first();
+
+//                DB::table('tig_pairs')->where('nid','811')->update([
+//                    'pval' => $pval->pval."<contact jid='".$user->id."@goobird' preped='simple' weight='1.0' activity='1.0' subs='both' last-seen=".time()." name='".$user->id."'/>",
+//                ]);
+
+            // 将注册成功信息写入 msg_history 表
+//                $time_now = Carbon::now()->toDateTimeString();  // 获取格式化后的时间，使用两次
+//                DB::table('msg_history')->insert([
+//                    'ts'           => $time_now,
+//                    'sender_uid'   => 80,
+//                    'receiver_uid' => $jid_id, // user_jid表中的jid_id
+//                    'msg_type'     => 1,
+//                    'message'      => '<message to="'.$user->id.'@goobird" type="chat" id="ZT3lV-23" xmlns="jabber:client" from="100000@goobird/Smack"><body>{&quot;content&quot;:&quot;欢迎使用！&quot;,&quot;time&quot;:&quot;'.$time_now.' +0800&quot;,&quot;type&quot;:0}</body><thread>70131a01-4ab7-4f95-98ed-cca8e2505b97</thread><delay from="goobird" stamp="2016-11-19T05:58:21.994Z" xmlns="urn:xmpp:delay">Offline Storage - localhost</delay></message>'
+//                ]);
+            # 将用户信息存入tigase表中 end
+
+            // 为用户添加至 zx_user_golds 表
+            GoldAccount::create([
+                'user_id' => $user->id,
+                'time_add' => $time,
+                'time_update' => $time
+            ]);
+
+            // 为用户创建 statistics_users 表中数据
+            StatisticsUsers::create([
+                'user_id' => $user->id,
+                'time_add' => $time,
+                'time_update' => $time
+            ]);
+            DB::commit();
+
+            $user->token = JWTAuth::fromUser($user);
+            // 获取用户关注人数
+            $user -> attention = Subscription::where('from',$user->id)->count();
+
+            return response()->json($this->authTransformer->transform($user),201);
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['message'=>'bad request'],500);
+        }
     }
 }
 

@@ -9,6 +9,7 @@
 namespace App\Api\Controllers;
 
 
+use App\Api\Transformer\NewTopicDetailsTransformer;
 use App\Api\Transformer\SearchTopicsTransformer;
 use App\Api\Transformer\TopicDetailsTransformer;
 use App\Api\Transformer\UsersWithFansTransformer;
@@ -36,18 +37,21 @@ class TopicController extends BaseController
     private $topicDetailsTransformer;
     private $usersWithFansTransformer;
     private $topicNewTransformer;
+    private $newTopicDetailsTransformer;
 
     public function __construct(
         SearchTopicsTransformer $searchTopicsTransformer,
         TopicDetailsTransformer $topicDetailsTransformer,
         UsersWithFansTransformer $usersWithFansTransformer,
-        TopicNewTransformer $topicNewTransformer
+        TopicNewTransformer $topicNewTransformer,
+        NewTopicDetailsTransformer $newTopicDetailsTransformer
     )
     {
         $this->searchTopicsTransformer = $searchTopicsTransformer;
         $this->topicDetailsTransformer = $topicDetailsTransformer;
         $this->usersWithFansTransformer = $usersWithFansTransformer;
         $this->topicNewTransformer = $topicNewTransformer;
+        $this->newTopicDetailsTransformer = $newTopicDetailsTransformer;
     }
 
     public function index(Request $request)
@@ -360,6 +364,21 @@ class TopicController extends BaseController
         } catch (\Exception $e) {
             return response()->json(['error'=>'bad_request'],403);
         }
+    }
+
+    public function findByName(Request $request)
+    {
+        $name = $request->name;
+
+        $topic = Topic::with(['hasOneCompere'=>function($q){
+            $q->select(['id','nickname','avatar','cover','verify','signature','verify_info']);
+        }])
+            ->where('name',$name)
+            ->first();
+
+        return response()->json([
+            'data'  => $this ->newTopicDetailsTransformer->transform( $topic ),
+        ]);
     }
 
 

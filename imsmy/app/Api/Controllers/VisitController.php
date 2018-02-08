@@ -68,6 +68,7 @@ class VisitController extends Controller
         $page = $request -> get('page','1');
 
         $times = VisitHistory::where('to',$id)->distinct()->forPage($page,$this->paginate)->pluck('class_time');
+        $times = VisitHistory::where('to',$id)->orderBy('class_time','DESC')->distinct()->forPage($page,$this->paginate)->pluck('class_time');
 
         //统计
         $count = VisitHistory::where('to',$id)->count();
@@ -83,14 +84,14 @@ class VisitController extends Controller
             ->orderBy('created_at','DESC')
             ->get();
 
-        $arr['date'] = $item;
-        $arr['info']  =  $this->visitTransformer->transformCollection( $user->all() );
+            $arr['date'] = $item;
+            $arr['info']  =  $this->visitTransformer->transformCollection( $user->all() );
 
         return $arr;
         },$times->toArray());
 
         return response()->json([
-            'data' =>$data ,
+            'data' =>$data,
             'count' =>$count,
         ],200);
     }

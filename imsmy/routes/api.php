@@ -68,6 +68,9 @@ $api->version(['v1'],function($api){
 
             $api->post('third-party-auth','AuthController@thirdPartyAuth');
 
+            //绑定手机号
+            $api->post('/bound','AuthController@bound');
+
             $api->group(['prefix' => '{id}','middleware' => ['jwt.auth','app.auth']],function($api){
 
                 $api->get('me','AuthController@getAuthenticatedUser');
@@ -1245,10 +1248,25 @@ $api->version(['v1'],function($api){
 
             //删除访问记录
             $api->post('/visit/delete','VisitController@delete');
+
+            //通过名字查找话题
+            $api->get('/topic/details/byname','TopicController@findByName');
+
         });
 
+        //鉴黄通知
         $api->post('/yellowcheck','YellowNoticeController@notice');
 
+        //触发用户动态的鉴黄
         $api->get('/yy','YyController@index');
+
+
+
+
+
+
+
+
     });
+
 });
