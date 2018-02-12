@@ -8,6 +8,7 @@ class MakeFontFile extends Common
     protected $table = 'make_font_file';
 
     protected $fillable = [
+        'id',
         'name',
         'cover',
         'address',

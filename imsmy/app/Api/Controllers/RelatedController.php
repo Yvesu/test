@@ -203,7 +203,6 @@ class RelatedController extends Controller
         $top = [];
         $handpicks = [];
         $hot_topic_tweet = [];
-        $user_likes = explode(',',$user_info['channels'][0]);
         if ($id === '0'){
             if ( $topic->compere_id === 0){
                 //话题动态
@@ -282,6 +281,7 @@ class RelatedController extends Controller
                 ]);
             }
         }else{
+            $user_likes = explode(',',$user_info['channels'][0]);
 
             if ( $topic->compere_id === 0){
                 //话题动态

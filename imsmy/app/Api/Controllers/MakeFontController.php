@@ -39,7 +39,7 @@ class MakeFontController extends BaseController
                     -> orderBy('sort')
                     -> where('test_result',1)
                     -> forPage($page,$this->paginate)
-                    -> get(['name','cover','address']);
+                    -> get(['id','name','cover','address']);
 
                 // 登录用户
             }else{
@@ -51,7 +51,7 @@ class MakeFontController extends BaseController
                 $fonts_user = CloudStorageFile::where('user_id',$user   ->id)
                     -> where('folder_id',$folder_id->id)
                     -> forPage($page,$this->paginate)
-                    -> get(['name','address']);
+                    -> get();
 
                 // 自己字体已全部取完，需从系统获取
                 if(!$count = $fonts_user->count()){
@@ -97,6 +97,7 @@ class MakeFontController extends BaseController
             foreach($files as $value){
 
                 $data[] = [
+                    'id'    =>$value['id'],
                     'name' => $value['name'],
                     'cover' => isset($value['cover']) ? CloudStorage::downloadUrl($value['cover']) : '',
                     'address' => CloudStorage::downloadUrl($value['address'])

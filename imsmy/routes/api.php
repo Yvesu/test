@@ -967,9 +967,6 @@ $api->version(['v1'],function($api){
         //赛事搜索
         $api->post('/activity/search','ActivitySearchController@search');
 
-        //获取某个人的用户信息  通过姓名
-        $api->post('/person','UserController@person' );
-
         //后增话题详情
         $api->post('/topics/details','TopicController@afterdetails');
 
@@ -1022,6 +1019,7 @@ $api->version(['v1'],function($api){
                 //相关
                 $api ->get('/correlation/{id}','FragmentController@correlation')
                     ->where('id','[0-9]+');
+
             });
 
             //片段详情
@@ -1254,6 +1252,9 @@ $api->version(['v1'],function($api){
             //通过名字查找话题
             $api->get('/topic/details/byname','TopicController@findByName');
 
+            //获取某个人的用户信息  通过姓名
+            $api->post('/person','UserController@person' );
+
         });
 
         //鉴黄通知
@@ -1264,8 +1265,6 @@ $api->version(['v1'],function($api){
 
         //绑定第三方
         $api->post('/add/third','AuthController@thirdRelatedAdd_third');
-
-
 
     });
 

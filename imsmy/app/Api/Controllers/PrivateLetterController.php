@@ -173,7 +173,6 @@ class PrivateLetterController extends BaseController
     public function create($id,Request $request)
     {
         try {
-
             $id_to = (int)$request->get('to');
 
             // 判断是否在黑名单内

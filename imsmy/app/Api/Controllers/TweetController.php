@@ -745,15 +745,6 @@ class TweetController extends BaseController
 
             // 判断所传数据中是否有位置信息
             if($location){
-
-                // 匹配数据库中是否已经存在该记录
-//                $location_able = Location::where('formattedAddress',$location['formattedAddress'])->get()->first();
-
-                // 如果不存在，将信息存入location表中
-//                if(!$location_able) $location_able = Location::create($location);
-
-                // 将位置信息存入tweet数组中
-//                $newTweet['location_id'] = $location_able -> id;
                 $newTweet['location'] = $location;
             }
 
@@ -761,7 +752,6 @@ class TweetController extends BaseController
 
 //      //TODO 发布动态的手机系统
         if($request->get('phone_type','') || $request->get('phone_os','') || $request->get('camera_type','')) {
-
 
               //手机类型
               $phone_type = $request->get('phone_type', '');
@@ -800,13 +790,7 @@ class TweetController extends BaseController
                 $shot_width_height = $request->get('shot_width_height');
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
-//                if ( ( $width >= 1280  || $height >= 720 ) && $request->get('joinvideo') === '0'  ){
-
                 if (  $width >= 1280  || $height >= 1280  ){
-//                    TweetTrasf::create([
-//                        'tweet_id' =>   $tweet->id,
-//                    ]);
-//                    $trans = [$tweet->id,$newTweet['video'],$newTweet['shot_width_height'],];
                     $this->trans($tweet->id,$newTweet['video'],$newTweet['shot_width_height']);
                 }
             }
@@ -816,7 +800,6 @@ class TweetController extends BaseController
 
                 //提取关键词
                 $arr = getKeywords($content);
-
 
                 $keywords = [];
                 foreach ($arr as $v) {
@@ -843,7 +826,7 @@ class TweetController extends BaseController
 
 //``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
             // 动态内容 zx_tweet_content 表
-            $a = TweetContent::create([
+            TweetContent::create([
                 'tweet_id' => $tweet -> id,
                 'content'  => $content ? $content : '',
             ]);
@@ -949,14 +932,24 @@ class TweetController extends BaseController
 
             DB::commit();
 
-////            大于10分钟  人工审核
-//            if( (int)$request->get('duration') <= 600){
-//                //写入待检测
-//                DB::table('tweet_to_qiniu')->insert([
-//                    'tweet_id'    => $tweet->id,
-//                    'create_time' => time(),
-//                ]);
-//            }
+//            大于10分钟  人工审核
+            if( (int)$request->get('duration') >= 900){
+                //写入待检测
+//                需要人工审核
+                Tweet::find($tweet->id)->update(['active'=>0]);
+
+                $time = time();
+                $tweet_content =  "您最新发送的动态<{$content}>动态长度超出规定范畴,我们将尽快为您处理...";
+                PrivateLetter::create([
+                    'from' => 1000437,
+                    'to'    => $tweet->user_id,
+                    'content'   => $tweet_content,
+                    'user_type' => '1',
+                    'created_at' => $time,
+                    'updated_at' =>$time,
+                ]);
+
+            }
 
             //是否添加水印
             if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);

@@ -2,12 +2,32 @@
 
 namespace App\Api\Transformer;
 
+use App\Models\Subscription;
 use CloudStorage;
 
 class UserInfomationTransformer extends Transformer
 {
     public function transform($user)
     {
+        $login_user = \Auth::guard('api')->user();
+
+        if ($login_user){
+            $result_1 = Subscription::where('from',$login_user->id)->where('to',$user->id)->first();
+            if ($result_1){
+                $result_2 = Subscription::where('from',$user->id)->where('to',$login_user->id)->first();
+                if ($result_2){
+                    $attention = '2';
+                }else{
+                    $attention = '1';
+                }
+            }else{
+                $attention = '0';
+            }
+        }else{
+            $attention = '0';
+        }
+
+
         return [
             'id'                    =>  $user -> id,
             'nickname'              =>  $user -> nickname,
@@ -27,6 +47,7 @@ class UserInfomationTransformer extends Transformer
             'honor'                 =>  $user -> honor,
             'cover'                 =>  CloudStorage::downloadUrl($user -> cover),
             'birthday'              =>  $user -> birthday,
+            'attention'             => $attention,
         ];
     }
 }
