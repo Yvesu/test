@@ -18,8 +18,10 @@ use App\Models\FilmfestUser\FilmfestUserUserGroupRoleGroup;
 use App\Models\FilmfestUser\FilmfestUserUserRoleGroup;
 use App\Models\FilmfestUser\FilmfestUserUserUserGroup;
 use App\Models\FilmfestUser\UserFilmfestUserRole;
+use App\Models\LocalAuth;
 use App\Models\PrivateLetter;
 use App\Models\Subscription;
+use App\Models\Test\TestUser;
 use App\Models\Tweet;
 use App\Models\TweetProduction;
 use App\Models\User;
@@ -28,7 +30,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Excel;
+use Excel;
 
 class FilmfestController extends Controller
 {
@@ -71,33 +73,40 @@ class FilmfestController extends Controller
              */
             //  总片数
             $sumNum = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','<>',2)->where('status','<>',4);
+                $q->where('status','<>',2);
             })
                 ->whereHas('filmfest',function ($q) use($id){
                     $q->where('filmfests.id','=',$id);
                 })->get()->count();
             //  私有数量
             $privateNum = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','>',2)->where('status','<>',4);
+                $q->where('status','>',2);
             })->whereHas('filmfest',function ($q) use($id){
                 $q->where('filmfests.id','=',$id);
             })->whereHas('tweet',function ($q) {
                 $q->where('visible', '=', 2);
             })->get()->count();
             //  私有占比
-            $privateProportion = (round($privateNum/$sumNum,2)*100).'%';
+
             //  公有数量
             $publicNum = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','>',2)->where('status','<>',4);
+                $q->where('status','>',2);
             })->whereHas('filmfest',function ($q) use($id){
                 $q->where('filmfests.id','=',$id);
             })->whereHas('tweet',function ($q) {
                 $q->where('visible','<>',2);
             })->get()->count();
             //  公有占比
-            $publicProportion = (round($publicNum/$sumNum,2)*100).'%';
+            if($sumNum == 0){
+                $privateProportion = '0%';
+                $publicProportion = '0%';
+                $alreadyWatchProportion = '0%';
+            }else{
+                $privateProportion = (round($privateNum/$sumNum,2)*100).'%';
+                $publicProportion = (round($publicNum/$sumNum,2)*100).'%';
+                $alreadyWatchProportion = (round($alreadyWatch/$sumNum,2)*100).'%';
+            }
             //  已查看占比
-            $alreadyWatchProportion = (round($alreadyWatch/$sumNum,2)*100).'%';
             //  倒计时
             $filmfest = Filmfests::find($id);
             $nowTime = time();
@@ -108,7 +117,7 @@ class FilmfestController extends Controller
             $endTime = $filmfest->time_end;
             if ($nowTime<$stopSubmitTime){
                 $countDownTime = $stopSubmitTime-$nowTime;
-                $des = '距离投片戒指倒计时';
+                $des = '距离投片截止倒计时';
             }else{
                 if($nowTime<$stopSelectTime){
                     $countDownTime = $stopSelectTime-$nowTime;
@@ -139,7 +148,7 @@ class FilmfestController extends Controller
                 $days = floor($countDownTime/86400);
                 $hours = floor(($countDownTime-86400*$days)/3600);
                 $minutes = floor((($countDownTime-86400*$days)-3600*$hours)/60);
-                $seconds = floor(((($countDownTime-86400*$days)-3600*$hours)-60*$minutes)/60);
+                $seconds = floor((($countDownTime-86400*$days)-3600*$hours)-60*$minutes);
                 $countDownTime = $days.'天  '.$hours.':'.$minutes.':'.$seconds;
             }
             $countDown = [
@@ -206,7 +215,7 @@ class FilmfestController extends Controller
             $endTime = $filmfest->time_end;
             if ($nowTime<$stopSubmitTime){
                 $countDownTime = $stopSubmitTime-$nowTime;
-                $des = '距离投片戒指倒计时';
+                $des = '距离投片截止倒计时';
             }else{
                 if($nowTime<$stopSelectTime){
                     $countDownTime = $stopSelectTime-$nowTime;
@@ -254,7 +263,7 @@ class FilmfestController extends Controller
     {
         if($visible==1){
             $data = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','<>',2)->where('status','<>',4);
+                $q->where('status','<>',2);
             })
                 ->whereHas('filmfest',function ($q) use($filmfest_id){
                     $q->where('filmfests.id','=',$filmfest_id);
@@ -266,7 +275,7 @@ class FilmfestController extends Controller
                 })->get()->count();
         }elseif($visible == 2){
             $data = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','<>',2)->where('status','<>',4);
+                $q->where('status','<>',2);
             })
                 ->whereHas('filmfest',function ($q) use($filmfest_id){
                     $q->where('filmfests.id','=',$filmfest_id);
@@ -278,7 +287,7 @@ class FilmfestController extends Controller
                 })->get()->count();
         }else{
             $data = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','<>',2)->where('status','<>',4);
+                $q->where('status','<>',2);
             })
                 ->whereHas('filmfest',function ($q) use($filmfest_id){
                     $q->where('filmfests.id','=',$filmfest_id);
@@ -875,7 +884,12 @@ class FilmfestController extends Controller
             if(is_null($userGroupId)){
                 return response()->json(['message'=>'数据不合法'],200);
             }
-            $userGroupName = FilmfestUserUserGroup::find($userGroupId)->name;
+            $userGroupName = FilmfestUserUserGroup::find($userGroupId);
+            if(!$userGroupName){
+                return response()->json(['message'=>'暂无数据'],200);
+            }else{
+                $userGroupName = $userGroupName->name;
+            }
             //  该用户组下所有角色组
             $roleGroup = FilmfestUserRoleGroup::where('filmfest_id',$filmfest_id)->where('status',1)
                 ->whereHas('userGroup',function ($q) use($userGroupId){
@@ -922,7 +936,7 @@ class FilmfestController extends Controller
             $avatar = User::find($user)->avatar;
             $topData['avatar']=$avatar;
             $topData['userGroupName']=$userGroupName;
-            array_push($topData,['des'=>'成员','sumPeopleNum'=>$sumPeopleNum]);
+            $topData['des'] = ['des'=>'成员','sumPeopleNum'=>$sumPeopleNum];
 
             //  主体数据
             $type = (int)($request->get('type',0));
@@ -930,7 +944,7 @@ class FilmfestController extends Controller
             $mainData = [];
             if($type===0){
                 $adminUser = User::whereHas('filmfestUserRoleGroup',function ($q)use($filmfest_id){
-                    $q->where('name','not like','发起者')->where('filmfest_id',$filmfest_id)->where('status',1);
+                    $q->where('name','not like','冻结')->where('name','not like','发起者')->where('filmfest_id',$filmfest_id)->where('status',1);
                 })->whereHas('filmfestUserGroup',function ($q) use($userGroupId){
                     $q->where('filmfest_user_user_group.id',$userGroupId);
                 })
@@ -1147,7 +1161,7 @@ class FilmfestController extends Controller
                     array_push($menu,$tempData);
                 }
             }
-            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'setting']);
+            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'setting'],['des'=>'导出表格','uri'=>'','key'=>'','icon'=>'']);
         }else{
             $menu = [
                 [
@@ -1343,6 +1357,13 @@ class FilmfestController extends Controller
                 if($is_subscription){
 
                     if($role->count()>0){
+                        $oldData = User::where('id',$v)
+                            ->whereHas('filmfest',function ($q) use($filmfest_id){
+                                $q->where('filmfests.id',$filmfest_id);
+                            })->first();
+                        if($oldData){
+                            return response()->json(['message'=>'不能重复添加用户'],200);
+                        }
                         foreach($role as $kk => $vv)
                         {
                             $newRoleUser = new UserFilmfestUserRole;
@@ -1395,6 +1416,136 @@ class FilmfestController extends Controller
         }
     }
 
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 电话号码直接添加
+     */
+    public function phoneDoAdd(Request $request)
+    {
+        try{
+            $filmfest_id = $request->get('id');
+            $role_group_id = $request->get('group_id',null);
+            $user_id = \Auth::guard('api')->user()->id;
+            $userGroupId = $request->get('user_group_id',null);
+            $phones = $request->get('phone',null);
+            $vacancyNum = $request->get('vacancyNum');
+            if(is_null($role_group_id) || is_null($userGroupId) || is_null($phones) || is_null($vacancyNum)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $phone = explode('|',$phones);
+            if(count($phone)>$vacancyNum){
+                return response()->json(['message'=>'您添加的用户数量已经超出限制'],200);
+            }
+            $role = FilmfestUserRole::where('filmfest_id',$filmfest_id)
+                ->where('status',1)
+                ->whereHas('group',function ($q) use($role_group_id){
+                    $q->where('filmfest_user_role_group.id',$role_group_id);
+                })->get();
+            DB::beginTransaction();
+            foreach ($phone as $k => $v)
+            {
+                if(strlen($v) == "11") {
+                    $rel = "/^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$/";
+                    if (preg_match($rel, $v)) {
+                        $dataOne = LocalAuth::where('username',$v)->first();
+                        if($dataOne){
+                            $dataTwo = TestUser::find($dataOne->user_id);
+                            if($dataTwo){
+                                $id = $dataTwo->id;
+                            }else{
+                                $finallyUser = new TestUser;
+                                $finallyUser -> id = $dataOne->id;
+                                $finallyUser -> name = $v;
+                                $finallyUser -> time_add = time();
+                                $finallyUser -> time_update = time();
+                                $finallyUser -> save();
+                                $id = $finallyUser->id;
+                            }
+                        }else{
+                            $user = new User;
+                            $user -> nickname = $v;
+                            $user -> is_phonenumber = 1;
+                            $user -> is_film_add =1;
+                            $user -> created_at = time();
+                            $user -> updated_at = time();
+                            $user -> save();
+
+                            $finallyUser = new TestUser;
+                            $finallyUser -> id = $user->id;
+                            $finallyUser -> name = $v;
+                            $finallyUser -> time_add = time();
+                            $finallyUser -> time_update = time();
+                            $finallyUser -> save();
+
+                            $localAuth = new LocalAuth;
+                            $localAuth -> user_id = $user->id;
+                            $localAuth -> username = $v;
+                            $localAuth -> status = 0;
+                            $localAuth -> created_at = time();
+                            $localAuth -> updated_at = time();
+                            $localAuth -> save();
+                            $id = $finallyUser->id;
+                        }
+                        if($role->count()>0){
+                            $oldData = User::where('id',$id)
+                                ->whereHas('filmfest',function ($q) use($filmfest_id){
+                                    $q->where('filmfests.id',$filmfest_id);
+                                })->first();
+                            if($oldData){
+                                return response()->json(['message'=>'不能重复添加用户'],200);
+                            }
+                            foreach($role as $kk => $vv)
+                            {
+                                $newRoleUser = new UserFilmfestUserRole;
+                                $newRoleUser -> user_id = $id;
+                                $newRoleUser -> role_id = $vv->id;
+                                $newRoleUser -> time_add = time();
+                                $newRoleUser -> time_update = time();
+                                $newRoleUser -> save();
+                            }
+
+                            $newUserFilmfest = new FilmfestUserFilmfestUser;
+                            $newUserFilmfest -> user_id = $id;
+                            $newUserFilmfest -> filmfest_id = $filmfest_id;
+                            $newUserFilmfest -> time_add = time();
+                            $newUserFilmfest -> time_update = time();
+                            $newUserFilmfest -> save();
+
+                            $newUserUserRoleGroup = new FilmfestUserUserRoleGroup;
+                            $newUserUserRoleGroup -> user_id = $id;
+                            $newUserUserRoleGroup -> role_group_id = $role_group_id;
+                            $newUserUserRoleGroup -> time_add = time();
+                            $newUserUserRoleGroup -> time_update = time();
+                            $newUserUserRoleGroup -> save();
+
+
+                            $newUserUserGroup = new FilmfestUserUserUserGroup;
+                            $newUserUserGroup -> group_id = $userGroupId;
+                            $newUserUserGroup -> user_id = $id;
+                            $newUserUserGroup -> time_add = time();
+                            $newUserUserGroup -> time_update = time();
+                            $newUserUserGroup -> save();
+                        }else{
+                            return response()->json(['message'=>'您目前无可用的角色可以添加'],200);
+                        }
+                    } else {
+                        return response()->json(['message' => '必须是手机号'], 200);
+                    }
+                }
+
+
+            }
+            DB::commit();
+            return response()->json(['message'=>'success'],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found']);
+        }
+    }
+
+
+
     public function adminDetail(Request $request)
     {
         try{
@@ -1406,7 +1557,8 @@ class FilmfestController extends Controller
             $is_filmfest = User::select('id')->where('id',$id)->whereHas('filmfest',function ($q) use($filmfest_id){
                 $q->where('filmfests.id',$filmfest_id);
             })->first();
-            if($is_subscription && $is_filmfest){
+//            if($is_subscription && $is_filmfest){
+            if($is_filmfest){
                 $user = User::find($id);
                 $avatar = $user->avatar;
                 $nickName = $user->nickname;
@@ -1463,7 +1615,7 @@ class FilmfestController extends Controller
                 foreach ($logs as $k => $v)
                 {
                     $time = date('Y年m月d日. H:i',$v->time_add);
-                    $content = ($v->doint).'  '.($v->cause);
+                    $content = ($v->doing).'  '.($v->cause);
                     $tempLogData = [
                         'time'=>$time,
                         'content'=>$content,
@@ -1818,6 +1970,7 @@ class FilmfestController extends Controller
                         )
                     );
                     $sheet->rows($data);
+                    ob_end_clean();
                 });
             })->export('xls');
 

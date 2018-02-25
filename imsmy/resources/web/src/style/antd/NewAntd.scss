@@ -1,0 +1,57 @@
+
+@charset "UTF-8";
+//更新到三版本之后 字体改为14px， 重新定义字体为12px  只定义字体大小  其他定义在common.scss中
+//目前为止需要的
+.ant-input, .ant-form,.ant-form label,.ant-btn, .ant-upload,.ant-radio-group,.ant-table,
+.ant-select,.ant-select-dropdown,.ant-pagination{
+  font-size: 12px;
+}
+
+.ant-form-item-control > *{
+  font-size: 12px;
+}
+//表格
+.ant-table-thead > tr > th, .ant-table-tbody > tr > td{
+  padding: 16px 8px;
+}
+
+
+//导航菜单 - 侧边栏
+// .ant-menu-vertical .ant-menu-item,
+// .ant-menu-vertical-left .ant-menu-item,
+// .ant-menu-vertical-right .ant-menu-item,
+// .ant-menu-inline .ant-menu-item,
+// .ant-menu-vertical .ant-menu-submenu-title,
+// .ant-menu-vertical-left .ant-menu-submenu-title,
+// .ant-menu-vertical-right .ant-menu-submenu-title,
+// .ant-menu-inline .ant-menu-submenu-title{
+//   font-size: 12px;
+// }
+//面包屑-卡片-输入框 -表格
+// .ant-breadcrumb,.ant-card,.ant-input,.ant-table,.ant-select,.ant-select-dropdown,
+// .ant-form,.ant-form label,.ant-btn,.ant-time-picker-input,.ant-pagination,.ant-upload,
+// .ant-radio-group,.ant-calendar{
+//   font-size: 12px;
+// }
+
+// .ant-steps-item-title{
+//   font-size: 14px;
+// }
+// .ant-time-picker-panel>*,.ant-time-picker-panel-select{
+//   font-size: 12px;
+// }
+
+// .ant-calendar-range .ant-calendar-input,
+// .ant-calendar-range .ant-calendar-time-picker-input{
+//   font-size: 12px;
+// }
+
+//右侧菜单栏划过弹出的菜单
+
+// .ant-menu-horizontal.ant-menu-sub,
+// .ant-menu-vertical.ant-menu-sub,
+// .ant-menu-vertical-left.ant-menu-sub,
+// .ant-menu-vertical-right.ant-menu-sub {
+//   min-width: 50px;
+//   text-align: center;
+// }

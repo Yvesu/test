@@ -159,4 +159,22 @@ class Activity extends Common
             ->where('recommend_expires', '>', getTime());
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 竞赛与关注用户关系 多对多
+     */
+    public function userAttention()
+    {
+        return $this->belongsToMany('App/Models/User','activity_user','activity_id','user_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * 与web端发布的竞赛关系
+     */
+    public function filmfest()
+    {
+        return $this->hasOne('App\Models\Filmfests','active_id','id');
+    }
+
 }

@@ -1,0 +1,99 @@
+@charset "UTF-8";
+
+//素材页 - 模板 样式
+
+//模板 - 分类
+
+//tabs 修改的样式
+
+.card_box{
+  margin-top: 10px;
+  >.ant-tabs{
+    padding-left: 1px;
+    >.ant-tabs-bar{
+      margin-bottom: 0px;
+
+      // height: 50px;
+      >.ant-tabs-extra-content{
+        line-height: 0;
+      }
+    }
+    >.ant-tabs-content>.ant-tabs-tabpane{
+      >.table_container{
+        border:1px solid #d9d9d9;
+        border-top:0;
+      }
+    }
+  }
+}
+// 分类 - 正常
+.sort_normal_icon{
+  width: 72px;
+  height: 72px;
+  background:#d8d8d8;
+}
+
+//分类 - 创建新分类
+.new_sort_modal{
+  // border: 1px solid #000;
+  min-height: 170px;
+  height: auto!important;
+  height: 170px;
+  padding-left: 30px;
+  background: #fff;
+  >div{
+    width: 100%;
+    height: 30px;
+    // border: 1px solid #000;
+    >span{
+      float: left;
+      line-height: 30px;
+      display: inline-block;
+      margin-right: 10px;
+      color:#666666;
+    }
+    >p{
+      float: left;
+    }
+    &:nth-child(2){
+      margin-top: 15px;
+      height: 105px;
+      >p{
+        // width: 150px;
+        // height: 150px;
+        // background: #d8d8d8;
+        // border: 1px solid #d8d8d8;
+      }
+    }
+  }
+  //支持的拓展名 - 上传
+  >p{
+
+    font-size: 12px;
+    padding-left: 65px;
+    padding-top: 10px;
+    color:rgba(0,0,0,0.43);
+  }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*-----------------------我是底线-------------------------*/

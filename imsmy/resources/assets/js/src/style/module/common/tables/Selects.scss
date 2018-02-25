@@ -1,0 +1,23 @@
+@charset "UTF-8";
+
+//表格上方 - 选择器样式
+.select_filter{
+  width: 100%;
+  background: #fff;
+  min-height: 120px;
+  margin-bottom: 20px;
+  border: none;
+  >h3{
+    height: 22px;
+    padding-top: 10px;
+    >span{
+      margin-right: 20px;
+      font-size: 14px;
+    }
+  }
+  >p{
+    height: 30px;
+    margin-top: 42px;
+    padding-left: 10px;
+  }
+}

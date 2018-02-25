@@ -1,0 +1,70 @@
+
+@charset "UTF-8";
+
+//作品栏
+.tables_opus_box{
+  width: 120px;
+  height: 70px;
+  position: relative;
+  // border: 1px solid #000;
+  //图片加时长
+  .tables_opus_cover_duration{
+    width: 100%;
+    height: 100%;
+    // border: 1px solid red;
+    background: #ccc;
+    cursor: pointer;
+    >p{
+      width: 100%;
+      height: 100%;
+    }
+  .tables_text{
+      display: block;
+      color: #fff;
+      position: absolute;
+      right: 10px;
+      bottom: 5px;
+      z-index: 2;
+    }
+  }
+
+  //处理中
+  .table_opus_active{
+    width: 100%;
+    height: 100%;
+    // border: 1px solid red;
+    text-align: center;
+    color: #ff0000;
+    line-height: 70px;
+    font-size: 14px;
+    // background: #000;
+    animation: changeBgColor 2s linear 0s infinite alternate;
+  }
+  @keyframes changeBgColor
+  {
+    0% {background:rgba(0,0,0,1)}/*动画开始样式*/
+    50% {background:rgba(100,0,0,1)}
+    100% {background:rgba(0,0,0,1)}/*动画结束样式*/
+  }
+}
+.table_container{
+  min-height: 500px;
+  height: auto !important;
+}
+//操作
+.tables_operate{
+  // border: 1px solid #000;
+  font-size: 20px;
+  display: flex;
+  justify-content: space-between;
+  >a{
+    margin-right: 15px;
+    color:rgba(0,0,0,0.65);
+  }
+}
+
+
+//弹出视频播放
+.ant-modal-mask,.ant-modal-wrap{
+  overflow-y: scroll;
+}

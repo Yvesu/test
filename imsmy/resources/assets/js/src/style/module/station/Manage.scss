@@ -1,0 +1,100 @@
+@charset "UTF-8";
+
+//临时给用户名一个样式
+.user_info_name{
+  color:#fff;
+  >i{
+    color: rgba(255, 255, 255, 0.67)
+  }
+}
+//退出按钮的样式
+.user_info_out{
+  // border: 1px solid #fff;
+  display: block;
+  text-align: center;
+
+}
+//管理信息中的样式
+.man_content_box{
+  width: 100%;
+  height: 200px;
+  color:#4a4a4a;
+  >.examine_box,.user_box{
+    float: left;
+    height: 100%;
+    background: #fff;
+    >p{
+      // line-height: 35px;
+      font-size: 13px;
+      padding-left: 20px;
+    }
+  }
+  >.examine_box{
+    width: 58%;
+    >p>span{
+        display: block;
+        float:left;
+        width:110px;
+        height: 35px;
+        margin-right:27%;
+      }
+  }
+  >.user_box{
+    width: 41%;
+    float: right;
+  }
+
+}
+//待处理
+.man_dispose{
+  width: 100%;
+  height: 100px;
+  background: #fff;
+  margin: 15px 0;
+  >span{
+    display: inline-block;
+    height: 35px;
+    // line-height: 35px;
+    padding-left: 20px;
+    margin-right: 10%;
+  }
+}
+//最近操作记录
+.lately_operation{
+  width:100%;
+  height: 465px;
+  background: #fff;
+  >ul{
+    height: 360px;
+    margin: 5px 0;
+    padding-left: 10px;
+    padding-top: 5px;
+    overflow: hidden;
+    >li{
+      width:98.3%;
+      height: 50px;
+      border-top: 1px solid #f7f7f7;
+      >span{
+        padding-left: 10px;
+        line-height: 50px;
+      }
+      .man_time{
+        float: right;
+        padding-right: 10px;
+      }
+    }
+  }
+  >.man_more{
+    width: 100%;
+    height: 50px;
+    border: none;
+    background:#ffffff;
+    cursor: pointer;
+    text-align: center;
+    line-height: 50px;
+    // outline:none;  //可以去除按钮点击之后出现的效果
+    &:hover{
+      color:#ff0000;
+    }
+  }
+}

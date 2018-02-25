@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\NewWeb;
 
+use App\Http\Middleware\FilmfestUserRole;
 use App\Models\Filmfest\Application;
+use App\Models\FilmfestUser\FilmfestUserReviewChildLog;
+use App\Models\User;
 use CloudStorage;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Omnipay\Common\Exception\RuntimeExceptionTest;
+use Excel;
 
 class TestController extends Controller
 {
@@ -41,10 +45,10 @@ class TestController extends Controller
         $pdf->SetFooterMargin(10);//页脚bottom间隔
 
         // 设置分页
-        $pdf->SetAutoPageBreak(true, 25);
+        $pdf->SetAutoPageBreak(false, 25);
 
         // 设置自动换页
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+        $pdf->SetAutoPageBreak(false, PDF_MARGIN_BOTTOM);
 
         // 设置图像比例因子
         $pdf->setImageScale(1.25);
@@ -115,6 +119,64 @@ class TestController extends Controller
         $pdf->writeHTML($html, true, false, true, false, '');
         ob_end_clean();
         //输出PDF
-        $pdf->Output('t.pdf', 'I');//I输出、D下载
+        $pdf->Output('t.pdf', 'D');//I输出、D下载
     }
+
+
+//    public function test(Request $request)
+//    {
+//        try{
+//            $filmfest_id = 1;
+//            $user_id = 1000437;
+//            $nickName = User::find($user_id)->nickname;
+//            $role = 2;
+//            if(is_null($user_id)||is_null($role)){
+//                return response()->json(['message'=>'缺少数据'],200);
+//            }
+//            $data = FilmfestUserReviewChildLog::where('user_id',$user_id)->where('filmfest_id',$filmfest_id)
+//                ->orderBy('time_add','desc')->get();
+//            $title = [
+//                0=>'时间',
+//                1=>'行为',
+//            ];
+//            $export = null;
+//            foreach($data as $k => $v)
+//            {
+//                $time = date('Y年m月d日. H:i',$v->time_add);
+//                $content = ($v->doint).'  '.($v->cause);
+//                $export[$k][0] = $time;
+//                $export[$k][1] = $content;
+//            }
+//            $data = array_merge($title,$export);
+//            $head = $role.$nickName.'操作日志';
+//            Excel::create($head,function ($excel) use($data,$head){
+//                $excel->sheet($head,function ($sheet) use($data){
+//                    $sheet->setWidth(
+//                        array(
+//                            'A'=>10,
+//                            'B'=>30,
+//                        )
+//                    );
+//                    $sheet->rows($data);
+//                    ob_end_clean();
+//                });
+//            })->export('xls');
+//
+//        }catch (ModelNotFoundException $q){
+//            return response()->json(['error'=>'not_found'],404);
+//        }
+//
+//    }
+
+//    public function test(Request $request)
+//    {
+//        $tid = 1;
+//        $bucket = 'hivideo-video-ects';
+//        $key = 'enroll/competition/trailers/1000413/1/20180211142858.mp4';
+//        $width = '960';
+//        $height = '540';
+//        $choice = '';
+//        $notice = '';
+//        CloudStorage::transcoding_tweet($tid,$bucket,$key,$width,$height,$choice,$notice);
+//    }
 }

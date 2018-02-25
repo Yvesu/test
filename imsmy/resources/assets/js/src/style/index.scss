@@ -1,0 +1,46 @@
+
+//公共页面样式
+@import "./module/common/Common";
+//antd升级后改变的样式
+@import "./antd/NewAntd";
+
+@import "./module/common/detail/Detail";
+@import "./module/common/tables/Selects";
+@import "./module/common/tables/Tables";
+//视频详情页中的弹出各种通知
+@import "./module/common/modal/PopAll";
+//排行榜
+@import "./module/common/rankList/RankList";
+@import "./module/common/rankList/RankProgress";
+
+//单个路由 - 站务
+@import "./module/station/Manage";
+
+//单个路由 - 内容  现在没有
+@import "./module/contents/HostSearch";
+
+//单个路由 - 素材
+@import "./module/sourceMaterial/Platform";
+@import "./module/sourceMaterial/Template";
+
+// @import "./module/sourceMaterial/Fragment";
+@import "./module/sourceMaterial/FragmentRelease";
+
+@import "./module/sourceMaterial/MixLibrary";
+//自定义的上传预览样式
+@import "./module/common/uploads/UploadCustom";
+
+
+//单个路由 - 用户
+@import "./module/user/User";
+
+//单个路由 - 移动端
+@import "./module/mobile/Terminal";
+@import "./module/mobile/Filters";
+
+
+//暂定的登录页面
+@import "./module/login/Login";
+
+//404页面样式
+@import "./module/common/notFound/NotFound";

@@ -1,0 +1,65 @@
+[
+  { "key":"1",
+    "uri":"/manage",
+    "icon":"desktop",
+    "name":"管理信息"
+  },
+  { "key":"2",
+    "icon":"calendar",
+    "name":"视频",
+    "children":[
+      {"key":"2.1","uri":"/videoCensor","name":"视频审查"},
+      {"key":"2.2","uri":"/videoPending","name":"待定池"},
+      {"key":"2.3","uri":"/notPass","name":"未通过"},
+      {"key":"2.4","uri":"/videoScreen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"3",
+    "icon":"trophy",
+    "name":"竞赛",
+    "children":[
+      {"key":"3.1","uri":"/race","name":"竞赛审核"},
+      {"key":"3.2","uri":"/notPass","name":"未通过"},
+      {"key":"3.3","uri":"/screen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"4",
+    "icon":"folder-open",
+    "name":"素材",
+    "children":[
+      {"key":"4.1","uri":"/material","name":"素材审查"},
+      {"key":"4.2","uri":"/notPass","name":"未通过"},
+      {"key":"4.3","uri":"/screen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"5",
+    "uri":"/audit",
+    "icon":"safety",
+    "name":"认证审核"
+  },
+  { "key":"6",
+    "uri":"/apply",
+    "icon":"pay-circle",
+    "name":"提现申请"
+  },
+  { "key":"7",
+    "uri":"/emcee",
+    "icon":"pay-circle",
+    "name":"主持人申请"
+  },
+  { "key":"8",
+    "uri":"/complain",
+    "icon":"question-circle",
+    "name":"投诉与反馈"
+  },
+  { "key":"9",
+    "uri":"/shieldset",
+    "icon":"minus-circle",
+    "name":"屏蔽理由设置"
+  },
+  { "key":"10",
+    "uri":"/retrieve",
+    "icon":"delete",
+    "name":"回收站"
+  }
+]

@@ -1,0 +1,171 @@
+@charset "UTF-8";
+//用户下拉菜单
+.user_list_drop_menu{
+  // width: 200px;
+  text-align: center;
+}
+b{
+  font-weight:normal;
+}
+.home_page_index{
+  min-width: 1200px;
+  // overflow: hidden;
+  min-height:calc(100vh - 0px);
+  .ant-btn{
+    background: #0096c8;
+    border-color:#0096c8;
+    border-radius: 3px;
+    color: #fff;
+    &:hover{
+      background: #2fc1f1;
+      border-color:#2fc1f1;
+      color: #fff;
+    }
+    color: #fff;
+  }
+
+  // min-width: 1200px;
+  // width: 100%;
+  // overflow-x: scroll;
+  .home_page_index_header,.home_page_index_header_collapsed{
+    min-width: 1000px;
+    // width: 100vw;
+    background: #fff;
+    padding:0 24px 0 0;
+    display: flex;
+    position: fixed;
+    right: 0px;
+    z-index: 2;
+    justify-content: space-between;
+    // border: 1px solid #000;
+    box-shadow:0 2px 5px 0 rgba(0,0,0,0.05);
+    .trigger{
+      font-size: 18px;
+     line-height: 64px;
+     padding: 0 24px;
+     cursor: pointer;
+     transition: color .3s;
+    }
+    .header_right_set{
+      // border: 1px solid #000;
+      display: flex;
+      justify-content: flex-end;
+      width: 40%;
+      min-width:500px;
+      height: 64px;
+
+      .header_user_list{
+        // height: 100%;
+        // padding-left: 10px;
+        // border: 1px solid blue;
+        margin-left: 30px;
+        >a{
+          display: block;
+          height: 100%;
+          min-width: 120px;
+          // width: 150px;
+          position: relative;
+          // padding-top: 20px;
+          // border: 1px solid red;
+          >span{
+            margin-top: 13px;
+            margin-right: 5px;
+          }
+          .user_name_and_icon{
+            position: absolute;
+            top: 50%;
+            margin-top: -10px;
+            height: 20px;
+            line-height: 20px;
+            color: #4a4a4a;
+            // top: 0;
+            // display: block;
+            >b{
+              margin-right: 4px;
+            }
+            // border: 1px solid #000;
+          }
+
+        }
+      }
+    }
+  }
+
+  //点击之后的left值改变
+  .home_page_index_header{
+    left: 200px;
+    -webkit-transition: left .2s;
+    transition: left .2s;
+  }
+  .home_page_index_header_collapsed{
+    left: 80px;
+    -webkit-transition: left .2s;
+    transition: left .2s;
+  }
+
+  .home_page_index_sider{
+    >.ant-layout-sider-children{
+      position: fixed;
+      left: 0;
+      right: 0;
+      max-width: 200px;
+      min-width: 200px;
+      >.logo,.bigLogo,.smallLogo{
+        height: 64px;
+         background: #00678a;
+         // margin: 16px;
+         padding: 5px 16px;
+        // border: 1px solid #fff;
+        max-width: 200px;
+        min-width: 80px;
+        >img{
+          width: 100%;
+          height: 100%;
+          // border: 1px solid #000;
+        }
+      }
+      .bigLogo{
+        transition: width .2s;
+        width: 200px;
+      }
+      .smallLogo{
+        transition: width .2s;
+        width: 80px;
+      }
+      >ul{
+        >.ant-menu-item-selected{
+          background-color: #27444c;
+          &::after{
+            content: "";
+            position: absolute;
+            right: 195px;
+            top: 0;
+            bottom: 0;
+            border-right: 3px solid #0096c8;
+          }
+        }
+        >li{
+          // padding: 0 15px;
+          &:first-child{
+            margin-top: 0px;
+          }
+      }
+      }
+    }
+
+    //自定义图标的样式
+    .sider_children_icon{
+      display: inline-block;
+      width: 25px;
+      height: 25px;
+      position: relative;
+      top:8px;left: -5px;
+      >img{
+        position: absolute;
+        left: 0;top: 0;
+        // width: 100%;
+        // height: 100%;
+      }
+    }
+  }
+}

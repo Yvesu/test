@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\NewWeb\User;
 
+use App\Models\Address\AddressCountry;
 use App\Models\Address\AddressCounty;
 use App\Models\Filmfest\Application;
 use App\Models\Filmfest\JoinUniversity;
 use App\Models\FilmfestFilmType;
+use App\Models\Filmfests;
+use App\Models\FilmfestUser\FilmfestUserPermission;
 use App\Models\FilmfestUser\FilmfestUserRole;
+use App\Models\FilmfestUser\FilmfestUserRoleGroup;
 use App\Models\TweetProduction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -35,8 +39,19 @@ class FilmfestUserController extends Controller
             $page = $request->get('page',1);
             $order = $request->get('order',null);
             $by = $request->get('by',null);
-
-                $role = FilmfestUserRole::find($role_id)->des;
+            $time = $request->get('time');
+            if(is_null($time)){
+                $startTime = 0;
+                $endTime = null;
+            }else{
+                $startTime = strtotime(explode('-',$time)[0]);
+                $endTime = strtotime(explode('-',$time)[1]);
+            }
+            $role = FilmfestUserRole::find($role_id);
+                if((int)$role->status===0){
+                    return response()->json(['message'=>'此功能未对您开放'],200);
+                }
+                $role = $role->des;
                 if(strstr($role,'初审')){
                     //  当前作品
                     $allProduction = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q) use($filmfest_id){
@@ -48,12 +63,12 @@ class FilmfestUserController extends Controller
                         ->whereHas('filmfestProduction',function ($q) use($filmfest_id){
                             $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
                                 ->where('filmfests_tweet_production.again_select_status','!=',0);
-                        })->orderBy('id')->get()->couont();
+                        })->orderBy('id')->get()->count();
                     //  待定
                     $waitProduction = TweetProduction::select('id')
                         ->whereHas('filmfestProduction',function ($q)use($filmfest_id){
                             $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
-                                ->where('filmfests_tweet_production.status',3);
+                                ->where('filmfests_tweet_production.status','>=',3);
                         })->orderBy('id')->get()->count();
                     //  淘汰
                     $passProduction = TweetProduction::select('id')
@@ -61,10 +76,10 @@ class FilmfestUserController extends Controller
                             $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
                                 ->where('filmfests_tweet_production.status',0);
                         })->orderBy('id')->get()->count();
-                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->SelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->limit($page*($this->paginate))->get();
-                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->SelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->get()->count();
+                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->SelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->limit($page*($this->paginate))->get();
+                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->SelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->get()->count();
                     $pageNum = ceil($mainDataNum/($this->paginate));
                 }elseif(strstr($role,'复审')){
                     //  当前作品
@@ -88,10 +103,10 @@ class FilmfestUserController extends Controller
                             ->where('filmfests_tweet_production.again_select_status','=',2)
                             ->where('filmfests_tweet_production.join_select_status','=',0);
                     })->orderBy('id')->get()->count();
-                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->AgainSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->limit($page*($this->paginate))->get();
-                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->AgainSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->get()->count();
+                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->AgainSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->limit($page*($this->paginate))->get();
+                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->AgainSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->get()->count();
                     $pageNum = ceil($mainDataNum/($this->paginate));
                 }elseif (strstr($role,'入围')){
                     //  当前作品
@@ -111,10 +126,10 @@ class FilmfestUserController extends Controller
                     })->orderBy('id')->get()->count();
                     //  淘汰
                     $passProduction = '';
-                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->JoinSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->limit($page*($this->paginate))->get();
-                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->JoinSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->get()->count();
+                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->JoinSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->limit($page*($this->paginate))->get();
+                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->JoinSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->get()->count();
                     $pageNum = ceil($mainDataNum/($this->paginate));
                 }elseif (strstr($role,'专业')){
                     //  全部
@@ -134,10 +149,10 @@ class FilmfestUserController extends Controller
                     })->orderBy('id')->get()->count();
                     //  淘汰
                     $passProduction = '';
-                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->PerofessuibalSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->limit($page*($this->paginate))->get();
-                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->PerofessuibalSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->get()->count();
+                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->PerofessuibalSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->limit($page*($this->paginate))->get();
+                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->PerofessuibalSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->get()->count();
                     $pageNum = ceil($mainDataNum/($this->paginate));
                 }elseif (strstr($role,'获奖')){
                     //  获奖
@@ -160,10 +175,10 @@ class FilmfestUserController extends Controller
                     })->orderBy('id')->get()->count();
                     $waitProduction = '';
                     $adoptProduction = '';
-                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->WinSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->limit($page*($this->paginate))->get();
-                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
-                        ->WinSelectStatus($searchStatus,$filmfest_id)->Schoole($searchSchool)->Order($order,$by)->get()->count();
+                    $mainData = Application::where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->WinSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->limit($page*($this->paginate))->get();
+                    $mainDataNum = Application::select('id')->where('filmfests_id',$filmfest_id)->Type($type,$filmfest_id)->Key($searchKey)->Country($searchCountry)->Duration($searchDuration)
+                        ->WinSelectStatus($searchStatus,$filmfest_id)->School($searchSchool)->Order($order,$by)->RangeTime($startTime,$endTime)->get()->count();
                     $pageNum = ceil($mainDataNum/($this->paginate));
                 }elseif (strstr($role,'日志')){
                     $mainData = TweetProduction::get();
@@ -177,34 +192,35 @@ class FilmfestUserController extends Controller
                         $des = $v->production_des;
                         $name = $v->name;
                         $number = $v->number;
-                        $poster = $v->production()->first()->poster?$v->production->poster:$v->production()->first()->tweet()->first()->screen_shoot;
-                        if($v->productionTweet->status == 4){
+                        $poster = $v->production()->first()->poster?$v->production->poster:$v->production()->first()->tweet()->first()->screen_shot;
+                        if((int)($v->productionTweet->status) === 4){
                             if((int)($v->productionTweet->again_select_status) === 1){
-                                $status = '待审';
+                                $status = '通过';
                             }elseif ($v->productionTweet->again_select_status == 2){
-                                if((int)($v->productionTweet->join_select_status === 1)){
-                                    $status = '待审';
-                                }elseif ($v->productionTweet->join_select_status == 2){
-                                    if((int)($v->productionTweet->perofessuibal_select_status) === 1){
-                                        $status = '待审';
-                                    }elseif ($v->productionTweet->perofessuibal_select_status == 2){
-                                        if((int)($v->productionTweet->is_win === 1)){
-                                            $status = '获奖';
-                                        }else{
-                                            $status = '已评审';
-                                        }
-                                    }else{
-                                        $status = '未进入';
-                                    }
-                                }else{
-                                    $status = '未进入';
-                                }
+                                $status = '通过';
+//                                if((int)($v->productionTweet->join_select_status === 1)){
+//                                    $status = '待审';
+//                                }elseif ($v->productionTweet->join_select_status == 2){
+//                                    if((int)($v->productionTweet->perofessuibal_select_status) === 1){
+//                                        $status = '待审';
+//                                    }elseif ($v->productionTweet->perofessuibal_select_status == 2){
+//                                        if((int)($v->productionTweet->is_win === 1)){
+//                                            $status = '获奖';
+//                                        }else{
+//                                            $status = '已评审';
+//                                        }
+//                                    }else{
+//                                        $status = '未进入';
+//                                    }
+//                                }else{
+//                                    $status = '未进入';
+//                                }
                             }elseif ($v->productionTweet->again_select_status == 2 && $v->productionTweet->join_select_status == 0){
-                                $status = '淘汰';
+                                $status = '通过';
                             }else{
-                                $status = '未进入';
+                                $status = '待审';
                             }
-                        }elseif((int)($v->productionTweet->status) === 1){
+                        }elseif((int)($v->productionTweet->status) === 3){
                             $status = '待审';
                         }elseif((int)($v->productionTweet->status) === 0){
                             $status = '淘汰';
@@ -212,7 +228,7 @@ class FilmfestUserController extends Controller
                             $status = '未参赛';
                         }
                         $application_id = $v->id;
-                        $production_id = $v->production()->first()->production_id;
+                        $production_id = $v->production()->first()->id;
                         $tempData = [
                             'des'=>$des,
                             'name'=>$name,
@@ -224,9 +240,9 @@ class FilmfestUserController extends Controller
                         ];
                         array_push($data,$tempData);
                     }
-                    return response()->json(['filmfest_id'=>$filmfest_id,'role_id'=>$role_id,'data'=>$data,'allProduction'=>$allProduction, 'passProduction'=>$passProduction,'waitProduction'=>$waitProduction, 'adoptProduction'=>$adoptProduction,'pageNum'=>$pageNum]);
+                    return response()->json(['filmfest_id'=>$filmfest_id,'role_id'=>$role_id,'data'=>$data,'top'=>[['label'=>'当前作品','num'=>$allProduction],['label'=>'淘汰','num'=>$passProduction],['label'=>'待定','num'=>$waitProduction],['label'=>'通过','num'=>$adoptProduction]],'pageNum'=>$pageNum]);
                 }else{
-                    return response()->json(['message'=>'暂无作品！'],200);
+                    return response()->json(['filmfest_id'=>$filmfest_id,'role_id'=>$role_id,'message'=>'暂无作品！','top'=>[['label'=>'当前作品','num'=>$allProduction],['label'=>'淘汰','num'=>$passProduction],['label'=>'待定','num'=>$waitProduction],['label'=>'通过','num'=>$adoptProduction]],'pageNum'=>$pageNum],200);
                 }
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],200);
@@ -246,6 +262,9 @@ class FilmfestUserController extends Controller
             $role_id = $request->get('role_id');
             $application_id = $request->get('application_id');
             $production_id = $request->get('production_id');
+            if(is_null($application_id) || is_null($production_id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
             $applicationDetail = Application::find($application_id);
             $number = $applicationDetail->number;
             $name = $applicationDetail->name;
@@ -260,7 +279,6 @@ class FilmfestUserController extends Controller
             }else{
                 $units = '';
             }
-            $movie_clips = $production->movie_clips;
             $tweet = $production->tweet()->first();
             $screen_shot = $tweet->screen_shot;
             $data = [
@@ -269,7 +287,6 @@ class FilmfestUserController extends Controller
                 'number'=>$number,
                 'name'=>$name,
                 'units'=>$units,
-                'movie_clips'=>$movie_clips,
                 'screen_shot'=>$screen_shot
             ];
             return response()->json(['data'=>$data],200);
@@ -277,6 +294,67 @@ class FilmfestUserController extends Controller
             return response()->json(['error'=>'not_found'],404);
         }
     }
+
+
+    public function detailClips(Request $request)
+    {
+        try{
+            $filmfest_id = $request->get('id');
+            $role_id = $request->get('role_id');
+            $application_id = $request->get('application_id');
+            $production_id = $request->get('production_id');
+            if(is_null($application_id) || is_null($production_id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $production = TweetProduction::where('id',$production_id)->first();
+            $data = [
+                [
+                    'name'=>'源码',
+                    'url'=>$production->movie_clios_video_m3u8,
+                ],
+                [
+                    'name'=>'自适应',
+                    'url'=>$production->movie_clios_transcoding,
+                ],
+            ];
+            $duration = $production->movie_clips_duration;
+            $screen_shot = $production->movie_clips_screen_shot;
+            return response()->json(['data'=>$data,'duration'=>$duration,'screen_shot'=>$screen_shot],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function detailDownload(Request $request)
+    {
+        try{
+            $filmfest_id = $request->get('id');
+            $role_id = $request->get('role_id');
+            $user = \Auth::guard('api')->user()->id;
+            $production_id = $request->get('production_id');
+            $is_download = FilmfestUserPermission::where('permission_name','like','%下载%')
+                ->whereHas('role',function ($q) use($role_id){
+                    $q->where('filmfest_user_role.id',$role_id);
+                })->first();
+            if($is_download){
+                $is_private = TweetProduction::find($production_id)->tweet()->first()->is_download;
+                if($is_private == 1){
+                    $status = 1;
+                }else{
+                    $status = 0;
+                }
+
+            }else{
+                $status = 0;
+            }
+            return response()->json(['data'=>$status],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
+
 
 
     /**
@@ -297,47 +375,110 @@ class FilmfestUserController extends Controller
             $type = $request->get('type',1);
             if($production){
                 $tweet = $production->tweet()->first();
-                if($tweet->high_video){
-                    $resolution_ratio = [
-                        [
-                            'label'=>1,
-                            'des'=>'自适应',
-                            'address'=>$tweet->transcoding_video,
-                        ],
-                        [
-                            'label'=>2,
-                            'des'=>'高清',
-                            'address'=>$tweet->high_video,
-                        ],
-                        [
-                            'label'=>3,
-                            'des'=>'标准',
-                            'address'=>$tweet->norm_video,
-                        ],
-                        [
-                            'label'=>4,
-                            'des'=>'原码',
-                            'address'=>$tweet->video_m3u8,
-                        ]
+                $filmfest = Filmfests::find($filmfest_id);
+                $titleStatus = $filmfest->titles_of_film_status;
+                $tailStatus = $filmfest->tail_leader_status;
+                if($titleStatus== 1 || $tailStatus == 1){
+                    if($tweet->high_video){
+                        $resolution_ratio = [
+                            [
+                                'label'=>1,
+                                'name'=>'自适应',
+                                'url'=>$tweet->joinVideo()->first()->transcoding_video,
+                            ],
+                            [
+                                'label'=>2,
+                                'name'=>'高清',
+                                'url'=>$tweet->joinVideo()->first()->high_video,
+                            ],
+                            [
+                                'label'=>3,
+                                'name'=>'标准',
+                                'url'=>$tweet->joinVideo()->first()->norm_video,
+                            ],
+                            [
+                                'label'=>4,
+                                'name'=>'原码',
+                                'url'=>$tweet->joinVideo()->first()->video_m3u8,
+                            ]
 
-                    ];
+                        ];
+                    }else{
+                        $resolution_ratio = [
+                            [
+                                'label'=>1,
+                                'name'=>'自适应',
+                                'url'=>$tweet->joinVideo()->first()->transcoding_video,
+                            ],
+                            [
+                                'label'=>4,
+                                'name'=>'原码',
+                                'url'=>$tweet->joinVideo()->first()->video_m3u8,
+                            ]
+
+                        ];
+                    }
                 }else{
-                    $resolution_ratio = [
-                        [
-                            'label'=>1,
-                            'des'=>'自适应',
-                            'address'=>$tweet->transcoding_video,
-                        ],
-                        [
-                            'label'=>4,
-                            'des'=>'原码',
-                            'address'=>$tweet->video_m3u8,
-                        ]
+                    if($tweet->high_video){
+                        $resolution_ratio = [
+                            [
+                                'label'=>1,
+                                'name'=>'自适应',
+                                'url'=>$tweet->transcoding_video,
+                            ],
+                            [
+                                'label'=>2,
+                                'name'=>'高清',
+                                'url'=>$tweet->high_video,
+                            ],
+                            [
+                                'label'=>3,
+                                'name'=>'标准',
+                                'url'=>$tweet->norm_video,
+                            ],
+                            [
+                                'label'=>4,
+                                'name'=>'原码',
+                                'url'=>$tweet->video_m3u8,
+                            ]
 
-                    ];
+                        ];
+                    }else{
+                        $resolution_ratio = [
+                            [
+                                'label'=>1,
+                                'name'=>'自适应',
+                                'url'=>$tweet->transcoding_video,
+                            ],
+                            [
+                                'label'=>4,
+                                'name'=>'原码',
+                                'url'=>$tweet->video_m3u8,
+                            ]
+
+                        ];
+                    }
                 }
+
                 if($type == 2) {
-                    array_push($resolution_ratio, ['label'=>5,'des'=>'原始视频','address'=>$tweet->video]);
+                    $is_download = FilmfestUserRole::where('id',$role_id)->where('filmfest_id',$filmfest_id)
+                        ->whereHas('permission',function ($q){
+                            $q->where('filmfest_user_permission.permission_name','like','%下载%')->where('filmfest_user_permission.status',1);
+                        })->first();
+                    if($is_download){
+                        array_push($resolution_ratio, ['label'=>5,'name'=>'原始视频','url'=>$tweet->video]);
+                    }else{
+                        return response()->json(['message'=>'权限不够']);
+                    }
+
+                }elseif((int)$type === 1){
+                    $is_watch = FilmfestUserRole::where('id',$role_id)->where('filmfest_id',$filmfest_id)
+                        ->whereHas('permission',function ($q){
+                            $q->where('filmfest_user_permission.permission_name','like','%观看%');
+                        })->first();
+                    if(!$is_watch){array_push($resolution_ratio, ['label'=>5,'name'=>'原始视频','url'=>$tweet->video]);
+                        return response()->json(['message'=>'权限不够']);
+                    }
                 }
                 return response()->json(['data'=>$resolution_ratio],200);
             }else{
@@ -374,35 +515,31 @@ class FilmfestUserController extends Controller
                     $text = [
                         [
                             'des'=>'作者:',
-                            'director_name'=>$application->creater_name,
+                            'name'=>$application->creater_name,
                         ],
                         [
                             'des'=>'导演:',
-                            'director_name'=>$application->director_name,
+                            'name'=>$application->director_name,
                         ],
                         [
                             'des'=>'摄影:',
-                            'photography_name'=>$application->photography_name,
+                            'name'=>$application->photography_name,
                         ],
                         [
                             'des'=>'编剧:',
-                            'photography_name'=>$application->scriptwriter_name,
+                            'name'=>$application->scriptwriter_name,
                         ],
                         [
                             'des'=>'剪辑:',
-                            'photography_name'=>$application->cutting_name,
+                            'name'=>$application->cutting_name,
                         ],
                         [
-                            'des'=>'男主角:',
-                            'photography_name'=>$application->hero_name,
-                        ],
-                        [
-                            'des'=>'女主角:',
-                            'photography_name'=>$application->heroine_name,
+                            'des'=>'主演:',
+                            'name'=>$application->hero_name.'、'.$application->heroine_name,
                         ],
                         [
                             'des'=>'指导老师:',
-                            'photography_name'=>$application->adviser_name,
+                            'name'=>$application->adviser_name,
                         ],
 
                     ];
@@ -433,14 +570,39 @@ class FilmfestUserController extends Controller
             $filmfest_id = $request->get('id');
             $role_id = $request->get('role_id');
             $user = \Auth::guard('api')->user()->id;
-            $role = FilmfestUserRole::find($role_id);
-            $data = [];
-            if($role->permission()->first()){
-                foreach ($role->permission as $k => $v)
-                {
-                    array_push($data,['id'=>$v->id,'name'=>$v->permission_name]);
-                }
+            $role_group_id = $request->get('role_group_id');
+//            $role = FilmfestUserRole::find($role_id);
+//            $data = [];
+//            if($role->permission()->first()){
+//                foreach ($role->permission as $k => $v)
+//                {
+//                    array_push($data,['id'=>$v->id,'name'=>$v->permission_name]);
+//                }
+//            }
+            $roleGroup = FilmfestUserRoleGroup::find($role_group_id);
+            $examMethod = $roleGroup->exam_method;
+            if($examMethod == 2){
+                $data = [
+                    [
+                        'des'=>'通过',
+                        'label'=>1
+                    ],
+                    [
+                        'des'=>'淘汰',
+                        'label'=>2
+                    ],
+                    'status'=>1
+                ];
+            }else{
+                $data = [
+                    [
+                        'des'=>'评分',
+                        'label'=>1
+                    ],
+                    'status'=>2
+                ];
             }
+
             return response()->json(['data'=>$data]);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
@@ -451,7 +613,12 @@ class FilmfestUserController extends Controller
     public function applicationFrom(Request $request)
     {
         try{
-            $application = Application::find(2);
+            $filmfest_id = $request->get('id');
+            $role_id = $request->get('role_id');
+            $production_id = $request->get('production_id');
+            $application_id = $request->get('application_id');
+            $type = $request->get('type',1);
+            $application = Application::find($application_id);
             $pdf  =  new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
             // 设置文档信息
             $pdf->SetCreator('嗨！视频');
@@ -477,10 +644,10 @@ class FilmfestUserController extends Controller
             $pdf->SetFooterMargin(10);//页脚bottom间隔
 
             // 设置分页
-            $pdf->SetAutoPageBreak(true, 25);
+            $pdf->SetAutoPageBreak(false, 25);
 
             // 设置自动换页
-            $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+            $pdf->SetAutoPageBreak(false, PDF_MARGIN_BOTTOM);
 
             // 设置图像比例因子
             $pdf->setImageScale(1.25);
@@ -517,6 +684,7 @@ class FilmfestUserController extends Controller
             $contact_way = rtrim($contact_way,'、');
             $schoolAndMajor = $application->university_name.' '.$application->major;
             $communication_address = $application->communication_address_country.' '.$application->communication_address_province.' '.$application->communication_address_city.' '.$application->communication_address_county.' '.$application->communication_detail_address;
+            $papers = 'http://img.cdn.hivideo.com/'.$application->papers;
             $pdf->Ln(5);//换行符
             $html = "
             <h2 align=\"center\">第25届北京大学生电影节报名表</h2>
@@ -546,7 +714,7 @@ class FilmfestUserController extends Controller
             <p>通讯地址:{$communication_address}</p>
             <p>作者简介:{$application->creater_des}</p>
             <p>其他作者简介及分工介绍:{$application->other_creater_des}</p>
-            <img src=\"http://img.ects.cdn.hivideo.com/0002.png\" align=\"middle\" />
+            <img src=\"http://img.cdn.hivideo.com/{$application->papers}\" align=\"middle\" />
         ";
             $pdf->writeHTML($html, true, false, true, false, '');
             ob_end_clean();
@@ -613,14 +781,14 @@ class FilmfestUserController extends Controller
         try{
 
 
-                $data = AddressCounty::get();
+                $data = AddressCountry::get();
                 $country =  [];
                 if($data->count()>0){
                     foreach ($data as $k => $v)
                     {
                         $tempData = [
                             'label'=>$v->id,
-                            'des'=>$v->name,
+                            'des'=>$v->Name,
                         ];
                         array_push($country,$tempData);
                     }

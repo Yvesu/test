@@ -1,0 +1,16 @@
+[
+	{
+		"key":"1",
+		"uri":"/terminal",
+		"name":"设备终端",
+		"icon":"calendar"
+	},
+	{ "key":"2",
+		"icon":"calendar",
+		"name":"滤镜",
+		"children":[
+			{"key":"2.1","uri":"/filterAll","name":"全部"},
+			{"key":"2.3","uri":"/filterRelease","name":"发布滤镜"}
+		]
+	}
+]

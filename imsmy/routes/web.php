@@ -90,7 +90,6 @@ Route::group(['namespace'=>'NewWeb'],function (){
     Route::get('/testuser','Office\WebIndexController@userIndex');
 
     Route::get('test','TestController@test');
-    Route::get('test2','TestController@aaa111');
 
 });
 
@@ -106,6 +105,16 @@ $api -> version('v1',function($api) {
          * 测试页面登录
          */
         $api -> post('/testlogin','TestLoginController@login');
+
+        /**
+         * 验证码登录之获取验证码
+         */
+        $api -> post('/sendCode','TestLoginController@sendCode');
+
+        /**
+         * 验证码登录之验证验证码且登录
+         */
+        $api -> post('/verifyCode','TestLoginController@verifyCode');
 
         /**
          * 测试刷新token
@@ -240,6 +249,21 @@ $api -> version('v1',function($api) {
                 $api -> post('match','User\UserController@match');
 
                 /**
+                 * 竞赛详情页
+                 */
+                $api -> post('match/index','User\UserController@matchIndex');
+
+                /**
+                 * 竞赛详情页-添加关注
+                 */
+                $api -> post('match/index/subscription','User\UserController@matchIndexSubscription');
+
+                /**
+                 * 普通情况发私信
+                 */
+                $api -> post('send/private/letter','User\UserController@sendPrivateLetter');
+
+                /**
                  * 主页竞赛获得类别
                  */
                 $api -> post('match/type','User\UserCommonController@matchType');
@@ -248,6 +272,21 @@ $api -> version('v1',function($api) {
                  * 主页竞赛时间条件
                  */
                 $api -> post('match/time','User\UserCommonController@matchTime');
+
+                /**
+                 * 未读私信数量
+                 */
+                $api -> post('privater-email/new-num','User\UserController@privateLetterNewNum');
+
+                /**
+                 * 查看部分未读私信
+                 */
+                $api -> post('privater-email/new','User\UserController@privateLetterNew');
+
+                /**
+                 * 查看某人的所有私信
+                 */
+                $api -> post('privater-email/one-user-letter','User\UserController@oneUserLetter');
 
             });
 
@@ -311,6 +350,11 @@ $api -> version('v1',function($api) {
                         $api -> post('do-add','User\FilmfestController@doAdd');
 
                         /**
+                         * 直接通过手机号添加成员
+                         */
+                        $api -> post('phone-do-add','User\FilmfestController@phoneDoAdd');
+
+                        /**
                          * 竞赛管理员详情
                          */
                         $api -> post('admin-detail','User\FilmfestController@adminDetail');
@@ -347,11 +391,181 @@ $api -> version('v1',function($api) {
                          */
                         $api -> post('send-privater-letter','User\FilmfestController@sendPrivaterLetter');
 
+                        /**
+                         * 设置页面
+                         */
+                        $api -> post('set','User\FilmfestIssueController@setIndexTop');
+
+                        /**
+                         * 基础设置
+                         */
+                        $api -> post('base-set','User\FilmfestIssueController@baseSet');
+
+                        /**
+                         * 保存基础设置
+                         */
+                        $api -> post('save-base-set','User\FilmfestIssueController@saveBaseSet');
+
+                        /**
+                         * 详情设置
+                         */
+                        $api -> post('detail-set','User\FilmfestIssueController@detailSet');
+
+                        /**
+                         * 进行详情设置
+                         */
+                        $api -> post('do-detail-set','User\FilmfestIssueController@doDetailSet');
+
+                        /**
+                         * 竞赛规则
+                         */
+                        $api -> post('set-rule','User\FilmfestIssueController@setIndexRule');
+
+                        /**
+                         * 执行修改
+                         */
+                        $api -> post('do-set-rule','User\FilmfestIssueController@doSetRule');
+
+//                        /**
+//                         * 改变角色组
+//                         */
+//                        $api -> post('change/role-group','User\FilmfestIssueController@changeRoleGroup');
+//
+//                        /**
+//                         * 增加角色组成员数
+//                         */
+//                        $api -> post('increase/role-group/num','User\FilmfestIssueController@increaseRoleGroupNum');
+//
+//                        /**
+//                         * 减少角色组成员数
+//                         */
+//                        $api -> post('decrease/role-group/num','User\FilmfestIssueController@decreaseRoleGroupNum');
+//
+//                        /**
+//                         * 改变角色组成员数
+//                         */
+//                        $api -> post('change/role-group/num','User\FilmfestIssueController@changeRoleGroupNum');
+//
+//                        /**
+//                         * 增加角色组配额
+//                         */
+//                        $api -> post('increase/role-group/quota_num','User\FilmfestIssueController@increaseRoleGroupQuotaNum');
+//
+//                        /**
+//                         * 减少角色组配额
+//                         */
+//                        $api -> post('decrease/role-group/quota_num','User\FilmfestIssueController@decreaseRoleGroupQuotaNum');
+//
+//                        /**
+//                         * 改变角色组配额
+//                         */
+//                        $api -> post('change/role-group/quota_num','User\FilmfestIssueController@changeRoleGroupQuotaNum');
+//
+//                        /**
+//                         * 改变允许成员下载权限
+//                         */
+//                        $api -> post('change/role-group/download','User\FilmfestIssueController@changeRoleGroupDownload');
+//
+//                        /**
+//                         * 改变是否结束后禁止访问后台
+//                         */
+//                        $api -> post('change/role-group/enter','User\FilmfestIssueController@changeRoleGroupEnter');
+//
+//                        /**
+//                         * 是否结束后公示成员名单
+//                         */
+//                        $api -> post('change/role-group/memberlist','User\FilmfestIssueController@memberList');
+
+                        /**
+                         * 影片设置
+                         */
+                        $api -> post('film-set','User\FilmfestIssueController@filmSet');
+
+
+//                        /**
+//                         * 上传片头
+//                         */
+//                        $api -> post('up/title-of-film','User\FilmfestIssueController@titleOfFilm');
+//
+//                        /**
+//                         * 上传片尾
+//                         */
+//                        $api -> post('up/tail-leader','User\FilmfestIssueController@tailLeader');
+//
+//                        /**
+//                         * 上传水印
+//                         */
+//                        $api -> post('up/wartermark','User\FilmfestIssueController@wartermark');
+//
+//                        /**
+//                         * 改变片头状态
+//                         */
+//                        $api -> post('change/title-of-film/status','User\FilmfestIssueController@changeTitleOfFilmStatus');
+//
+//                        /**
+//                        * 改变片尾状态
+//                        */
+//                        $api -> post('change/tail-leader/status','User\FilmfestIssueController@changeTailLeaderStatus');
+//
+//                        /**
+//                         * 改变水印状态
+//                         */
+//                        $api -> post('change/wartermark/status','User\FilmfestIssueController@changeWartermarkStatus');
+//
+//                        /**
+//                         * 设置水印位置
+//                         */
+//                        $api -> post('change/wartermark/place','User\FilmfestIssueController@changeWarterMarkPlace');
+
+                        /**
+                         * 保存影片设置
+                         */
+                        $api -> post('film-set/save','User\FilmfestIssueController@filmSetSave');
+
+                        /**
+                         * 单元和奖项页
+                         */
+                        $api -> post('units-and-awards','User\FilmfestIssueController@unitsAndAwards');
+
+                        /**
+                         * 添加单元和奖项
+                         */
+                        $api -> post('add-unit-and-awards','User\FilmfestIssueController@addUnitAndAwards');
+
+                        /**
+                         * 保存单元奖项页
+                         */
+                        $api -> post('save-unit-and-awards','User\FilmfestIssueController@saveUnitAndAwards');
+
+                        /**
+                         * 编辑详情页
+                         */
+                        $api -> post('edit-des','User\FilmfestIssueController@editDes');
+
+                        /**
+                         * 执行编辑
+                         */
+                        $api -> post('do-edit-des','User\FilmfestIssueController@doEditDes');
+
+                        /**
+                         * 启动页面
+                         */
+                        $api -> post('start-page','User\FilmfestIssueController@startPage');
+
+                        /**
+                         * 开启竞赛
+                         */
+                        $api -> post('start','User\FilmfestIssueController@start');
+
+
+
+
+
 
 
                     });
 
-                    $api -> group(['middleware'=>'filmfestUsserRole:id,role_id'],function ($api){
+                    $api -> group(['middleware'=>'filmfestUserRole:id,role_id'],function ($api){
 
                         /**
                          * 审片室下面的展示
@@ -391,12 +605,17 @@ $api -> version('v1',function($api) {
                         /**
                          * 审片室排序
                          */
-                        $api -> post('role-power/school','User\FilmfestUserController@productionDuration');
+                        $api -> post('role-power/order','User\FilmfestUserController@productionOrder');
 
                         /**
                          * 审片详情
                          */
                         $api -> post('role-power/detail','User\FilmfestUserController@detail');
+
+                        /**
+                         * 审片详情-片花内容
+                         */
+                        $api -> post('role-power/detail-clips','User\FilmfestUserController@detailClips');
 
                         /**
                          * 审片视频
@@ -412,6 +631,11 @@ $api -> version('v1',function($api) {
                          * 审片详情-操作
                          */
                         $api -> post('role-power/detail-handle','User\FilmfestUserController@detailHandle');
+
+                        /**
+                         * 审片详情-是否有下载
+                         */
+                        $api -> post('role-power/detail-download','User\FilmfestUserController@detailDownload');
 
                         /**
                          * 审片室报名表
@@ -439,6 +663,8 @@ $api -> version('v1',function($api) {
                     $api -> post('page_three','Application\ApplicationController@pageThree');
                     $api -> post('page_four','Application\ApplicationController@pageFour');
                     $api -> post('page_submit','Application\ApplicationController@pageSubmit');
+                    //  鉴黄
+                    $api -> post('page_check','Application\ApplicationController@check');
                     /**
                      * 影片单元选择类别
                      */

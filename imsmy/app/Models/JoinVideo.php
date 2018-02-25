@@ -20,4 +20,13 @@ class JoinVideo extends Model
         'weight_height',
         'duration',
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * 与动态表关系 多对多
+     */
+    public function tweet()
+    {
+        return $this->belongsToMany('App\Models\Tweet','join_video_tweet','join_video_id','tweet_id');
+    }
 }

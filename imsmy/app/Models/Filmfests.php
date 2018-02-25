@@ -130,5 +130,23 @@ class Filmfests extends Model
     {
         return $this->hasMany('App\Models\FilmfestUser\FilmfestUserUserGroup','filmfest_id','id');
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * 与总竞赛表id
+     */
+    public function activity()
+    {
+        return $this->hasOne('App\Models\Activity','id','active_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * 与竞赛相关网站关系
+     */
+    public function correlation()
+    {
+        return $this->hasMany('App\Models\FilmfestCorrelation','filmfest_id','id');
+    }
     
 }

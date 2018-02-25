@@ -1,0 +1,39 @@
+[
+  { "key":"1",
+    "uri":"/platform",
+    "icon":"desktop",
+    "name":"平台看板"
+  },
+  { "key":"2",
+    "icon":"calendar",
+    "name":"模板",
+    "children":[
+      {"key":"2.1","uri":"/templateAll","name":"全部"},
+      {"key":"2.3","uri":"/templateSort","name":"分类"}
+    ]
+  },
+  { "key":"3",
+    "icon":"trophy",
+    "name":"片段",
+    "children":[
+      {"key":"3.1","uri":"/fragmentAll","name":"全部"},
+      {"key":"3.2","uri":"/fragmentRecommend","name":"推荐"},
+      {"key":"3.3","uri":"/fragmentClassify","name":"分类"},
+      {"key":"3.4","uri":"/fragmentSearch","name":"搜索热点"},
+      {"key":"3.5","uri":"/fragmentUpload","name":"上传片段"},
+      {"key":"3.6","uri":"/fragmentScreen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"4",
+    "icon":"trophy",
+    "name":"混合资源库",
+    "children":[
+      {"key":"4.1","uri":"/libraryAll","name":"全部"},
+      {"key":"4.2","uri":"/libraryRecommend","name":"推荐"},
+      {"key":"4.3","uri":"/libraryClassify","name":"分类"},
+      {"key":"4.4","uri":"/librarySearch","name":"搜索热点"},
+      {"key":"4.5","uri":"/libraryUpload","name":"上传资源"},
+      {"key":"4.6","uri":"/libraryScreen","name":"屏蔽仓"}
+    ]
+  }
+]

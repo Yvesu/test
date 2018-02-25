@@ -1,0 +1,81 @@
+@charset "UTF-8";
+
+//不带进度条的排行榜
+.rank_list{
+  color:#4a4a4a;
+  text-align: left;
+  .rank_list_title{
+    height: 30px;
+    line-height: 30px;
+    padding:0 10px;
+    // width: 100%;
+    // border:1px solid #000;
+    >span{
+      // border: 1px solid #000;
+      display:block;
+      float: left;
+      height: 100%;
+      &:first-child{
+        margin-right: 20px;
+      }
+      &:nth-child(2){
+        width:70%;
+        // border: 1px solid #000;
+      }
+      &:last-child{
+        min-width: 5%;
+        // max-width: 10%;
+        float: right;
+        // text-align: right;
+        // margin-left: 3%;
+        // border: 1px solid #000;
+      }
+    }
+  }
+  //UL列表样式
+  ul{
+    // background: #ccc;
+      >li{
+        padding:5px 10px;
+        margin: 2px 0;
+        cursor: pointer;
+        border-bottom: 1px solid #cecece;
+        // border: 1px solid #000;
+        // background:#cecece;
+        >span{
+          display: inline-block;
+          // border: 1px solid #000;
+          text-align: left;
+          &:first-child{
+            // display: block;
+            // float: left;
+            width: 18px;
+            height: 18px;
+            line-height: 16px;
+            background:#9b9b9b;
+            border-radius:4px;
+            color: #fff;
+            text-align: center;
+            margin-left: 3px;
+            margin-right: 20px;
+          }
+          &:nth-child(2){
+              margin-left: 3px;
+              // display: inline-block;
+              width: 70%;
+              // text-align: left;
+              // border: 1px solid #000;
+          }
+          &:last-child{
+            color:#9b9b9b;
+            // text-align: center;
+            // display: block;
+            float: right;
+            min-width: 5%;
+            max-width: 10%;
+            // border: 1px solid #000;
+          }
+        }
+      }
+  }
+}

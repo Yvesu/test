@@ -1,0 +1,11 @@
+@charset "UTF-8";
+body{
+  background: #001529;
+}
+
+video::-webkit-media-controls-enclosure {
+        overflow:hidden;
+    }
+video::-webkit-media-controls-panel {
+    width: calc(100% + 30px);
+}

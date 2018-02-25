@@ -1,0 +1,150 @@
+@charset "UTF-8";
+
+//平台看板 - one
+
+.platform_box{
+  width: 100%;
+  height: 146px;
+  border: 1px solid #000;
+  background: #fff;
+  text-align: center;
+  >h2{
+    color:#108ee9;
+    height: 56px;
+    margin-top: 21px;
+    font-size: 40px;
+  }
+  >p{
+    height: 28px;
+    // border: 1px solid #000;
+    margin: 21px 0;
+    color: #4a4a4a;
+    font-size: 20px;
+    >span{
+      margin-right: 2.5%;
+    }
+  }
+}
+
+//平台看板 - 底下的循环片段
+
+.platform_statistics_box{
+  height: 161px;
+  // border: 1px solid #000;
+  margin-top: 20px;
+  >h2{
+    height: 42px;
+    // border: 1px solid #000;
+    font-size: 30px;
+    >span{
+      float: right;
+      color:#9b9b9b;
+    }
+  }
+  //白色区域的内容
+  .statistics_single{
+    // width: 500px;
+    height: 100px;
+    background: #fff;
+    // border: 1px solid #000;
+    margin-top: 19px;
+    padding: 10px;
+    //左右两边共同的样式
+    .single_left,.single_right{
+      width: 50%;
+      // width: 550px;
+      height: 100%;
+      // border: 1px solid #000;
+      color:#000;
+      em{
+        font-style: normal;
+        color: #9b9b9b;
+        // font-size: 14px;
+      }
+    }
+    .single_left{
+      float: left;
+      border-right: 1px solid #ccc;
+      >div{
+        height: 20px;
+        // border: 1px solid red;
+        width: 100%;
+        margin: 11px 0;
+        >p{
+          // min-width: 60%;
+          // max-width: 70%;
+          // float: left;
+          height: 100%;
+          // border: 1px solid blue;
+          &:first-child{
+            float:left;
+            min-width:30%;
+            max-width: 35%;
+            // width: 40%;
+          }
+          &:nth-child(2){
+            min-width: 65%;
+            max-width: 70%;
+            float: right;
+            >span{
+              display: inline-block;
+              min-width: 90px;
+              max-width:100px;
+              height: 100%;
+              border: 1px solid #000;
+              margin-right: 15px;
+            }
+          }
+        }
+      }
+    }
+    //右边的样式
+    .single_right{
+      float: right;
+      text-align: center;
+      >p{
+        width: 100%;
+        height: 22px;
+        // border: 1px solid #000;
+        margin: 24px 0;
+        >span{
+          display: inline-block;
+          max-width: 120px;
+          min-width: 100px;
+          height: 100%;
+          border: 1px solid #000;
+          text-align: left;
+          margin-right: 20px;
+        }
+      }
+    }
+
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//底线

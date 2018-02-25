@@ -1,0 +1,127 @@
+@charset "UTF-8";
+//Table表格样式
+.table_container{
+  width: 100%;
+  background: #fff;
+  position: relative;
+  padding: 10px 10px 1px;
+  height: 80%;
+  font-size: 12px;
+}
+.tables_span{
+  position: absolute;
+  left: 5px;
+}
+.tables_btn_hide,.tables_btn_show{
+  height: 40px;
+  text-align: right;
+}
+.tables_btn_hide{
+  display: none;
+}
+
+table{
+  >thead>tr>th{
+    &:last-child{
+      text-align: center;
+    }
+  }
+  // >tbody>tr>td{
+  //   &:last-child{
+  //     text-align: center;
+  //   }
+  // }
+}
+
+//Tabel表格中的图片样式
+.cover_box{
+  height: 100%;
+  padding: 1px;
+  position: relative;
+  cursor: pointer;
+  >.detail_img_hover{
+    width: 100%;
+    height: 100%
+  }
+  &:hover{
+    >.detail_img_mask{
+      display: block;
+    }
+  }
+  >.detail_img_mask{
+    display: none;
+    position: absolute;
+    left: 0;top: 0;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    text-align: center;
+    >i{
+      display: block;
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      left: 0;top: 0;right: 0;bottom: 0;
+      margin:auto;
+    }
+  }
+
+}
+//不需要跳转和鼠标滑过事件显示
+.cover_box_noneed_mask{
+  height: 100%;
+  padding: 1px;
+  position: relative;
+  cursor: pointer;
+  >.detail_img_hover{
+    width: 100%;
+    height: 100%
+  }
+  >.detail_img_mask{
+    display: none;
+  }
+}
+
+
+//下拉菜单样式
+.dropMenu{
+  >li{
+    padding:1px;
+    >div>button{
+      border: none;
+      outline:none;
+      width:100%;
+      &:hover{
+         background-color: #ecf6fd;
+         // border-color: #ecf6fd;
+      }
+    }
+    >button{
+      border: none;
+      outline:none;
+      width:100%;
+      &:hover{
+        background-color: #ecf6fd;
+        // border-color: #ecf6fd;
+        // border-radius: 4px;
+      }
+    }
+    >.ant-btn-danger{
+      background-color: #fff;
+      &:hover{
+        color: #fff;
+        background-color: #f04134;
+        border-color: #f04134;
+      }
+      // border-color: #49a9ee;
+    }
+    >.ant-btn-primary{
+      &:hover{
+        color: #fff;
+        background-color: #49a9ee;
+        border-color: #49a9ee;
+      }
+    }
+  }
+}
