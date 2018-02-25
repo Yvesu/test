@@ -1,0 +1,190 @@
+@charset "UTF-8";
+
+//模板 - 片段
+.fragment_box{
+  background: #fff;
+  // border: 1px solid #000;
+  position: relative;
+  >h3{
+    // border: 1px solid red;
+    margin-bottom: 1px;
+    font-size: 20px;
+    padding-top: 5px;
+  }
+}
+
+//取消Spin的默认定位
+// .setps_box_empty_spin{
+//   position: static;
+//   >.ant-spin-container{
+//     position: static;
+//   }
+// }
+
+//标题
+.steps_box{
+  // border: 1px solid red;
+  min-height: 500px;
+  padding: 2px 20px 40px 10px;
+  display: flex;
+  >.steps_title{
+    margin-top: 20px;
+    // border: 1px solid #000;
+    width: 20%;
+    // float: left;
+  }
+}
+//内容
+.steps_content_box{
+  border-left: 1px solid #d8d8d8;
+  width: 80%;
+  min-height: 800px;
+  // float: left;
+}
+//按钮
+.steps_btn{
+  // border: 1px solid blue;
+  width: 80%;
+  padding-left: 20px;
+  position: absolute;
+  right: 0;
+  top: -38px;
+  // z-index: 5;
+  >button{
+    width: 100px;
+    margin-right: 20px;
+    float: right;
+  }
+  >.steps_btn_prev{
+    float: left;
+  }
+}
+
+//第二步 - 上传片段资源
+
+.upload_fragment_box{
+  border: 1px dashed #979797;
+  height: 210px;
+  // width: 100%;
+  margin: 10px 0 20px 20px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-radius: 4px;
+  // padding-top: 15px;
+  .upload_fragment_formItem_title{
+    >.ant-form-item-label>label{
+      font-size: 16px;
+    }
+    >.ant-form-item-control-wrapper{
+      margin-top: 20px;
+    }
+  }
+}
+
+//最后一步
+.upload_publish_img{
+  width: 160px;
+  height: 90px;
+  // border: 1px solid #000;
+  background: #ccc;
+  >img{
+    width: 100%;
+    height: 100%;
+  }
+}
+.upload_publish_content{
+  // border: 1px solid blue;
+  min-height: 300px;
+  margin-top: 25px;
+  >div{
+    width: 100%;
+    // border: 1px solid #000;
+    // height: 30px;
+    >p{
+      width: 30%;
+      display: inline-block;
+      color: #000;
+      margin: 10px 0;
+      >span{
+        font-size: 12px;
+        &:last-child{
+        color: #ccc;
+        }
+      }
+      &:first-child,&:nth-child(5),&:nth-child(6){
+        width: 100%;
+      }
+      &:first-child>span{
+        display: block;
+        &:first-child{
+          height: 25px;
+        }
+      }
+    }
+  }
+  >.video_play_box{
+    // position: relative;
+    >.push_videos_box{
+      width: 480px;
+      height: 270px;
+      border:1px solid #000;
+      margin: 20px 0;
+      position: relative;
+      >video{
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      &:hover{
+        .video_play_box_mask{
+          display: block;
+        }
+      }
+      >.video_play_box_mask{
+        display: none;
+        position: absolute;
+        left: 0;top: 0;
+        background:rgba(0,0,0,0.40);
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+        >i{
+          cursor: pointer;
+          // text-align: center;
+          width: 50px;
+          height: 50px;
+          font-size: 50px;
+          color: #fff;
+          // border: 1px solid #fff;
+          position: absolute;
+          left: 0;top:0;bottom: 0;right: 0;
+          margin:auto;
+          z-index: 5;
+        }
+      }
+    }
+    // width: 100%;
+    >p{
+      display: block;
+      color:#000;
+      font-size: 12px;
+      // &:nth-child(2){
+      //
+      //
+      // }
+    }
+  }
+
+  // >.upload_publish_ZM{
+  //   >p{
+  //     display: block;
+  //     >span{
+  //       &:nth-child(2){
+  //         color:#ccc;
+  //         margin: 0 10px;
+  //       }
+  //     }
+  //   }
+  // }
+
+}

@@ -1,0 +1,67 @@
+{
+  "title":"启动次数：",
+  "title_em":"4525423次",
+  "list_title":[
+    {
+      "title":"排名"
+    },
+    {
+      "title":"机型"
+    },
+    {
+      "title":"占比"
+    }
+  ],
+   "data":[
+     {
+       "ranking":"1",
+       "key_word":"iPhone 6",
+       "search_number":"18.3%"
+     },
+     {
+       "ranking":"2",
+       "key_word":"iPhone 6 Plus",
+       "search_number":"13.5%"
+     },
+     {
+       "ranking":"3",
+       "key_word":"iPhone 7 Plus",
+       "search_number":"12.1%"
+     },
+     {
+       "ranking":"4",
+       "key_word":"iPhone 6s",
+       "search_number":"10.1%"
+     },
+     {
+       "ranking":"5",
+       "key_word":"iPhone 5",
+       "search_number":"8.3%"
+     },
+     {
+       "ranking":"6",
+       "key_word":"OPPO R11（标准版/全网通）",
+       "search_number":"8.1%"
+     },
+     {
+       "ranking":"7",
+       "key_word":"vivo X20（全网通）",
+       "search_number":"7.8%"
+     },
+     {
+       "ranking":"8",
+       "key_word":"华为nova 2（PIC-AL00/全网通）",
+       "search_number":"7.1%"
+     },
+     {
+       "ranking":"9",
+       "key_word":"苹果iPhone 8（全网通）",
+       "search_number":"6.5%"
+     },
+     {
+       "ranking":"10",
+       "key_word":"三星GALAXY Note 8",
+       "search_number":"4.1%"
+     }
+   ]
+}

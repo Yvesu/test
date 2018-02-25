@@ -1,0 +1,64 @@
+@charset "UTF-8";
+
+
+//弹出穿梭框 ,因为在videoDetail中效果不起作用 所以单独提出来
+.pop_transfer{
+  //不能直接加 > 符号 ;如果需要 前边还需在添加一个 .ant-transfer
+  .ant-transfer-operation{
+      >.ant-btn{
+        &:first-child{
+          margin-bottom: 20px;
+        }
+      }
+    }
+}
+
+//视频详情页和屏蔽仓中删除弹出的内容图片样式
+.confirm_content_box{
+  width:350px;
+  min-height: 100px;
+  height: auto!important;
+  height: 100px;
+  padding-top: 10px;
+  margin-left: -45px;
+  line-height: 120px;
+  >p{
+    font-size: 12px;
+    color:#4a4a4a;
+    margin-left:100px;
+    width: 245px;
+    min-height:20px;
+    height: auto!important;
+    height: 20px;
+    line-height: 20px;
+  }
+  .confirm_img_box{
+    width: 90px;
+    height: 50%;
+    // height: 100px;
+    float: left;
+    >img{
+      // float: left;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+//设置置顶的过期时间
+.top_select_expire_time{
+  // border: 1px solid red;
+  height: 150px;
+  padding: 30px 0 50px;
+  >span{
+    display: inline-block;
+    width: 100px;
+    height: 50px;
+    font-size: 14px;
+    text-align: center;
+  }
+  >.select_expire_choose_box{
+    width: 200px;
+    // height: 100px;
+  }
+}

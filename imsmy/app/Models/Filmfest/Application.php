@@ -2,6 +2,7 @@
 
 namespace App\Models\Filmfest;
 
+use App\Models\FilmfestFilmfestType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ class Application extends Model
         'create_time','production_des','creater_name','director_name','photography_name',
         'scriptwriter_name','cutting_name','hero_name','heroine_name','major','university_id',
         'university_name','adviser_name','adviser_phone','communication_address','creater_des',
-        'other_creater_des','apply_time','time_add','time_update','festfilms_id'
+        'other_creater_des','apply_time','time_add','time_update','festfilms_id','production_id'
     ];
 
     public $timestamps =false;
@@ -95,16 +96,45 @@ class Application extends Model
      * @return mixed
      * 查询单元类别
      */
-    public function scopeType($query,$type)
+    public function scopeType($query,$type,$filmfest_id)
     {
         if((int)$type===0){
-            return $query;
+            return $query->whereHas('production',function ($q){
+                $q->whereHas('tweet',function ($a){
+                    $a->whereHas('yellowCheck',function ($b){
+                        $b->where('tweet_qiniu_check.image_qpulp',0)
+                            ->where('tweet_qiniu_check.qpolitician',0)
+                            ->where('tweet_qiniu_check.tupu_video',0);
+                    });
+                });
+            });
         }elseif($type==999){
             return $query;
         }elseif ($type==1000){
-            return $query;
+            return $query->whereHas('production',function ($q){
+                $q->whereHas('tweet',function ($a){
+                    $a->whereHas('yellowCheck',function ($b){
+                        $b->where('tweet_qiniu_check.image_qpulp',1)
+                            ->orWhere('tweet_qiniu_check.qpolitician',1)
+                            ->orWhere('tweet_qiniu_check.tupu_video',1);
+                    });
+                });
+            });
         }else{
-            return $query->whereHas('filmType',function ($q)use($type){
+            $filmfestFilmType = FilmfestFilmfestType::where('type_id',$type)
+                ->where('filmfest_id',$filmfest_id)->first();
+            $lt_time = $filmfestFilmType->lt_time;
+            $gt_time = $filmfestFilmType->gt_time;
+            return $query->whereHas('production',function ($q) use($lt_time,$gt_time){
+                $q->where('tweet.duration','>=',$lt_time)->where('tweet.duration','<=',$gt_time)
+                    ->whereHas('tweet',function ($a){
+                        $a->whereHas('yellowCheck',function ($b){
+                            $b->where('tweet_qiniu_check.image_qpulp',0)
+                                ->where('tweet_qiniu_check.qpolitician',0)
+                                ->where('tweet_qiniu_check.tupu_video',0);
+                        });
+                    });
+            })->whereHas('filmType',function ($q)use($type){
                 $q->where('filmfest_film_type.id',$type);
             });
         }
@@ -199,10 +229,13 @@ class Application extends Model
      * @return mixed
      * 复审状态查询
      */
-    public function scopeAgaginSelectStatus($query,$searchStatus,$filmfest_id)
+    public function scopeAgainSelectStatus($query,$searchStatus,$filmfest_id)
     {
         if((int)$searchStatus === 0){
-            return $query;
+            return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
+                $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
+                    ->where('filmfests_tweet_production.again_select_status','!=',0);
+            });
         }elseif ((int)$searchStatus === 1){
             return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
                 $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
@@ -216,7 +249,8 @@ class Application extends Model
         }else{
             return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
                 $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
-                    ->where('filmfests_tweet_production.again_select_status','=',3);
+                    ->where('filmfests_tweet_production.again_select_status','=',2)
+                    ->where('filmfests_tweet_production.join_select_status','!=',0);
             });
         }
     }
@@ -232,7 +266,10 @@ class Application extends Model
     public function scopeJoinSelectStatus($query,$searchStatus,$filmfest_id)
     {
         if((int)$searchStatus === 0){
-            return $query;
+            return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
+                $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
+                    ->where('filmfests_tweet_production.join_select_status','!=',0);
+            });
         }elseif((int)$searchStatus === 1){
             return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
                 $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
@@ -258,7 +295,10 @@ class Application extends Model
     public function scopePerofessuibalSelectStatus($query,$searchStatus,$filmfest_id)
     {
         if((int)$searchStatus === 0){
-            return $query;
+            return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
+                $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
+                    ->where('filmfests_tweet_production.perofessuibal_select_status','!=',0);
+            });
         }elseif((int)$searchStatus === 1){
             return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
                 $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
@@ -279,10 +319,16 @@ class Application extends Model
      * @return mixed
      * 获奖查询
      */
-    public function scopWinSelectStatus($query,$searchStatus,$filmfest_id)
+    public function scopeWinSelectStatus($query,$searchStatus,$filmfest_id)
     {
         if((int)$searchStatus === 0){
-            return $query;
+            return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
+                $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
+                    ->where('filmfests_tweet_production.status',4)
+                    ->where('filmfests_tweet_production.again_select_status',2)
+                    ->where('filmfests_tweet_production.join_select_status',2)
+                    ->where('filmfests_tweet_production.perofessuibal_select_status',2);
+            });
         }elseif((int)$searchStatus === 1){
             return $query->whereHas('productionTweet',function ($q)use($filmfest_id){
                 $q->where('filmfests_tweet_production.filmfests_id',$filmfest_id)
@@ -343,8 +389,19 @@ class Application extends Model
                 array_push($aa,$v->application_id);
             }
             return $query->whereIn('id',$aa);
+        }elseif (is_null($order)){
+            return $query;
         }else{
             return $query->orderBy($order,$by);
+        }
+    }
+
+    public function scopeRangeTime($query,$startTime,$endTime)
+    {
+        if(is_null($endTime)){
+            return $query;
+        }else{
+            return $query->where('time_add','>',$startTime)->where('time_add','<',$endTime);
         }
     }
 }

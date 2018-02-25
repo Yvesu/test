@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+//发布滤镜的样式
+.release_filter_box{
+  background: #fff;
+  position: relative;
+  // border:1px solid #000;
+}
+
+//改变列表中纹理标题显示居中
+.filter_all_need_modify{
+  // border: 1px solid red;
+  >.select_and_table >.ant-spin-nested-loading{
+    .table_container>.table_need_modify{
+        table{
+          // border: 1px solid blue;
+          >thead>tr>th{
+            &:nth-child(5){
+              text-align: center;
+            }
+          }
+        }
+      }
+    }
+}

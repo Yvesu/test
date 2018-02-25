@@ -922,5 +922,14 @@ class Tweet extends Common
         return $this->hasOne('App\Models\TweetTopic','tweet_id','id');
     }
 
+    public function yellowCheck()
+    {
+        return $this->hasOne('App\Models\TweetQiniuCheck','tweet_id','id');
+    }
+
+    public function joinVideo()
+    {
+        return $this->belongsToMany('App\Models\JoinVideo','join_video_tweet','tweet','join_video_id');
+    }
 
 }

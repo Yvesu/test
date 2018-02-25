@@ -902,18 +902,39 @@ class CloudStorage
      }
 
 
-    public function joint($id,$join_id,$notice = null)
+    public function joint($id,$join_id,$notice = null,$status=1)
     {
        $tweet = Tweet::find($id);
        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
        $url = $this->downloadUrl($tweet->video);
        $file_url = ltrim(parse_url($url)['path'], '/');
-       $join_video = JoinVideo::find($join_id,['head_video','tail_video']);
+       switch ($status){
+           case 1:
+               $join_video = JoinVideo::find($join_id,['head_video','tail_video']);
+               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               break;
+           case 2:
+               $join_video = JoinVideo::find($join_id,['tail_video']);
+               $head_url = false;
+               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               break;
+           case 3:
+               $join_video = JoinVideo::find($join_id,['head_video']);
+               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $tail_url = false;
+               break;
+           default:
+               $join_video = JoinVideo::find($join_id,['head_video','tail_video']);
+               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               break;
+       }
        $bucket = 'hivideo-video';
         $pipeline = 'hivideo_alternative';
         $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
-       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+//       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
        $encodedUrl1 = base64_urlSafeEncode( $head_url );
        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);

@@ -1,0 +1,258 @@
+@charset "UTF-8";
+//用户管理页- 头像
+
+.user_avatar_table_box{
+
+  >.ant-avatar-lg{
+    width: 72px;
+    height: 72px;
+    border-radius: 100px;
+  }
+}
+//头像居中 - table表格
+.user_manage_all_box,.user_manage_third_box{
+  >.select_and_table >.ant-spin-nested-loading{
+    .table_container>.table_need_modify{
+        table{
+          // border: 1px solid blue;
+          >thead>tr>th{
+            &:nth-child(4),&:nth-child(8){
+              text-align: center;
+            }
+          }
+          >tbody>tr>td{
+            &:nth-child(8){
+              text-align: center;
+            }
+          }
+        }
+      }
+    }
+}
+.user_manage_vip_box{
+  >.select_and_table >.ant-spin-nested-loading{
+    .table_container>.table_need_modify{
+        table{
+          // border: 1px solid blue;
+          >thead>tr>th{
+            &:nth-child(4){
+              text-align: center;
+            }
+          }
+
+        }
+      }
+    }
+}
+.user_manage_mechanism_box,.user_manage_framer_box,.user_manage_verify_box,
+.user_manage_censor_box,.user_manage_choice_box,.user_manage_frozen_box{
+  >.select_and_table >.ant-spin-nested-loading{
+    .table_container>.table_need_modify{
+        table{
+          // border: 1px solid blue;
+          >thead>tr>th{
+            &:nth-child(3){
+              text-align: center;
+            }
+          }
+
+        }
+      }
+    }
+}
+
+//监控页
+//进度条单独的颜色
+@mixin changeProgress($color) {
+  >.ant-progress{
+    margin-left: 22%;
+    >.ant-progress-inner{
+      >.ant-progress-circle {
+        >.ant-progress-circle-path{
+          stroke:$color
+        }
+      }
+    }
+  }
+}
+
+.user_monitor_box{
+  min-height: 500px;
+  width: 100%;
+
+  margin-bottom: 20px;
+
+
+  //标题部分
+  .monitor_title_content_box{
+
+    >div{
+      >.ant-card-head{
+        height: 52px;
+      }
+      >.ant-card-body{
+        height: 82px;
+        >div{
+          >p{
+            width: 34%;
+            height: 100%;
+
+            float: left;
+            color: #4a4a4a;
+
+            &:last-child{
+              width: 28%;
+              >h3>span>b{
+                margin-left: 5px;
+              }
+            }
+            >h3{
+              margin-top: 5px;
+              height: 20px;
+              line-height: normal;
+              font-size:14px;
+              color:#4a4a4a;
+              padding: 0;
+              >span{
+                &:nth-child(2){
+                  margin-left: 10px;
+                }
+              }
+            }
+            >p{
+              font-weight: 500;
+              >span{
+                font-size: 18px;
+              }
+              >em{
+                font-size: 14px;
+                font-weight: 500;
+                margin-left: 5px;
+              }
+            }
+          }
+          >.high_lines_time{
+            display: block;
+            width: 100%;
+            height: 37px;
+
+            font-size: 26px;
+            text-align: center;
+            margin: 20px 0;
+            line-height: 37px;
+          }
+        }
+      }
+    }
+  }
+  
+  //图表部分
+  >.monitor_echarts_box{
+    height: 452px;
+    margin: 20px 0;
+    // border: 1px solid blue;
+    >.ant-card>div>.ant-card-head{
+      height: 55px;
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      .card_echarts_right_box{
+        position: absolute;
+        right: 10px;top:17px;
+        display: flex;
+
+        width: 50%;
+        float: right;
+
+        >.change_date_box{
+          width: 80%;
+          text-align: left;
+          >span,.changeColorClick{
+            margin-right: 13px;
+            font-size: 16px;
+            cursor: pointer;
+            &:hover{
+              color:#108ee9;
+            }
+          }
+          >.changeColorClick{
+            color::#108ee9;
+          }
+          >span{
+            color: #000;
+          }
+        }
+        >.ant-calendar-picker{
+          >span{
+            width: 255px;
+          }
+        }
+      }
+    }
+
+    //改变饼状图下列表的大小
+    .change_pie_size{
+      >.charts_pie_box{
+        >div>ul{
+          width: 100px;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  //用户占比
+  >.monitor_progress_box{
+
+    .card_monitor_progress_box{
+      >div{
+        >.ant-card-body{
+          >div>p{
+            width: 15.5%;
+            // position: relative;
+            // height: 100px;
+            margin: 50px 0.5% 20px;
+            float: left;
+            // border: 1px solid red;
+            @include changeProgress(#ff0000);
+            &:nth-child(2){
+              @include changeProgress(#108ee9);
+            }
+            &:nth-child(3){
+              @include changeProgress(#f6a623);
+            }
+            &:nth-child(4){
+              @include changeProgress(#2ecc71);
+            }
+            &:nth-child(5){
+              @include changeProgress(#bd0fe1);
+            }
+            &:last-child{
+              @include changeProgress(#50e3c2);
+            }
+            .progress_center_box{
+              // border: 1px solid #000;
+              font-size: 16px;
+              >p{
+                // border: 1px solid red;
+                color:#9b9b9b;
+                margin: 0;
+                &:last-child{
+                  color: #000;
+                  font-size: 20px;
+                  padding-top: 5px;
+                }
+              }
+            }
+            >p{
+              font-size: 16px;
+              margin-top: 16px;
+              text-align: center;
+            }
+          }
+        }
+      }
+    }
+
+  }
+}

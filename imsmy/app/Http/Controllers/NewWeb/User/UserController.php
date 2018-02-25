@@ -5,6 +5,7 @@ namespace App\Http\Controllers\NewWeb\User;
 use App\Models\AdvertisingRotation;
 use App\Models\Filmfests;
 use App\Models\Friend;
+use App\Models\PrivateLetter;
 use App\Models\Subscription;
 use App\Models\Tweet;
 use App\Models\TweetReply;
@@ -294,8 +295,8 @@ class UserController extends Controller
             if($layout == 1){
                 $data = [];
                 $my_id = \Auth::guard('api')->user()->id;
-                $maindata = Tweet::where('active','=',1)
-                    ->where('user_id',$my_id)->where([['type','=','video'],['type','=','production']])
+                $maindata = Tweet::where([['active','=',1],['user_id',$my_id],['type','=',0]])
+                    ->orWhere([['active','=',1],['user_id',$my_id],['type','=',3]])
                     ->orderBy($orderBy,'desc')->limit($page*($this->paginate))->get();
                 foreach ($maindata as $k => $v)
                 {
@@ -385,8 +386,8 @@ class UserController extends Controller
             }else{
                 $data = [];
                 $my_id = \Auth::guard('api')->user()->id;
-                $maindata = Tweet::where('active','=',1)
-                    ->where('user_id',$my_id)->where([['type','=','video'],['type','=','production']])
+                $maindata = Tweet::where([['active','=',1],['user_id',$my_id],['type','=',0]])
+                    ->orWhere([['active','=',1],['user_id',$my_id],['type','=',3]])
                     ->orderBy($orderBy,'desc')->limit($page*20)->get();
                 foreach ($maindata as $k => $v)
                 {
@@ -746,7 +747,7 @@ class UserController extends Controller
                     'name'=>$v->name,
                     'detail'=>$v->detail,
                     'status'=>$status,
-                    'submit_time'=>date('Y.m.m H:i',$v->submit_start_time).' - '.date('Y.m.d H:i',$v->submit_end_time),
+                    'submit_time'=>date('Y.m.d H:i',$v->submit_end_time),
                 ];
                 array_push($data,$tempData);
             }
@@ -795,6 +796,310 @@ class UserController extends Controller
             }else{
                 return $data;
             }
+        }
+    }
+
+
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     * 新消息数量
+     */
+    public function privateLetterNewNum()
+    {
+        try{
+            $user = \Auth::guard('api')->user()->id;
+            $num = PrivateLetter::select('id')->where('type',0)
+                ->where('delete_from',0)
+                ->where('delete_to',0)
+                ->where('to',$user)
+                ->get()->count();
+            return response()->json(['data'=>$num],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    public function privateLetterNew()
+    {
+        $user = \Auth::guard('api')->user()->id;
+        $data = DB::select('select *,count(id) as num FROM private_letter AS pl WHERE pl.to=? AND pl.type=? AND pl.delete_to=? AND pl.delete_from=? GROUP BY pl.from ORDER BY created_at DESC',[$user,0,0,0]);
+        if(is_null($data)){
+            return response()->json(['data'=>'']);
+        }else{
+            $letter = [];
+            foreach ($data as $k => $v)
+            {
+                $from_id = $v->from;
+                $from = User::find($from_id);
+                $from = $from?$from->nickname:'';
+                $time = $v->created_at;
+                $contetn = $v->content;
+                $num = $v->num;
+                $tempData = [
+                    'from'=>$from,
+                    'time'=>$time,
+                    'contet'=>$contetn,
+                    'num'=>$num,
+                ];
+                array_push($letter,$tempData);
+            }
+        }
+        return response()->json(['data'=>$letter],200);
+
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 竞赛详情主页
+     */
+    public function matchIndex(Request $request)
+    {
+        try{
+            $filmfest_id = $request->get('id');
+            $webUser = \Auth::guard('api')->user()->id;
+            $filmfest = Filmfests::find($filmfest_id);
+            if($filmfest){
+                $cover = $filmfest->cover;
+                $user_id = $filmfest->issue_id;
+                $user = User::find($user_id);
+                $avatar = $user->avatar;
+                $nikcname = $user->nickname;
+                $verify_info = $user->verify_info;
+                $time = date('Y年m月d日',$filmfest->time_start).'-'.date('Y年m月d日',$filmfest->time_end);
+                $address = $filmfest->address;
+                $nowTime = time();
+                $stopSubmitTime = $filmfest->submit_end_time;
+                $stopSelectTime = $filmfest->check_time;
+                $stopCheckTime = $filmfest->check_again_time;
+                $stopCheckAgainTime = $filmfest->enter_time;
+                $endTime = $filmfest->time_end;
+                if ($nowTime<$stopSubmitTime){
+                    $countDownTime = $stopSubmitTime-$nowTime;
+                    $des = '距离投片截止倒计时';
+                }else{
+                    if($nowTime<$stopSelectTime){
+                        $countDownTime = $stopSelectTime-$nowTime;
+                        $des = '距离海选截止倒计时';
+                    }else{
+                        if($nowTime<$stopCheckTime){
+                            $countDownTime = $stopCheckTime-$nowTime;
+                            $des = '距离复选截止倒计时';
+                        }else{
+                            if($nowTime<$stopCheckAgainTime){
+                                $countDownTime = $stopCheckAgainTime-$nowTime;
+                                $des = '距离入围名单公示倒计时';
+                            }else{
+                                if($nowTime<$endTime){
+                                    $countDownTime = $endTime-$nowTime;
+                                    $des = '距离颁奖倒计时';
+                                }else{
+                                    $countDownTime = null;
+                                    $des = '已结束';
+                                }
+                            }
+                        }
+                    }
+                }
+                if(is_null($countDownTime)){
+                    $countDownTime = '--:--:--';
+                }else{
+                    $days = floor($countDownTime/86400);
+                    $hours = floor(($countDownTime-86400*$days)/3600);
+                    $minutes = floor((($countDownTime-86400*$days)-3600*$hours)/60);
+                    $seconds = floor((($countDownTime-86400*$days)-3600*$hours)-60*$minutes);
+                    $countDownTime = $days.'天  '.$hours.':'.$minutes.':'.$seconds;
+                }
+                $countDown = [
+                    'countDownTime'=>$countDownTime,
+                    'des'=>$des,
+                ];
+                if($webUser == $user_id){
+                    if($filmfest->is_open==1){
+                        $notice = '';
+                        $submitName = '启动竞赛';
+                        $submitStatus = 2;
+                        $timeAndAddressStatus = 0;
+                        $textStatus = 0;
+                        $coverStatus =  0;
+                    }else{
+                        $notice = '请再三确认内容无错误，启动后将无法修改';
+                        $submitName = '启动竞赛';
+                        $submitStatus = 1;
+                        $countDown = [
+                            'countDownTime'=>'--:--:--',
+                            'des'=>'未启动倒计时',
+                        ];
+                        $timeAndAddressStatus = 1;
+                        $textStatus = 1;
+                        $coverStatus =  1;
+                    }
+                    $operation = [
+                        [
+                            'name'=>'后台管理中心',
+                        ]
+                    ];
+                }else{
+                    if($filmfest->submit_start_time>=time()){
+                        $notice = '';
+                        $submitName = '提交作品';
+                        $submitStatus = 0;
+                    }elseif($filmfest->submit_end_time>time()){
+                        $notice = '';
+                        $submitName = '提交作品';
+                        $submitStatus = 1;
+                    }else{
+                        $notice = '';
+                        $submitName = '提交作品';
+                        $submitStatus = 0;
+                    }
+                    $subscription = Subscription::where('from',$webUser)->where('to',$user_id)->first();
+                    if($subscription){
+                        $subscriptionStatus = '取消关注';
+                    }else{
+                        $subscriptionStatus = '关注';
+                    }
+                    $operation = [
+                        [
+                            'name'=>$subscriptionStatus,
+                        ],
+                        [
+                            'name'=>'发私信'
+                        ]
+                    ];
+                    $timeAndAddressStatus = 0;
+                    $textStatus = 0;
+                    $coverStatus =  0;
+                }
+
+                $correlationData = $filmfest->correlation()->get();
+                $correlation = [];
+                if($correlationData->count()>0){
+                    foreach ($correlationData as $k => $v)
+                    {
+                        $tempData = [
+                            'name'=>$v->name,
+                            'url'=>$v->url,
+                        ];
+                        array_push($correlation,$tempData);
+                    }
+                }
+
+                //  相关暂时没有写
+                $data = [
+                    'user_id'=>$user_id,
+                    'cover'=>$cover,
+                    'avatar'=>$avatar,
+                    'nickname'=>$nikcname,
+                    'verify_info'=>$verify_info,
+                    'operation'=>$operation,
+                    'time'=>$time,
+                    'address'=>$address,
+                    'timeAndAddressStatus'=>$timeAndAddressStatus,
+                    'notice'=>$notice,
+                    'countDown'=>$countDown,
+                    'submit'=>[
+                        'name'=>$submitName,
+                        'status'=>$submitStatus,
+                    ],
+                    'correlation'=>$correlation,
+                    'filmfestName'=>'第'.$filmfest->period.'届'.$filmfest->name,
+                    'issueTime'=>'发布于 '.date('Y-m-d H:i',$filmfest->time_add),
+                    'textStatus'=>$textStatus,
+                    'coverStatus'=>$coverStatus,
+                ];
+                return response()->json(['data'=>$data],200);
+            }else{
+                return response()->json(['message'=>'该竞赛不存在'],200);
+            }
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 竞赛详情页关注/取消关注按钮
+     */
+    public function matchIndexSubscription(Request $request)
+    {
+        try{
+            $user_id = \Auth::guard('api')->user()->id;
+            $issue_id = $request->get('user_id');
+            if($issue_id == $user_id){
+                return response()->json(['message'=>'自己不能关注自己'],200);
+            }
+            $subscription = Subscription::where('from',$user_id)->where('to',$issue_id)->first();
+            if($subscription){
+                Subscription::where('from',$user_id)->where('to',$issue_id)->delete();
+                return response()->json(['message'=>'取消关注成功'],200);
+            }else{
+                $newSubscription = new Subscription;
+                $newSubscription->from = $user_id;
+                $newSubscription->to = $issue_id;
+                $newSubscription->created_at = time();
+                $newSubscription->updated_at =time();
+                $newSubscription->save();
+                return response()->json(['message'=>'关注成功'],200);
+            }
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 发送私信
+     */
+    public function sendPrivateLetter(Request $request)
+    {
+        try{
+            $user = \Auth::guard('api')->user()->id;
+            $user_id = $request->get('user_id',null);
+            $content = $request->get('content',null);
+            if(is_null($content)){
+                return response()->json(['message'=>'私信不能为空'],200);
+            }
+            DB::beginTransaction();
+            if(is_null($user_id)){
+                return response()->json(['message'=>'数据不合法'],200);
+            }
+            $user_id = rtrim($user_id,'|');
+            $user_id = explode('|',$user_id);
+            foreach ($user_id as $k => $v)
+            {
+                $newPrivaterLetter = new PrivateLetter;
+                $newPrivaterLetter -> from = $user;
+                $newPrivaterLetter -> to = $v;
+                $newPrivaterLetter -> content = $content;
+                $newPrivaterLetter -> created_at = time();
+                $newPrivaterLetter -> updated_at = time();
+                $newPrivaterLetter -> save();
+            }
+            DB::commit();
+            return response()->json(['message'=>'发送成功'],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function oneUserLetter(Request $request)
+    {
+        try{
+            $from_id = $request->get('from_id');
+            $to_id = \Auth::guard('api')->user()->id;
+            $mainData = PrivateLetter::where('from',$from_id)->where('to',$to_id)
+                ->where('delete_to',0)
+                ->where('delete_from',0)
+                ->get();
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
         }
     }
 

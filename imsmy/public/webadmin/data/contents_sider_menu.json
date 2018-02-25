@@ -1,0 +1,51 @@
+[
+	{
+		"key":"1",
+		"uri":"/host-search",
+		"name":"搜索热点",
+		"icon":"calendar"
+	},
+  { "key":"2",
+    "icon":"calendar",
+    "name":"视频",
+    "children":[
+      {"key":"2.1","uri":"/video-all","name":"全部"},
+      {"key":"2.2","uri":"/video-hot","name":"热门"},
+      {"key":"2.3","uri":"/video-high","name":"高分"},
+      {"key":"2.4","uri":"/video-user-extend","name":"用户推广"},
+			{"key":"2.5","uri":"/video-screen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"3",
+    "icon":"trophy",
+    "name":"竞赛",
+    "children":[
+      {"key":"3.1","uri":"/raceing","name":"竞赛中"},
+      {"key":"3.2","uri":"/race-recommend","name":"推荐"},
+			{"key":"3.3","uri":"/race-end","name":"已结束"},
+      {"key":"3.4","uri":"/race-screen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"4",
+    "icon":"folder-open",
+    "name":"话题",
+    "children":[
+      {"key":"4.1","uri":"/talk-all","name":"全部"},
+      {"key":"4.2","uri":"/talk-hot","name":"热门"},
+      {"key":"4.3","uri":"/talk-screen","name":"屏蔽仓"}
+    ]
+  },
+	{ "key":"5",
+    "icon":"/audit",
+    "name":"分类管理",
+    "children":[
+      {"key":"4.1","uri":"/classify-all","name":"全部"},
+      {"key":"4.2","uri":"/classify-screen","name":"屏蔽仓"}
+    ]
+  },
+  { "key":"6",
+    "uri":"/retrieve",
+    "icon":"delete",
+    "name":"回收站"
+  }
+]

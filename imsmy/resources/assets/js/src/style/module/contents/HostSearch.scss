@@ -1,0 +1,24 @@
+@charset "UTF-8";
+
+//热门搜索
+
+// .hostContent{
+//   margin: 20px 0;
+//   width: 100%;
+//   // min-height: 500px;
+//   // border: 1px solid #000;
+//   // >div{
+//   //   width: 49.5%;
+//   // }
+// }
+//改变了一下 hover样式
+.ant-tag:hover{
+  border-color: #108ee9;
+  >span{
+    color:#108ee9;
+  }
+}
+.ant-tag{
+  min-width: 10px;
+  margin-bottom: 10px;
+}

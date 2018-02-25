@@ -22,4 +22,9 @@ class FilmfestFilmfestType extends Model
         return $this->belongsToMany('App\Models\Filmfests','filmfest_filmtype','type_id','filmfest_id');
     }
 
+    public function filmfestUserFilmfestFilmtypeAwards()
+    {
+        return $this->hasMany('App\Models\FilmfestUser\FilmfestUserFilmfestFilmtypeAwards','filmfest_filmtype_id','id');
+    }
+
 }

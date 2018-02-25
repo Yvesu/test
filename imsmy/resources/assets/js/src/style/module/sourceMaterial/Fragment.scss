@@ -1,0 +1,297 @@
+@charset "UTF-8";
+
+//模板 - 片段
+.fragment_box{
+  background: #fff;
+  // border: 1px solid #000;
+  position: relative;
+    >h3{
+      // border: 1px solid red;
+      margin-bottom: 1px;
+      font-size: 20px;
+    }
+}
+
+//标题
+.steps_box{
+  // border: 1px solid red;
+  min-height: 900px;
+  padding: 2px 20px 40px 10px;
+  display: flex;
+  >.steps_title{
+    margin-top: 20px;
+    // border: 1px solid #000;
+    width: 20%;
+    // float: left;
+  }
+}
+//内容
+.steps_content_box{
+  border-left: 1px solid #d8d8d8;
+  width: 80%;
+  min-height: 800px;
+  // float: left;
+}
+//按钮
+.steps_btn{
+  // border: 1px solid blue;
+  width: 80%;
+  padding-left: 20px;
+  position: absolute;
+  right: 0;
+  top: 10px;
+  >button{
+    width: 100px;
+    margin-right: 20px;
+    float: right;
+  }
+  >.steps_btn_prev{
+    float: left;
+  }
+}
+
+//第二步 - 上传片段资源
+
+.upload_fragment_box{
+  border: 1px dashed #979797;
+  height: 210px;
+  // width: 100%;
+  margin: 10px 0 20px 20px;
+  padding-left: 15px;
+  padding-right: 15px;
+
+  // padding-top: 15px;
+
+  //上传封面图片和音乐
+  >.upload_img_box,.upload_example_video_box,.upload_music_box,.upload_slider_box{
+    float: left;
+    // border: 1px solid #000;
+    width: 25%;
+    >h3{
+      padding: 0;
+      margin-bottom: 10px;
+    }
+  }
+  // >.upload_img_box{
+  //   width: 44%;
+  // }
+  .upload_slider_box{
+    >h3>span{
+      margin-left: 10px;
+      font-size: 12px;
+      color:#d8d8d8;
+    }
+    // width:27%;
+    // float: right;
+    // border: 1px solid #000;
+    .icon_slider_box{
+      width: 100%;
+      height: 50px;
+      // border: 1px solid blue;
+      margin-top: 30px;
+      >i{
+        // border: 1px solid red;
+        float: left;
+        width: 10%;
+        margin-right: 2.5%;
+        // height: 100%;
+        &:last-child{
+          float: right;
+          margin-right: 0;
+          margin-left: 2.5%;
+        }
+      }
+      >div{
+        // border: 1px solid #666;
+        width: 75%;
+        // height: 100%;
+        float: left;
+        margin: 0;
+      }
+    }
+  }
+}
+
+//上传镜头片段
+.add_lens_box{
+  // border: 1px solid red;
+  // width: 100%;
+  padding-left: 20px;
+  >.upload_video_box{
+    border: 1px dashed #979797;
+    height: 210px;
+    // width: 100%;
+    margin-bottom: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
+    // margin:
+    >h3{
+      padding: 0;
+      // border: 1px solid #ccc;
+      >p{
+        float: right;
+        height: 100%;
+        width: 26%;
+        // border: 1px solid #000;
+        >span{
+          font-size: 12px;
+          color:#9b9b9b;
+          margin-right: 5%;
+        }
+        >div{
+          width:65%;
+        }
+      }
+    }
+    >.upload_video_left{
+      width: 44%;
+      // height: 100%;
+      margin-top: 15px;
+      // border: 1px solid red;
+      float: left;
+    }
+    >.upload_video_center{
+      float: left;
+      // height: 100%;
+      margin-top: 15px;
+      // border: 1px solid #000;
+    }
+    >.upload_delete_video{
+      float: right;
+      margin-top: 120px;
+    }
+  }
+  //添加镜头
+  >.upload_push_video{
+    width: 100%;
+    height: 80px;
+    font-size: 16px;
+    // margin-left: 20px;
+    // margin-right: 20px;
+  }
+
+
+}
+
+//第三步 - 编辑字幕
+
+.add_caption_box{
+  // border: 1px solid red;
+  width: 100%;
+  padding-left: 20px;
+  padding-top: 10px;
+  >.upload_captions_up{
+    border: 1px dashed #979797;
+    height: 210px;
+    // width: 100%;
+    // margin: 10px 0 20px 0;
+    margin-bottom: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
+    >h3{
+      padding: 0;
+      // border: 1px solid #000;
+    }
+    >.upload_captions_bottom{
+      height: 50px;
+      // border: 1px solid #000;
+      margin-top: 30px;
+      >p{
+        height: 100%;
+        float: left;
+        &:first-child{
+          width: 20%;
+          // border: 1px solid #000;
+        }
+        &:last-child{
+          width: 70%;
+          // border: 1px solid #000;
+          float: right;
+          >span{
+            // isplay: inline-block;
+            >div{
+              width:150px;
+            }
+          }
+          >p{
+            width: 60%;
+            float: right;
+            >span{
+              display: inline-block;
+              margin-right: 5px;
+              &:first-child{
+                margin-top: 5px;
+              }
+              &:last-child{
+                display: inline-block;
+                width: 80%;
+                float: right;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  //添加字幕按钮
+  >.upload_push_caption{
+    width: 100%;
+    height: 80px;
+    font-size: 16px;
+  }
+}
+
+//最后一步
+.upload_publish_img{
+  width: 160px;
+  height: 90px;
+  // border: 1px solid #000;
+  background: #ccc;
+}
+.upload_publish_content{
+  // border: 1px solid blue;
+  min-height: 300px;
+  margin-top: 25px;
+  >div{
+    width: 100%;
+    // border: 1px solid #000;
+    // height: 30px;
+    >p{
+      width: 30%;
+      display: inline-block;
+      color: #000;
+      margin: 10px 0;
+      >span{
+        font-size: 12px;
+        &:last-child{
+        color: #ccc;
+        }
+      }
+    }
+  }
+  >p{
+    color: #000;
+    // width: 100%;
+    // border: 1px solid #000;
+    margin: 10px 0;
+    >span{
+      // border: 1px solid #000;
+      font-size: 12px;
+      &:last-child{
+      color: #ccc;
+      }
+    }
+  }
+
+  >.upload_publish_ZM{
+    >p{
+      display: block;
+      >span{
+        &:nth-child(2){
+          color:#ccc;
+          margin: 0 10px;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+@charset "UTF-8";
+
+//移动端 - 设备终端 - 应用启动次数
+.terminal_title_box{
+  height: 146px;
+  background: #fff;
+  border: 1px solid #000;
+  >h2{
+    height: 55px;
+    text-align: center;
+    color:#108ee9;
+    // border: 1px solid #000;
+    line-height: 55px;
+    font-size: 40px;
+  }
+  >p{
+    text-align: center;
+    margin-top: 25px;
+    // border: 1px solid #000;
+    font-size: 20px;
+    >span{
+      color: #4a4a4a;
+      margin: 0 15px;
+    }
+  }
+}
+
+///移动端 - 设备终端 - 内容切换
+.terminal_contents_box{
+  // border: 1px solid #000;
+  margin-top: 20px;
+  min-height: 500px;
+  height: auto!important;
+  height: 500px;
+  // .phone_model_box{
+  //   // min-height: 500px;
+  //   border: 1px solid #fff;
+  //   .ant-card-body>ul>li{
+  //     // border: 1px solid #000;
+  //     // padding-top: 10px;
+  //     // padding-bottom: 10px;
+  //   }
+  // }
+
+  //数据明细
+  .rank_list_more_title{
+    // height: 50px;
+    padding: 8px 14px;
+    border-bottom: 1px solid #cecece;
+    >span{
+      display: inline-block;
+      color:#4a4a4a;
+      width: 20%;
+      // border: 1px solid #000;
+      font-size: 14px;
+      &:nth-child(3),&:last-child{
+        color:#9b9b9b;
+        // text-align: center;
+        padding-left: 25px
+      }
+    }
+    &:first-child{
+      // height: 20px;
+      // color:#000000;
+      padding-top: 20px;
+      padding-bottom: 10px;
+      >span{
+        color: #000000;
+        // text-align: left;
+        padding-left: 0;
+      }
+    }
+  }
+}
