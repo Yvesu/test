@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'ios_app_key'                => '59014fc975ca3547a80003cb',
-    'ios_app_master_secret'     => 'cd0phg9blf6hhwswnwz3wubke9nybmfr',
-    'android_app_key'            => '59014cdcaed17957320009ab',
-    'android_app_master_secret' => 'rnkv9ymgpcotxzx8qy3mb1pumjbifuou',
+    'ios_app_key'                => '5a74106b8f4a9d4a85000098',
+    'ios_app_master_secret'     => 'rjvtxeuvqodjkylfqudbmezqrfpawfn1',
+    'android_app_key'            => '5a740d5ef43e484a930000cf',
+    'android_app_master_secret' => 'eoyouovoemxvk8w7mzhs5n1z2bonaio9',
     'production_mode'                =>  env('UMENG_MODE', false)
 ];

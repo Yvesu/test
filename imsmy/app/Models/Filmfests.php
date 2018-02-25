@@ -14,7 +14,7 @@ class Filmfests extends Model
     protected $fillable = [
         'name','time_add','time_update','time_start','time_end',
         'logo','cover','address','cost','submit_end_time','submit_start_time',
-        'period','file_address','url','count',
+        'period','file_address','url','count','active_id',
     ];
 
     public $timestamps = false;
@@ -130,5 +130,5 @@ class Filmfests extends Model
     {
         return $this->hasMany('App\Models\FilmfestUser\FilmfestUserUserGroup','filmfest_id','id');
     }
-    
+
 }

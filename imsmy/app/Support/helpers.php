@@ -766,6 +766,54 @@ function objectToArrayAgain($object) {
     return json_decode(json_encode($object), true);
 }
 
+function null_filter($arr)
+{
+    foreach($arr as $key=>&$val) {
+        if(is_array($val)) {
+            $val = null_filter($val);
+        } else {
+            if($val === null){
+                unset($arr[$key]);
+            }
+        }
+    }
+    $data = array_values($arr);
+    return $data;
+}
+
+function arr_uniq($arr,$key)
+{
+    $key_arr = [];
+    foreach ($arr as $k => $v) {
+        if (in_array($v[$key],$key_arr)) {
+            unset($arr[$k]);
+        } else {
+            $key_arr[] = $v[$key];
+        }
+    }
+//    sort($arr);
+    $data = array_values($arr);
+    return $data;
+}
+
+function array_sort_again($array,$keys,$type='desc')
+{
+    $keysvalue = $new_array = array();
+    foreach ($array as $k=>$v){
+        $keysvalue[$k] = $v[$keys];
+    }
+    if($type == 'asc'){
+        asort($keysvalue);
+    }else{
+        arsort($keysvalue);
+    }
+    reset($keysvalue);
+    foreach ($keysvalue as $k=>$v){
+        $new_array[$k] = $array[$k];
+    }
+    $data = array_values($new_array);
+    return $data;
+}
 
 
 

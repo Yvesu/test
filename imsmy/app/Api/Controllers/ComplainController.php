@@ -71,7 +71,7 @@ class ComplainController extends BaseController
             $type_id = (int)$request -> get('type_id');
 
             // 判断是否为数字
-            if(!$cause_id || !in_array($type,[0,1,2,3,4]) || !$type_id)
+            if(!$cause_id || !in_array($type,[0,1,2,3,4,5]) || !$type_id)
                 return response()->json(['error'=>'bad_request'],403);
 
             // 获取投诉原因表的集合 zx_user_complains_cause

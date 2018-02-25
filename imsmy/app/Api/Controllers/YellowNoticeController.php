@@ -43,10 +43,11 @@ class YellowNoticeController extends Controller
                 $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
                 $time = time();
                 PrivateLetter::create([
-                    'from' => 1000437,
+                    'from' => 10,
                     'to'    => $tweet->user_id,
                     'content'   => $tweet_content,
                     'user_type' => '1',
+                    'read_from'  => '1',
                     'created_at' => $time,
                     'updated_at' =>$time,
                 ]);

@@ -97,7 +97,7 @@ class MakeFontController extends BaseController
             foreach($files as $value){
 
                 $data[] = [
-                    'id'    =>$value['id'],
+                    'font_id'    =>$value['id'],
                     'name' => $value['name'],
                     'cover' => isset($value['cover']) ? CloudStorage::downloadUrl($value['cover']) : '',
                     'address' => CloudStorage::downloadUrl($value['address'])

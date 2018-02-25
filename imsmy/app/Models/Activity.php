@@ -159,4 +159,9 @@ class Activity extends Common
             ->where('recommend_expires', '>', getTime());
     }
 
+    public function filmfest()
+    {
+        return $this->hasOne('App\Models\Filmfests','active_id','id');
+    }
+
 }

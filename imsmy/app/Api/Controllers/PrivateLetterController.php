@@ -2,6 +2,8 @@
 
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\LettersDetailsTransformer;
+use App\Api\Transformer\LetterUserTransformer;
 use App\Api\Transformer\TweetsPreviewTransformer;
 
 use App\Api\Transformer\UsersTransformer;
@@ -10,6 +12,7 @@ use App\Models\PrivateLetter;
 use App\Models\Blacklist;
 use App\Models\Notification;
 use App\Models\Friend;
+use App\Models\Subscription;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,14 +29,21 @@ class PrivateLetterController extends BaseController
 
     protected $lettersTransformer;
 
+    protected $letterUserTransformer;
+
+    protected $lettersDetailsTransformer;
+
     public function __construct(
         UsersTransformer $usersTransformer,
-        LettersTransformer $lettersTransformer
+        LettersTransformer $lettersTransformer,
+        LetterUserTransformer $letterUserTransformer,
+        LettersDetailsTransformer $lettersDetailsTransformer
         )
     {
         $this->usersTransformer = $usersTransformer;
         $this->lettersTransformer = $lettersTransformer;
-
+        $this->letterUserTransformer = $letterUserTransformer;
+        $this->lettersDetailsTransformer = $lettersDetailsTransformer;
     }
 
     /**
@@ -76,7 +86,7 @@ class PrivateLetterController extends BaseController
     {
         try {
             // 获取要查询的类型，0=>未读，1=>已读,默认为0
-            $type = $request->input('type',0);
+//            $type = $request->input('type',0);
 
             $user_type = $request->get('user_type','0');
 
@@ -96,6 +106,7 @@ class PrivateLetterController extends BaseController
                     ->where('to',$user->id)
                     ->take($limit)
                     ->get();
+
             }else{              //官方的私信
 
                 $letters = PrivateLetter::with('belongsToUser')
@@ -187,8 +198,13 @@ class PrivateLetterController extends BaseController
             }
 
             // 判断是否允许私信
-            $personalAllow = new CommonController();
-            if(!$personalAllow->personalAllow($id,$id_to,'stranger_private_letter'))
+//            $personalAllow = new CommonController();
+//            if(!$personalAllow->personalAllow($id,$id_to,'stranger_private_letter'))
+            $user = User::find($id_to);
+
+            $users_id = Subscription::where('from',$id_to)->pluck('to');
+
+            if (!$user->stranger_private_letter && !in_array($id,$users_id->all()))
                 return response()->json(['error'=>'stranger_cannot_letter'],433);
 
             $time = new Carbon();
@@ -201,7 +217,7 @@ class PrivateLetterController extends BaseController
                 'content' => removeXSS($request->get('content') === null ? null : $request->get('content')),
                 'created_at' => $time,
                 'updated_at' => $time,
-                'pid'       =>$request->get('pid','0'),
+                'read_from'  => '1',
             ];
 
             // 查询user表中是否有收发私信者的信息
@@ -382,6 +398,271 @@ class PrivateLetterController extends BaseController
             return response()->json(['status'=>'ok'],200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], $e->getCode());
+        }
+    }
+
+    /**
+     * @param $id
+     * @param Request $request
+     * @return array
+     */
+    public function userletter($id,Request $request)
+    {
+        $user_type = $request->get('user_type','0');
+        $page = (int)$request->get('page',1);
+
+        // 获取登录用户信息
+        $user = Auth::guard('api')->user();
+        $user_id = (int)$id;
+
+        if ($user_type === '0'){
+            $letters_1 = PrivateLetter::where(function ($q) use ($user_id){
+                $q->where('from',$user_id)
+                    ->where('delete_from',0);
+            })
+                ->where('user_type','0')
+                ->orderBy('created_at','DESC')
+                    ->distinct()
+                ->pluck('to');
+
+            $letters_2 = PrivateLetter::where(function ($q) use ($user_id){
+                    $q->where('to',$user_id)
+                        ->where('delete_to',0);
+                })
+                ->where('user_type','0')
+                ->orderBy('created_at','DESC')
+                ->distinct()
+                ->pluck('from');
+
+            $arr = array_unique( array_merge($letters_1->toArray(),$letters_2->toArray()) );
+
+            $data = array_map(function ($uid)use ($user_id,$arr){
+                $data = PrivateLetter::where(function ($q) use ($user_id,$uid){
+                    $q->where('from',$user_id)
+                        ->where('delete_from',0)
+                        ->where('to',$uid);
+                })
+                    ->orWhere(function ($q) use ($user_id,$uid){
+                        $q->where('to',$user_id)
+                            ->where('delete_to',0)
+                            ->where('from',$uid);
+                    })
+                    ->orderBy('created_at','DESC')
+                    ->first();
+
+                return $this->letterUserTransformer->transform($data);
+            },$arr);
+
+            $official_count = PrivateLetter::where('user_type','1')
+                ->where('type',0)
+                ->where('to',$user->id)
+                ->count();
+
+            // 返回数据
+            return [
+                // 所获取的数据
+                'data'              =>  $data,
+
+                'official_count'    => $official_count,
+
+            ];
+
+        }else{
+            $letters = PrivateLetter::with('belongsToUser')
+                ->where('user_type','1')
+                ->where('pid',0)
+                ->where(function ($q) use ($user_id){
+                    $q->where('to',$user_id)
+                        ->where('delete_to',0);
+                })
+                ->forPage($page,20)
+                ->orderBy('created_at','desc')
+                ->where('to',$user->id)
+                ->get();
+
+            $count = $letters->count();
+
+            foreach ($letters as $v){
+                if ($v->type === 0){
+                    PrivateLetter::find($v->id)->update(['type'=>1]);
+                }
+            }
+
+            // 返回数据
+            return [
+
+                // 所获取的数据
+                'data'       => $count ? $this->lettersTransformer->transformCollection($letters->all()) : [],
+
+            ];
+        }
+
+    }
+
+    public function details($id,Request $request)
+    {
+        //接收私信用户的属性
+        if ( is_null( $user_from_id = (int)$request->get('user') )) return response()->json(['message'=>'bad request'],403);
+
+        $page = (int)$request->get('page',1);
+
+        $user_to_id = (int)$id;
+
+        $letters = PrivateLetter::with('belongsToUser')
+            ->where(function ($q) use($user_from_id,$user_to_id){
+                $q->where('from',$user_from_id)
+                    ->where('to',$user_to_id)
+                    ->where('user_type','0')
+                        ->where('delete_to',0);
+            })
+            ->orWhere(function($q) use($user_from_id,$user_to_id){
+                $q->where('from',$user_to_id)
+                    ->where('to',$user_from_id)
+                    ->where('user_type','0')
+                        ->where('delete_from',0);
+            })
+            ->orderBy('created_at','ASC')
+            ->get();
+
+        return response()->json([
+            'data'=> $this->lettersDetailsTransformer->transformCollection($letters->all()),
+        ]);
+    }
+
+    public function newdelete(Request $request)
+    {
+        try{
+           if (is_null($type = $request ->get('type')))  return response()->json(['message'=>'bad request'],403);
+
+           $user = Auth::guard('api')->user();
+
+            if ( $type === '0'){
+                //删除某用户的记录
+                if (is_null($user_from_id = (int)$request->get('from'))) return response()->json(['message'=>'bad request'],403);
+
+                \DB::beginTransaction();
+
+                //当该用户为接收者
+
+                $result_to_data = PrivateLetter::where('from',$user_from_id)
+                    ->where('to',$user->id)
+                    ->pluck('id');
+
+                $result_to = 1;
+                if($result_to_data->all()){
+                    $result_to = PrivateLetter::whereIn('id',$result_to_data->all())->update(['delete_to'=>1]);
+                }
+
+                //当该用户为发送者
+                $result_from_data = PrivateLetter::where('from',$user->id)
+                    ->where('to',$user_from_id)
+                    ->pluck('id');
+
+                $result_from = 1;
+                if($result_from_data->all()){
+                    $result_from = PrivateLetter::whereIn('id',$result_from_data->all())->update(['delete_from'=>1]);
+                }
+
+                if ($result_to && $result_from){
+                    \DB::commit();
+                    return response()->json(['message'=>'success'],201);
+                }else{
+                    \DB::rollBack();
+                    return response()->json(['message'=>'failed'],500);
+                }
+            }elseif ( $type === '1'){
+                //删除单条
+                if (is_null($letter_id = (int)$request->get('letter'))) return response()->json(['message'=>'bad request'],403);
+
+                $letter = PrivateLetter::find($letter_id);
+
+                \DB::beginTransaction();
+
+                if ($letter->from === $user->id){
+                    $result = PrivateLetter::where('id',$letter_id)->update(['delete_from'=>1]);
+                }elseif($letter->to === $user->id){
+                    $result = PrivateLetter::where('id',$letter_id)->update(['delete_to'=>1]);
+                }
+
+                if ($result){
+                    \DB::commit();
+                    return response()->json(['message'=>'success'],201);
+                }else{
+                    \DB::rollBack();
+                    return response()->json(['message'=>'failed'],500);
+                }
+
+            }elseif( $type === '2'){
+                //删除多条
+                if (is_null($letters=$request->get('letters'))) return response()->json(['message'=>'bad request'],403);
+                $ids = explode(',',$letters);
+                \DB::beginTransaction();
+                $result = array_map(function($id) use ($user){
+                    $letter = PrivateLetter::find($id);
+
+                    if ($letter->from === $user->id){
+                        $result = PrivateLetter::where('id',$id)->update(['delete_from'=>1]);
+                    }elseif($letter->to === $user->id){
+                        $result = PrivateLetter::where('id',$id)->update(['delete_to'=>1]);
+                    }
+                    return $result;
+                },$ids);
+
+                if ($result){
+                    \DB::commit();
+                    return response()->json(['message'=>'success'],201);
+                }else{
+                    \DB::rollBack();
+                    return response()->json(['message'=>'failed'],500);
+                }
+            }else{
+                if (is_null($users=$request->get('users'))) return response()->json(['message'=>'bad request'],403);
+                $users_ids = explode(',',$users);
+
+                $result = array_map(function ($user_from_id) use ($user){
+                    \DB::beginTransaction();
+
+                    //当该用户为接收者
+
+                    $result_to_data = PrivateLetter::where('from',$user_from_id)
+                        ->where('to',$user->id)
+                        ->pluck('id');
+
+                    $result_to = 1;
+                    if($result_to_data->all()){
+                        $result_to = PrivateLetter::whereIn('id',$result_to_data->all())->update(['delete_to'=>1]);
+                    }
+
+                    //当该用户为发送者
+                    $result_from_data = PrivateLetter::where('from',$user->id)
+                        ->where('to',$user_from_id)
+                        ->pluck('id');
+
+                    $result_from = 1;
+                    if($result_from_data->all()){
+                        $result_from = PrivateLetter::whereIn('id',$result_from_data->all())->update(['delete_from'=>1]);
+                    }
+
+                    if ($result_to && $result_from){
+                        \DB::commit();
+                        return true;
+                    }else{
+                        \DB::rollBack();
+                        return false;
+                    }
+
+                },$users_ids);
+
+                if ($result){
+                    \DB::commit();
+                    return response()->json(['message'=>'success'],201);
+                }else{
+                    \DB::rollBack();
+                    return response()->json(['message'=>'failed'],500);
+                }
+            }
+        }catch (\Exception $e){
+            return response()->json(['message'=>'bad request'],500);
         }
     }
 

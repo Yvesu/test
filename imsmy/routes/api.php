@@ -75,17 +75,22 @@ $api->version(['v1'],function($api){
 
             $api->group(['prefix' => '{id}','middleware' => ['jwt.auth','app.auth']],function($api){
 
+                //
                 $api->get('me','AuthController@getAuthenticatedUser');
 
+                //用户中心
                 $api->post('center','UserController@center');
 
+                //请求用户头像
                 $api->post('avatar','UserController@avatar');
 
+                //修改手机  TODO umeng driver_token 也要一同修改
                 $api->post('/phone/update','AuthController@phoneReset');
 
                 // 用户认证
                 $api->post('verify','UserVerifyController@index');
 
+                //修改用户信息
                 $api->post('/update','UserController@update');
 
                 // 查看用户设置
@@ -290,12 +295,24 @@ $api->version(['v1'],function($api){
                     $api->get('/receive','PrivateLetterController@index')
                         ->where('id','[0-9]+');
 
+                    //查询用户与用户之间的私信
+                    $api->get('/receive/user','PrivateLetterController@userletter')
+                        ->where('id','[0-9]+');
+
+                    //查询用户与用户之间的私信
+                    $api->get('/receive/user/details','PrivateLetterController@details')
+                        ->where('id','[0-9]+');
+
                     // 查询私信数量接口
                     $api->get('/count','PrivateLetterController@count')
                         ->where('id','[0-9]+');
 
-                    // 删除私信接口
+                    // 删除私信接口  停用
                     $api->post('/delete','PrivateLetterController@delete')
+                        ->where('id','[0-9]+');
+
+                    //新开启的私信删除接口
+                    $api->post('/newdelete','PrivateLetterController@newdelete')
                         ->where('id','[0-9]+');
                 });
 
@@ -1265,6 +1282,9 @@ $api->version(['v1'],function($api){
 
         //绑定第三方
         $api->post('/add/third','AuthController@thirdRelatedAdd_third');
+
+        //分享的网页
+        $api->post('/share','ShareController@index');
 
     });
 

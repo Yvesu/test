@@ -330,28 +330,21 @@ class UserController extends BaseController
                 return response()->json(['error' => 'not_empty'],403);
             }
 
-            // 初始化数组
-            $set = [
-                'stranger_comment',
-                'stranger_at',
-                'stranger_private_letter',
-                'location_recommend',
-                'search_phone',
-                'new_message_comment',
-                'new_message_fans',
-                'new_message_like'
-            ];
-            $keys = [1,1];
-
-            foreach($settings as $key => $setting){
-                if(in_array($key,$set) && $keys[$setting]){
-                    $user -> $key = $setting;
+            //修改个人设置
+            $res = [];
+            foreach ($settings as  $k=>$v){
+                if ($user -> $k != (int)$v){
+                    $user -> $k = $v;
                     $user -> updated_at = new Carbon();
-                    $user -> save();
+                    $res[] = $user -> save();
                 }
             }
+            if (!in_array(false,$res)){
+                return response()->json(['status'=>'ok'],200);
+            }else{
+                return response()->json(['status'=>'no'],500);
+            }
 
-            return response()->json(['status'=>'ok'],200);
 
         } catch(ModelNotFoundException $e) {
             return response()->json(['error' => 'not_found'],404);
@@ -412,7 +405,10 @@ class UserController extends BaseController
                 'at' => 0,
                 'like' => 0,
                 'reply' => 0,
-                'message' => PrivateLetter::where('to', $id) -> where('type', 0) -> count(),    // 未读私信数量
+                'message' => PrivateLetter::where('to', $id)
+                    ->where('read_to','0')
+//                    -> where('type', 0)
+                    -> count(),    // 未读私信数量
                 'templates' => MakeTemplateDownloadLog::where('user_id', $id) -> count(),    // 模板
                 'my_like' => $user -> like_count,    // 我点赞的
                 'collection' => $user -> collection_count,    // 收藏

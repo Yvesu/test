@@ -182,7 +182,7 @@ class AllSearchController extends Controller
                 //获取用户信息
                 $user = Auth::guard('api')->user();
 
-                $res = preg_match("/^1[3,4,5,7,8][0-9]{9}$/",$keyword);
+                $res = preg_match("/^1[6,3,4,5,7,8][0-9]{9}$/",$keyword);
 
                 if (is_numeric($keyword) && strlen($keyword)==11 && $res){
 
@@ -195,19 +195,20 @@ class AllSearchController extends Controller
                         $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
                             $q->where('username', $keyword);
                         })
-                            ->where('is_phonenumber', 1)
+//                            ->where('is_phonenumber', 1)
                             ->where('search_phone', 1)
-                            ->where('id','!=',$user_id)
+//                            ->where('id','!=',$user_id)
                             ->whereIn('active', [1,2])
                             ->orderBy('fans_count','DESC')
                             ->whereNotIn('id',$blacklist)
                             ->get(['id', 'nickname', 'avatar', 'verify', 'verify_info', 'signature', 'cover','fans_count']);
+
                     }else{                  //手机号搜索   用户未登录
 
                         $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
                             $q->where('username', $keyword);
                         })
-                            ->where('is_phonenumber', 1)
+//                            ->where('is_phonenumber', 1)
                             ->where('search_phone', 1)
                             ->whereIn('active', [1,2])
                             ->orderBy('fans_count','DESC')
@@ -896,7 +897,7 @@ class AllSearchController extends Controller
             //用户
             $user = Auth::guard('api')->user();
 
-            $res = preg_match("/^1[3,4,5,7,8][0-9]{9}$/",$keyword);
+            $res = preg_match("/^1[6,3,4,5,7,8][0-9]{9}$/",$keyword);
 
             if (is_numeric($keyword) && strlen($keyword)==11 && $res){
 
@@ -909,9 +910,9 @@ class AllSearchController extends Controller
                     $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
                         $q->where('username', $keyword);
                     })
-                        ->where('is_phonenumber', 1)
+//                        ->where('is_phonenumber', 1)
                         ->where('search_phone', 1)
-                        ->where('id','!=',$user_id)
+//                        ->where('id','!=',$user_id)
                         ->whereIn('active', [1,2])
                         ->orderBy('fans_count','DESC')
                         ->whereNotIn('id',$blacklist)
@@ -921,7 +922,7 @@ class AllSearchController extends Controller
                     $user_info = User::WhereHas('hasOneLocalAuth', function ($q) use ($keyword) {
                         $q->where('username', $keyword);
                     })
-                        ->where('is_phonenumber', 1)
+//                        ->where('is_phonenumber', 1)
                         ->where('search_phone', 1)
                         ->whereIn('active', [1,2])
                         ->orderBy('fans_count','DESC')

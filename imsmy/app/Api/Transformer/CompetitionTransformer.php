@@ -1,6 +1,7 @@
 <?php
 namespace App\Api\Transformer;
 
+use App\Models\Filmfests;
 use Auth;
 use CloudStorage;
 use App\Models\{UserCollections,TweetActivity};
@@ -27,6 +28,15 @@ class CompetitionTransformer extends Transformer
         // 判断用户是否参与了该赛事
         $already_join = $user_from ? TweetActivity::where('activity_id',$data->id)->where('user_id',$user_from->id)->first() : 0;
 
+        $allow_phone = '1';
+        $url = '';
+        if ($data->is_child === 1){
+            $film = Filmfests::where('active_id',$data->id)->first();
+            $url = $film->url;
+            $allow_phone = $film->allow_phone;
+        }
+
+
         return [
             'id'                => $data->id,
             'name'              => $data->name,
@@ -45,6 +55,9 @@ class CompetitionTransformer extends Transformer
             'comment'           => $data->comment,
             'already_join'      => $already_join ? 1 : 0,
             'location'          =>  $data->location,
+            'web'               =>  $data->is_child === 1 ? '1': '0',
+            'allow_phone'       =>  $allow_phone,
+            'url'               => $url,
         ];
     }
 }

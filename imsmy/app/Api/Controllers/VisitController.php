@@ -33,7 +33,8 @@ class VisitController extends Controller
      */
     public function add($from,$to)
     {
-        if ( !is_null( $visit_history = VisitHistory::where('from',$from)->where('to',$to)->first()) ){
+        if (!(int)$from || !(int)$to) die();
+        if ( !is_null( $visit_history = VisitHistory::where('from',$from)->where('to',$to)->where('status','1')->orderBy('created_at','DESC')->first()) ){
             $str=   $visit_history->created_at;
             $str = date('Y-m-d H:i:s',$str);
             $p = '/\d{4}-\d{1,2}-\d{1,2}/';

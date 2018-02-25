@@ -11,6 +11,7 @@ namespace App\Api\Controllers;
 use App\Api\Transformer\TweetThirdlyRepliesTransformer;
 use App\Api\Transformer\TweetOriginRepliesTransformer;
 use App\Models\Notification;
+use App\Models\Subscription;
 use App\Models\{Tweet,Blacklist};
 use App\Models\Friend;
 use App\Models\TweetReply;
@@ -87,9 +88,15 @@ class TweetReplyController extends BaseController
             }
 
             // 判断是否允许陌生人评论，朋友关系可以评论
-            $personalAllow = new CommonController();
-            if(!$personalAllow->personalAllow($id,$tweet->user_id,'stranger_comment'))
+//            $personalAllow = new CommonController();
+//            if(!$personalAllow->personalAllow($id,$tweet->user_id,'stranger_comment'))
+//                return response()->json(['error'=>'stranger_cannot_reply'],433);
+
+            $user = User::find($tweet->user_id);
+            $users_id = Subscription::where('from',$tweet->user_id)->pluck('to');
+            if (!$user->stranger_comment && !in_array($id,$users_id->all()))
                 return response()->json(['error'=>'stranger_cannot_reply'],433);
+
 
             // 获取用户是否为匿名评论
             $anonymity = 1 == $request -> get('anonymity',0) ? 1 : 0;
@@ -153,6 +160,11 @@ class TweetReplyController extends BaseController
                 $data[] = $newNotice;
 
                 if(null != $newReply['reply_id']){
+                    $user = User::find((int)$request->get('reply_user_id'));
+                    $users_id = Subscription::where('from',$tweet->user_id)->pluck('to');
+                    if (!$user->stranger_comment && !in_array($id,$users_id->all()))
+                        return response()->json(['error'=>'stranger_cannot_reply'],433);
+
                     $data[] = [
                         'user_id'           => (int)$newNotice['user_id'],
                         'notice_user_id'    => $request->get('reply_user_id'),

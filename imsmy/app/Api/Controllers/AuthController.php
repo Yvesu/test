@@ -336,9 +336,9 @@ class AuthController extends BaseController
             }
 
             // 判断缓存中是否有此用户名，有说明已通过短信验证，为空则抛出错误
-            if(null == Cache::get('SMS'.$request->get('username'))){
+//            if(null == Cache::get('SMS'.$request->get('username'))){
               //  throw new \Exception('request_timeout',408);
-            }
+//            }
 
             $time = getTime();
 
@@ -366,9 +366,13 @@ class AuthController extends BaseController
 
             //TODO  逻辑问题严重，需要改！！！
             // 自动生成用户的昵称，目前采用用户的id
-            $user->nickname = 'ZhuiXi_' . $user->id;
+//            $user->nickname = 'ZhuiXi_' . $user->id;     //2018.2.24 停用  原因:接ID回泄露网站的用户使用量
+            $user->nickname = 'ZhuiXi_' .$username;
 
             //TODO 邀请码 ==> 目前办法 sprintf('%X',crc32(microtime().'ID'))
+
+            //用户的 umeng driver_token   //TODO  待前端传值
+            $user -> umeng_device_token = $request->get('device_token');
 
             // 保存用户信息
             $user->save();
@@ -425,7 +429,14 @@ class AuthController extends BaseController
             //添加用户喜好
             $userslikes = $request->get('likes');
 
-            if (is_null($userslikes)) return response()->json(['message'=>'user likes is empty'],400);
+            //  TODO  用户喜好暂时停止使用    原因:没有页面
+//            if (is_null($userslikes)) return response()->json(['message'=>'user likes is empty'],400);
+
+            if(is_null($userslikes)){
+                $default_userslikes = Channel::where('active',1)->pluck('id');
+
+                $userslikes = implode($default_userslikes->all(),',');
+            }
 
             UsersLikes::create([
                 'user_id'   => $user->id,
@@ -1174,6 +1185,13 @@ class AuthController extends BaseController
     public function sendCode(Request $request)
     {
         $username = $request ->get('username');
+
+//        $is_exist = Cache::get('SMS'.$username);
+
+//        if ($is_exist){
+//            return response()->json(['message'=>'It has been sent'],403);
+//        }
+
         //生成验证码
         $code = mt_rand(1000,9999);
 
@@ -1192,9 +1210,9 @@ class AuthController extends BaseController
         );
 
         if($response->Message == 'OK'){
- 		return response()->json(['message'=>'Send success'],200);
-         }else{
-            return response()->json(['Send failure']);
+ 		    return response()->json(['message'=>'Send success'],200);
+        }else{
+            return response()->json(['message'=>'Send failure'],500);
         }
     }
 

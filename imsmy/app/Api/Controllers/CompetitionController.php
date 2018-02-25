@@ -8,6 +8,7 @@ use App\Api\Transformer\UsersWithFansTransformer;
 use App\Api\Transformer\TopicSimplyTransformer;
 use App\Api\Transformer\CompetitionTransformer;
 use App\Api\Transformer\Discover\HotActivityTransformer;
+use App\Models\Channel;
 use App\Models\TweetActivity;
 use App\Models\Activity;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -128,7 +129,6 @@ class CompetitionController extends BaseController
     public function details($id)
     {
         try{
-
             // 获取赛事的详情
             $data = Activity::with('belongsToUser')->findOrFail($id);
 

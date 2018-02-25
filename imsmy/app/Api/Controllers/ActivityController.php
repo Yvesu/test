@@ -170,29 +170,41 @@ class ActivityController extends BaseController
         $time = time();
 
         //电影节
-        $film_ids_obj = ActivityFilmRecommend::where('type','1')
-            ->where('expires','>',$time)
-            ->forPage($page,$this->paginate)
-            ->pluck('work_id');
+//        $film_ids_obj = ActivityFilmRecommend::where('type','1')
+//            ->where('expires','>',$time)
+//            ->forPage($page,)
+//            ->pluck('work_id');
 
-        $film_ids_arr = $film_ids_obj -> all();
+//        $film_ids_arr = $film_ids_obj -> all();
 
-        $film = Filmfests::whereIn('id',$film_ids_arr)
-            ->get(['id','name','cover','url','cost','count','time_end']);
+//        $film = Filmfests::whereIn('id',$film_ids_arr)
+//            ->get(['id','name','cover','url','cost','count','time_end']);
 
 //        if ($film->count()>10){
 //            $film = $film->random(10);
 //        }
 
-        $number = $this->paginate - $film->count();
+//        $number = $this->paginate - $film->count();
 
         //获取推荐
         $activity_ids_obj = ActivityFilmRecommend::where('type','0')
             ->where('expires','>',$time)
-            ->forPage($page,$number)
+            ->forPage($page,$this->paginate)
             ->pluck('work_id');
 
         $activity_ids_arr = $activity_ids_obj -> all();
+
+        $film_ids = Activity::where('is_child',1)->whereIn('id',$activity_ids_obj->all())->pluck('id');
+
+        //web端发起的赛事
+        $film_ids =$film_ids->all();
+
+        //将web过滤
+        foreach( $activity_ids_arr  as $k=>$v) {
+            if( in_array($v,$film_ids,TRUE) ){
+                unset($activity_ids_arr[$k]);
+            }
+        }
 
         //赛事
         $data = Activity::with(['belongsToUser','hasManyTweets.belongsToUser' => function ($q){
@@ -201,9 +213,16 @@ class ActivityController extends BaseController
             ->whereIn('id',$activity_ids_arr)
             ->get(['id','user_id','bonus','comment','expires','time_add','icon','users_count']);
 
-//        if ($data->count()>10){
-//            $data = $data->random(10);
-//        }
+        if ($data->count()>10){
+            $data = $data->random(10);
+        }
+
+        //获取web端的赛事
+        $film = Activity::with(['filmfest','belongsToUser','hasManyTweets.belongsToUser'=> function ($q){
+            $q -> select(['id','avatar']);
+        }])
+            ->whereIn('id',$film_ids)
+            ->get();
 
         return [
             'film'  => $this ->filmRecommendTransformer ->transformCollection($film->all()),
