@@ -71,6 +71,7 @@ class User extends Common implements AuthenticatableContract,
         'last_ip',
         'last_token',
         'is_vip',
+        'is_phonenumber',
     ];
 
 

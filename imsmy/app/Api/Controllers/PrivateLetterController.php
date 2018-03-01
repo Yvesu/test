@@ -454,14 +454,15 @@ class PrivateLetterController extends BaseController
             },$arr);
 
             $official_count = PrivateLetter::where('user_type','1')
-                ->where('type',0)
+                ->where('read_to','0')
                 ->where('to',$user->id)
                 ->count();
+
 
             // 返回数据
             return [
                 // 所获取的数据
-                'data'              =>  $data,
+                'data'              =>  array_values($data),
 
                 'official_count'    => $official_count,
 
@@ -470,7 +471,7 @@ class PrivateLetterController extends BaseController
         }else{
             $letters = PrivateLetter::with('belongsToUser')
                 ->where('user_type','1')
-                ->where('pid',0)
+//                ->where('pid',0)
                 ->where(function ($q) use ($user_id){
                     $q->where('to',$user_id)
                         ->where('delete_to',0);
@@ -483,14 +484,13 @@ class PrivateLetterController extends BaseController
             $count = $letters->count();
 
             foreach ($letters as $v){
-                if ($v->type === 0){
-                    PrivateLetter::find($v->id)->update(['type'=>1]);
+                if ($v->read_to === '0'){
+                    PrivateLetter::find($v->id)->update(['read_to'=>'1']);
                 }
             }
 
             // 返回数据
             return [
-
                 // 所获取的数据
                 'data'       => $count ? $this->lettersTransformer->transformCollection($letters->all()) : [],
 

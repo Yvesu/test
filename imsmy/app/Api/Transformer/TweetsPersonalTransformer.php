@@ -2,6 +2,7 @@
 
 namespace App\Api\Transformer;
 
+use App\Models\UserCollections;
 use CloudStorage;
 use Auth;
 use App\Models\TweetLike;
@@ -62,6 +63,8 @@ class TweetsPersonalTransformer extends Transformer
                 'already_like'  =>  $user ? (TweetLike::where('user_id',$user->id)->where('tweet_id',$tweet->id)->first() ? 1 : 0) : 0,
                 'reply'         =>  $tweet->hasManyTweetReply ? $this->tweetSimplyRepliesTransformer->transformCollection($tweet->hasManyTweetReply->take(3)->all()) : [],
                 'location'      =>  $tweet->location ?? '',
+                'lat'           =>  $tweet->lat,
+                'lgt'           =>  $tweet->lgt,
                 'created_at'    =>  strtotime($tweet->created_at),
                 'user_top'      =>  $tweet->user_top,
                 'photo'         =>  $tweet->photo === null ? null : CloudStorage::downloadUrl(json_decode($tweet->photo,true)),
@@ -71,6 +74,8 @@ class TweetsPersonalTransformer extends Transformer
                 'user'          =>  $this->usersTransformer->transform($tweet->belongsToUser),
                 'original'      =>  $tweet->hasOneOriginal == null ? null : $this->transform($tweet->hasOneOriginal),
                 'grade'         =>  $grade,
+                'collections'   =>  $user ? (UserCollections::where('user_id',$user->id)->where('status',1)->where('type',3)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
+                'is_download'   =>  $tweet->is_download,
             ];
         }else{
 

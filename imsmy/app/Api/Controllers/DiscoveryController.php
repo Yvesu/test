@@ -3,6 +3,7 @@
 namespace App\Api\Controllers;
 
 use App\Api\Transformer\DiscoveryTopicsTransformer;
+use App\Api\Transformer\HandpickUserTransformer;
 use App\Api\Transformer\ZxHomeImagesTransformer;
 use App\Api\Transformer\LocationTweetsTransformer;
 use App\Api\Transformer\UsersTransformer;
@@ -47,6 +48,7 @@ class DiscoveryController extends BaseController
     protected $usersTransformer;
     protected $discoverFilmTransformer;
     protected $featuredMediaTransformer;
+    protected $handpickUserTransformer;
 
     // 热门赛事 活动
     protected $hotActivityTransformer;
@@ -65,7 +67,8 @@ class DiscoveryController extends BaseController
         DiscoverFilmTransformer $discoverFilmTransformer,
         HotActivityTransformer $hotActivityTransformer,
         TweetsWatchingTransformer $tweetsWatchingTransformer,
-        FeaturedMediaTransformer $featuredMediaTransformer
+        FeaturedMediaTransformer $featuredMediaTransformer,
+        HandpickUserTransformer $handpickUserTransformer
     )
     {
         $this->discoveryTopicsTransformer = $discoveryTopicsTransformer;
@@ -79,6 +82,7 @@ class DiscoveryController extends BaseController
         $this->hotActivityTransformer = $hotActivityTransformer;
         $this->tweetsWatchingTransformer = $tweetsWatchingTransformer;
         $this->featuredMediaTransformer = $featuredMediaTransformer;
+        $this->handpickUserTransformer = $handpickUserTransformer;
     }
 
     /**
@@ -358,27 +362,15 @@ class DiscoveryController extends BaseController
 //            'page_count'    => ceil($media_count -> count()/$this -> paginate)
 //        ];
 
-
         //精选用户
-
-        $top = Cache::remember('top'.$page, 5, function () use ($page){
-
             $top = User::where('active',2)
-                ->where('is_vip','!=',0)
-                ->where('verify','!=',0)
                 ->forPage($page,$this->paginate)
                 ->get(['id', 'avatar', 'nickname', 'verify', 'verify_info']);
 
-            $top_data = $this -> featuredMediaTransformer -> ptransform($top);
-
             return [
-                'top'           => $top_data,
+                'top'           => $top_data = $this -> handpickUserTransformer->transformCollection($top->all()),
                 'page_count'    => ceil($top -> count()/$this -> paginate)
             ];
-        });
-
-        return $top;
-
     }
 
 }

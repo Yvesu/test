@@ -3,6 +3,7 @@ namespace App\Api\Transformer;
 
 use App\Api\Controllers\Traits\TweetsCommon;
 use App\Models\Subscription;
+use App\Models\UserCollections;
 use CloudStorage;
 use Auth;
 use App\Models\TweetLike;
@@ -93,6 +94,10 @@ class ActivityTweetDetailsTransformer extends Transformer
             'duration'          =>      $tweet -> duration,
             'location'          =>      $tweet -> location,
             'grade'             =>      $grade,
+            'collections'       =>      $user ? (UserCollections::where('user_id',$user->id)->where('type',3)->where('status',1)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
+            'lgt'               =>      $tweet -> lgt,
+            'lat'               =>      $tweet -> lat,
+            'is_download'       =>      $tweet -> is_download,
         ];
     }
 }

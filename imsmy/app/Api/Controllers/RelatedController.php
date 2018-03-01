@@ -45,7 +45,7 @@ class RelatedController extends Controller
         if ( is_null($type = $request->get('type')) ) return response()->json(['message'=>'bad_request'],403);
 
         //获取页码
-        $page = $request ->get('page',1);
+        $page = (int)$request ->get('page',1);
 
         //是否热门
         $is_hot = $request->get('is_hot','0');
@@ -232,7 +232,7 @@ class RelatedController extends Controller
             }else{
 
                 //非热门
-                $nohot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('status_compere','1')->pluck('tweet_id');
+                $nohot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->where('status_compere','1')->pluck('tweet_id');
 
                 $nohot_topic_tweet   =  $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$nohot_topic_tweet_ids->all())->get();
 
@@ -241,12 +241,12 @@ class RelatedController extends Controller
                     $top_id = TweetTopic::where('topic_id',$info)->where('is_top','1')->where('status_compere','1')->pluck('tweet_id');
 
                     if ( $top_id->all() ){
-                        $top = $tweets_nohot->with(['hasOneTweetTopic'])->where('id',$top_id->all()[0])->first();
+                        $top = Tweet::where('active',1)->with(['hasOneTweetTopic'])->where('id',$top_id->all()[0])->first();
                         $top =  $this->topicTweetTransformer->transform( $top );
                     }
 
                     //精华  5
-                    $handpicks_ids = TweetTopic::where('topic_id',$info)->where('is_handpick','1')->where('status_compere','1')->pluck('tweet_id');
+                    $handpicks_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->where('is_handpick','1')->where('status_compere','1')->pluck('tweet_id');
 
                     if ( $handpicks_ids->all() ){
                         $handpicks = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$handpicks_ids->all() )->get();
@@ -257,7 +257,7 @@ class RelatedController extends Controller
                     }
 
                     //热门  5
-                    $hot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('status_compere','1')->pluck('tweet_id');
+                    $hot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->where('status_compere','1')->pluck('tweet_id');
 
                     if ($hot_topic_tweet_ids ->all() ){
                         $hot_topic_tweet   =  $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$hot_topic_tweet_ids->all())->get();
@@ -270,6 +270,8 @@ class RelatedController extends Controller
 
                     $data =  mult_unique( array_merge($handpicks,$hot_topic_tweet,$nohot_topic_tweet) );
 
+                    $data = array_values($data);
+
                     return response()->json([
                         'top'   => $top,
                         'data'  => $data,
@@ -281,7 +283,7 @@ class RelatedController extends Controller
                 ]);
             }
         }else{
-            $user_likes = explode(',',$user_info['channels'][0]);
+//            $user_likes = explode(',',$user_info['channels'][0]);
 
             if ( $topic->compere_id === 0){
                 //话题动态
@@ -309,7 +311,7 @@ class RelatedController extends Controller
 //                $tweets_3 = $this->channelTweetsTransformer->transformCollection($tweet_3->all());
 
                 $tweets = mult_unique( array_merge($tweets_1,$tweets_2) );
-
+                $tweets = array_values($tweets);
                 return response()->json([
                     'data'  =>  $tweets,
                 ]);
@@ -317,27 +319,27 @@ class RelatedController extends Controller
             }else{
 
                 //非热门
-                $nohot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->pluck('tweet_id');
+                $nohot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->pluck('tweet_id');
 
                 $nohot_topic_tweet   =  $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$nohot_topic_tweet_ids->all())->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-
-//                $tweet_3_ids = $this ->friendsTweets((int)$id ,$page);
-
-//                $tweet_3 = $tweets_nohot->whereIn('id',$tweet_3_ids)->whereIn('channel_id', $user_info['channels'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
-
-//                $tweets_3 = $this->channelTweetsTransformer->transformCollection($tweet_3->all());
 
                 if ($page === 1 ){
                     //置顶  1
                     $top_id = TweetTopic::where('topic_id',$info)->where('is_top','1')->pluck('tweet_id');
 
                     if ( $top_id->all() ){
-                        $top = $tweets_nohot->with(['hasOneTweetTopic'])->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->where('id',$top_id->all()[0])->first();
-                        $top =  $this->topicTweetTransformer->transform( $top );
+                        $top = Tweet::where('active',1)
+                            ->with(['hasOneTweetTopic'])
+                            ->where('id',$top_id->all()[0])
+                            ->whereNotIn('id',$user_info['unlike'])
+                            ->whereNotIn('user_id',$user_info['black'])
+                            ->first();
+
+                        $top =  is_null($top) ? [] : $this->topicTweetTransformer->transform( $top );
                     }
 
                     //精华  5
-                    $handpicks_ids = TweetTopic::where('topic_id',$info)->where('is_handpick','1')->pluck('tweet_id');
+                    $handpicks_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->where('is_handpick','1')->pluck('tweet_id');
 
                     if ( $handpicks_ids->all() ){
                         $handpicks = $tweets_nohot->with(['hasOneTweetTopic'])->whereIn('id',$handpicks_ids->all() )->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
@@ -348,7 +350,7 @@ class RelatedController extends Controller
                     }
 
                     //热门  5
-                    $hot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->pluck('tweet_id');
+                    $hot_topic_tweet_ids = TweetTopic::where('topic_id',$info)->where('is_top','0')->pluck('tweet_id');
 
                     if ($hot_topic_tweet_ids ->all() ){
                         $hot_topic_tweet   =  $tweets_hot->with(['hasOneTweetTopic'])->whereIn('id',$hot_topic_tweet_ids->all())->whereNotIn('id',$user_info['unlike'])->whereNotIn('user_id',$user_info['black'])->get();
@@ -361,7 +363,7 @@ class RelatedController extends Controller
                     $nohot_topic_tweet = $this->topicTweetTransformer->transformCollection( $nohot_topic_tweet->all() );
 
                     $data =  mult_unique( array_merge($handpicks,$hot_topic_tweet,$nohot_topic_tweet) );
-
+                    $data = array_values($data);
                     return response()->json([
                         'top'   => $top,
                         'data'  => $data,
@@ -480,7 +482,14 @@ class RelatedController extends Controller
             }
 
             if( $yet==='1' ){
-                $result_1 = TweetTopic::where('topic_id',$topic_id)->where('is_top','1')->update(['is_top'=>'0']);
+                $already = TweetTopic::where('topic_id',$topic_id)->where('is_top','1')->first();
+
+                $result_1 = 1;
+                if ($already){
+                    $already->update(['is_top'=>'0']);
+                    $result_1 = $already->save();
+                }
+
                 $result_2 = $tweet->update([ 'is_top'=>'1' ]);
 
                 if ( $result_1 && $result_2 ){

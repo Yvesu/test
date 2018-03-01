@@ -23,6 +23,7 @@ use App\Api\Transformer\ActivityDiscoverTransformer;
 use App\Api\Transformer\TemplateDiscoverTransformer;
 use App\Api\Transformer\AdsDiscoverTransformer;
 use App\Models\Activity;
+use App\Models\ActivityFilmRecommend;
 use App\Models\Blacklist;
 use App\Models\Channel;
 use App\Models\Friend;
@@ -941,7 +942,7 @@ class TweetController extends BaseController
                 $time = time();
                 $tweet_content =  "您最新发送的动态<{$content}>动态长度超出规定范畴,我们将尽快为您处理...";
                 PrivateLetter::create([
-                    'from' => 1000437,
+                    'from' => 10,
                     'to'    => $tweet->user_id,
                     'content'   => $tweet_content,
                     'user_type' => '1',
@@ -951,25 +952,29 @@ class TweetController extends BaseController
 
             }
 
-            //是否添加水印
-            if (!is_numeric($request->get('mark',2))) return  response()->json(['message'=>'markType is error'],403);
 
-            //默认为不添加
-            $mark = $request->get('mark',2);
+//            //当用户允许下载时添加下载地址的水印
+//            if((int)$request->get('is_download',1)===1){
+//                //判断尺寸 取不同尺寸的素材
+//                //判断尺寸
+//                $shot_width_height = $request->get('shot_width_height');
+//                $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
+//                $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
+//                if (  $width >= 1280  || $height >= 1280  ){
+//                    //尺寸的地址  TODO 需要不同尺寸的素材
+//                }else{
+//                    //尺寸的地址
+//                }
 
-            if($mark==1){
-                //接收水印id
-                if ( !is_numeric($request->get('mark_id'))) return  response()->json(['message'=>'markId is error'],403);
+                $file = $request->get('video');
 
-                //水印id
-                $mark_id = $request->get('mark_id');
+                $notice = 'http://www.goobird.com/api/notification';
 
-                TweetMark::create([
-                    'tweet_id'      =>  $tweet->id,
-                    'mark_id'       =>  $mark_id,
-                    'create_time'   =>  time(),
-                ]);
-            }
+                $nickname = User::find($id)->nickname;
+
+                CloudStorage::Mark($file,'',$tweet->id,$notice,$nickname);
+
+//            }
             //鉴黄
 //            YyController::check($tweet->id);
             $this->check($tweet -> id);
@@ -1439,7 +1444,7 @@ class TweetController extends BaseController
     {
             try {
                 //接收页码
-                if (!is_numeric($page = $request->get('page',1))) return response()->json(['message'=>'bad_request'],403);
+                $page = $request->get('page',1);
 
                 $time = getTime();
 
@@ -1452,6 +1457,7 @@ class TweetController extends BaseController
 
                 //获取用户信息
                 $user = Auth::guard('api')->user();
+
 
                 if(0 == $rand){
                     // 广告
@@ -1507,12 +1513,11 @@ class TweetController extends BaseController
                         $ids_arr = $ids_obj->all();
 
                         // 模板
-                        $templates = $templates-> whereNotIn('id',$ids_arr)
-                            -> get(['id', 'user_id', 'name','folder_id','intro', 'cover', 'preview_address', 'count', 'time_add']);
+                        $templates = $templates-> whereNotIn('id',$ids_arr)-> get();
 
                     }else{
                         // 模板
-                        $templates = $templates -> get(['id', 'user_id', 'name','folder_id','intro', 'cover', 'preview_address', 'count', 'time_add']);
+                        $templates = $templates -> get();
                     }
 
                     if($templates -> count()) {
@@ -1526,21 +1531,30 @@ class TweetController extends BaseController
                         $user_id = $user->id;
                         $ids_obj = UsersUnlike::where('user_id',$user_id)->where('type','2')->pluck('work_id');
                         $ids_arr = $ids_obj->all();
+
+                        //查找推荐
+                        $activity_recommend = ActivityFilmRecommend::where('type','0')->where('expires','>',$time)->pluck('id');
+
                         // 竞赛
                         $activity = Activity::with(['belongsToUser'=>function($q){
                             $q->select(['id','nickname','avatar','signature','verify','verify_info']);
                         }])
-                            -> recommend()
+//                            -> recommend()
                             -> ofExpires()
+                            ->whereIn('id',$activity_recommend->all())
                             ->whereNotIn('id',$ids_arr)
                             -> get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
                     }else{
+                        //查找推荐
+                        $activity_recommend = ActivityFilmRecommend::where('type','0')->where('expires','>',$time)->pluck('id');
+
                         // 竞赛
                         $activity = Activity::with(['belongsToUser'=>function($q){
                             $q->select(['id','nickname','avatar','signature','verify','verify_info']);
                         }])
-                            -> recommend()
+//                            -> recommend()
                             -> ofExpires()
+                            ->whereIn('id',$activity_recommend->all())
                             -> get(['id', 'user_id', 'comment', 'location', 'icon', 'recommend_expires', 'time_add']);
                     }
 
@@ -1557,6 +1571,11 @@ class TweetController extends BaseController
                     //查看用户喜好
                     $user_channels = UsersLikes::where('user_id',$user->id)->pluck('channel_id');
 
+                    if (!$user_channels->all()){
+                        $default_userslikes = Channel::where('active',1)->pluck('id');
+                        $user_channels[] = implode($default_userslikes->all(),',');
+                    }
+
                     //获取用户ID
                     $user_id = $user->id;
 
@@ -1568,8 +1587,7 @@ class TweetController extends BaseController
                     $users_id_black = Blacklist::where('from',$user_id)->pluck('to');
                     $users_id_black = $users_id_black->all();
 
-                    if ($user_channels->all()){
-                        //拆解过滤
+                      //拆解过滤
                         $user_channels = explode(',', $user_channels->all()[0]);
                         $user_channels = Channel::where('active',1)->whereIn('id',$user_channels)->pluck('id')->all();
 
@@ -1583,13 +1601,6 @@ class TweetController extends BaseController
                         if (!$tweets_data->count()){
                             $tweets_data = $this -> hot($page)->get();
                         }
-                    }else{
-                        //用户喜好为空
-                        $tweets_data = $this -> hot($page)
-                            ->whereNotIn('id',$ids_arr)
-                            ->whereNotIn('user_id',$users_id_black)
-                            ->get();
-                    }
 
                 }else{
                     $tweets_data = $this -> hot($page)->get();
@@ -1599,7 +1610,7 @@ class TweetController extends BaseController
                 return response()->json([
 
                     // 动态
-                    'data'       => $this->channelTweetsTransformer->transformCollection($tweets_data->all()),
+                    'data'       => $tweets_data->count() ? $this->channelTweetsTransformer->transformCollection($tweets_data->all()): [],
 
                     // 广告位
                     'ads'        => $ads,
@@ -2785,9 +2796,7 @@ class TweetController extends BaseController
             ->orderBy('browse_times','DESC')
             ->where('id','!=',$id)
             ->forPage($page,$this->paginate)
-            ->get(['id','user_id','created_at','type','screen_shot','duration','location',
-                'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
-                'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
+            ->get();
 
         if($user) {
             if ($tweets->count() < $this->paginate) {
@@ -2821,9 +2830,7 @@ class TweetController extends BaseController
                         ->orderBy('created_at', 'desc')
                         ->where('id', '!=', $id)
                         ->forPage($page, $this->paginate)
-                        ->get(['id','user_id','created_at','type','screen_shot','duration','location',
-                            'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
-                            'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
+                        ->get();
 
                 }else{
                     $friends_tweets = Tweet::where('visible',10)->get();
@@ -2846,9 +2853,7 @@ class TweetController extends BaseController
                     ->whereIn('active',[0,1])
                     ->where('id', '!=', $id)
                     ->forPage($page, $this->paginate)
-                    ->get(['id','user_id','created_at','type','screen_shot','duration','location',
-                        'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
-                        'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
+                    ->get();
 
             }
         }
@@ -2880,9 +2885,7 @@ class TweetController extends BaseController
                 ->orderBy('browse_times','DESC')
                 ->where('id','!=',$id)
                 ->whereIn('id',$except->all())
-                ->get(['id','user_id','created_at','type','screen_shot','duration','location',
-                    'browse_times','like_count','reply_count','tweet_grade_total','tweet_grade_times',
-                    'video','transcoding_video','video_m3u8','norm_video','high_video','join_video']);
+                ->get();
 
             if ($tweets->count()>= 5 ){
                 $tweets = $tweets->random(5);

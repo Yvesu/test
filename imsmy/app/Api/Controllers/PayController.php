@@ -146,20 +146,21 @@ class PayController extends BaseController
     private function wxpay($order)
     {
         $gateway = Omnipay::create('WechatPay_App');
-        $gateway->setAppId(''); // 微信appId
+        $gateway->setAppId('wxe3946ac648160cda'); // 微信appId
         $gateway->setMchId(''); // 商铺号
         $gateway->setApiKey(''); // apikey  需要在微信商户平台自行设置
         $order = [
             'body' => 'Hi!Video订单支付',
-            'out_trade_no' => $order,
+            'out_trade_no' =>$order -> order_number,
             'total_fee' => 0.01,
             'spbill_create_ip' => '39.106.106.73',
             'fee_type' => 'CNY',
             'notify_url' => url('http://www.hivideo.com'),    // 微信支付的回调地址
         ];
+
         $request = $gateway->purchase($order);
         $response = $request->send();
-        return response()->json(['code' => 200, 'msg' => 'ok', 'data' => ['code'=>$code,'data' => $response->getAppOrderData()]]);
+        return response()->json(['data' =>  $response->getAppOrderData()],200);
     }
 
 }

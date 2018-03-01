@@ -1,6 +1,7 @@
 <?php
 namespace App\Api\Transformer;
 
+use App\Models\UserCollections;
 use CloudStorage;
 use Auth;
 use App\Models\TweetLike;
@@ -55,6 +56,8 @@ class AttentionTweetsTransformer extends Transformer
             'created_at'        =>      strtotime($tweet->created_at),
             'phone'             =>      $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
             'phone_id'          =>      $tweet->phone_id,
+            'collections'       =>      $user ? (UserCollections::where('user_id',$user->id)->where('status',1)->where('type',3)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
+            'is_download'       =>      $tweet->is_download,
         ];
     }
 

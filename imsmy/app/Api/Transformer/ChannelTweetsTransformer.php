@@ -8,6 +8,7 @@
 
 namespace App\Api\Transformer;
 
+use App\Models\UserCollections;
 use CloudStorage;
 use Auth;
 use App\Models\Subscription;
@@ -59,6 +60,8 @@ class ChannelTweetsTransformer extends Transformer
             'created_at'    => strtotime($tweet->created_at),
             'phone'         => $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
             'phone_id'      => $tweet->phone_id,
+            'collections'   => $user_from ? (UserCollections::where('user_id',$user_from->id)->where('type',3)->where('status',1)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
+            'is_download'   => $tweet->is_download,
         ];
     }
 

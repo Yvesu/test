@@ -1082,9 +1082,6 @@ $api->version(['v1'],function($api){
             //动态相关
             $api->post('/tweets/correlation/{id}','TweetController@correlation')
                 ->where('id','[0-9]+');
-            //动态相关
-            $api->get('/tweets/correlation/{id}','TweetController@correlation')
-                ->where('id','[0-9]+');
 
             //搜索
             $api->get('/search/list','AllSearchController@search');
@@ -1283,8 +1280,9 @@ $api->version(['v1'],function($api){
         //绑定第三方
         $api->post('/add/third','AuthController@thirdRelatedAdd_third');
 
-        //分享的网页
-        $api->post('/share','ShareController@index');
+        $api->get('/tweet/down/{id}/{user_id?}','TweetDownController@down')
+            ->where('id','[0-9]+')
+            ->where('user_id','[0-9]+');
 
     });
 

@@ -400,10 +400,11 @@ class ActivityController extends BaseController
                -> where('reply_id','=',null)
                -> get();
        }
-
+       $data = $this->tweetActivityRepliesTransformer->transformCollection($reply-> forPage($page, $this->paginate)->all());
+        $data = array_values($data);
        return [
             'page_count' => ceil($reply -> count()/$this->paginate),
-            'data' => $this->tweetActivityRepliesTransformer->transformCollection($reply-> forPage($page, $this->paginate)->all())
+            'data' => $data,
         ];
 
     }

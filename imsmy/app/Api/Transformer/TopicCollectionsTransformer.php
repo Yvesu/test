@@ -15,7 +15,8 @@ class TopicCollectionsTransformer extends Transformer
             'name'              => $topic->name,
             'icon'              => CloudStorage::downloadUrl($topic->icon),
             'forwarding_times'  => $topic -> forwarding_times,
-            'work_count'       => $topic -> work_count,
+            'work_count'        => $topic -> work_count,
+            'type'              => 1,
         ];
     }
 }

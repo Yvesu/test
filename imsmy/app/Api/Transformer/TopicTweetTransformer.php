@@ -8,6 +8,7 @@
 
 namespace App\Api\Transformer;
 
+use App\Models\UserCollections;
 use CloudStorage;
 use Auth;
 use App\Models\Subscription;
@@ -61,6 +62,8 @@ class TopicTweetTransformer extends Transformer
             'phone_id'      => $tweet->phone_id,
             'is_handpick'   => $tweet ->hasOneTweetTopic->is_handpick,
             'is_top'        => $tweet ->hasOneTweetTopic->is_top,
+            'is_download'   => $tweet->is_download,
+            'collections'   => $user_from ? (UserCollections::where('user_id',$user_from->id)->where('status',1)->where('type',3)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
         ];
     }
 

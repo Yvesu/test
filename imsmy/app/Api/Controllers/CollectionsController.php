@@ -2,6 +2,10 @@
 
 namespace App\Api\Controllers;
 
+use App\Api\Transformer\ChannelTweetsTransformer;
+use App\Api\Transformer\Discover\HotActivityTransformer;
+use App\Models\Activity;
+use App\Models\Tweet;
 use App\Models\UserCollections;
 use App\Models\Topic;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -18,14 +22,20 @@ class CollectionsController extends BaseController
     protected $paginate = 20;
     protected $tweetsSearchTransformer;
     protected $topicCollectionsTransformer;
+    protected $channelTweetsTransformer;
+    protected $hotActivityTransformer;
 
     public function __construct(
         TweetsSearchTransformer $tweetsSearchTransformer,
-        TopicCollectionsTransformer $topicCollectionsTransformer
+        TopicCollectionsTransformer $topicCollectionsTransformer,
+        ChannelTweetsTransformer $channelTweetsTransformer,
+        HotActivityTransformer $hotActivityTransformer
     )
     {
         $this->tweetsSearchTransformer = $tweetsSearchTransformer;
         $this->topicCollectionsTransformer = $topicCollectionsTransformer;
+        $this->channelTweetsTransformer = $channelTweetsTransformer;
+        $this->hotActivityTransformer = $hotActivityTransformer;
     }
 
     /**
@@ -37,6 +47,7 @@ class CollectionsController extends BaseController
     public function index($id,Request $request)
     {
         try {
+            $page = $request->get('page',1);
 
             // 话题集合
             $topic_data = Topic::whereHas('belongsToCollection',function($query)use($id){
@@ -45,10 +56,51 @@ class CollectionsController extends BaseController
                 -> forPage((int)$request->get('page'),$this->paginate)
                 -> get();
 
+            //动态集合
+            $tweet_ids = UserCollections::where('user_id',$id)
+                ->where('type',3)
+                ->where('status',1)
+                ->forPage($page,20)
+                ->pluck('type_id');
+
+            $tweets_data = Tweet::where('type', 0)
+                ->where('active', 1)
+                ->where('visible', 0)
+                ->with(['belongsToManyChannel' => function ($q) {
+                    $q->select(['name']);
+                }, 'hasOneContent' => function ($q) {
+                    $q->select(['content', 'tweet_id']);
+                }, 'belongsToUser' => function ($q) {
+                    $q->select(['id', 'nickname', 'avatar', 'cover', 'verify', 'signature', 'verify_info']);
+                },'hasOnePhone' =>function($q){
+                    $q->select(['id','phone_type','phone_os','camera_type']);
+                }])
+                ->orderBy('created_at', 'DESC')
+                ->whereIn('id',$tweet_ids->all())
+                ->forPage($page, $this->paginate)
+                ->get();
+
+            //收藏的赛事
+            $activity_ids = UserCollections::where('user_id',$id)
+                ->where('type',2)
+                ->where('status',1)
+                ->forPage($page,20)
+                ->pluck('type_id');
+
+            $activity_data = Activity::with(['belongsToUser' => function($q){
+                $q -> select('id','nickname','avatar','cover','verify','signature','verify_info');
+            }, 'hasManyTweets'=>function($q){
+                $q->select(['tweet_id','screen_shot']);
+            }])
+                ->whereIn('id',$activity_ids->all())
+                -> paginate($this->paginate, ['id','user_id','bonus','comment','expires','time_add','icon','work_count'], 'page', $page);
+
+
             // 返回合并后的数据
             return response()->json([
-                'data' => $this->topicCollectionsTransformer->transformCollection($topic_data->all()),
-                'count'=> $this->paginate
+                'topic'     => $this->topicCollectionsTransformer->transformCollection($topic_data->all()),
+                'activity'  => $this -> hotActivityTransformer->transformCollection($activity_data->all()),
+                'tweet'     => $this->channelTweetsTransformer->transformCollection($tweets_data->all()),
             ],200);
 
         } catch (ModelNotFoundException $e) {
@@ -85,11 +137,14 @@ class CollectionsController extends BaseController
             // 验证所要收藏的数据是否存在
             switch($type){
                 case 1:
-                    $data = Topic::findOrFail($type_id);
+                    $data = Topic::findOrFail((int)$type_id);
                     break;
-//                case 2:
-//                    $data = Activity::where('id',$type_id) -> first();
-//                    break;
+                case 2:         //赛事
+                    $data = Activity::where('id',(int)$type_id) -> first();
+                    break;
+                case 3 :        //动态
+                    $data = Tweet::find((int)$type_id);
+                    break;
                 default :
                     $data = '';
             }
@@ -152,7 +207,7 @@ class CollectionsController extends BaseController
             $type = $request -> get('type');
 
             // 判断类型的规范性
-            if(!in_array($type,[1,2])) return response() -> json(['error'=>'bad_request'],403);
+            if(!in_array($type,[1,2,3])) return response() -> json(['error'=>'bad_request'],403);
 
             // 判断该用户是否收藏
             $collection = UserCollections::where('user_id',$id)

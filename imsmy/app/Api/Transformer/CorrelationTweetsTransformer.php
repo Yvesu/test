@@ -4,6 +4,7 @@ namespace App\Api\Transformer;
 
 use App\Facades\CloudStorage;
 use App\Models\TweetLike;
+use App\Models\UserCollections;
 use Auth;
 
 class CorrelationTweetsTransformer extends Transformer
@@ -44,9 +45,10 @@ class CorrelationTweetsTransformer extends Transformer
             'user'          => $this->usersTransformer->tweettransformer($tweet['belongs_to_user']),
             'already_like'  => $user_from ? (TweetLike::where('tweet_id',$tweet['id'])->where('user_id',$user_from->id)->first() ? 1 : 0) : 0,
             'created_at'    => strtotime($tweet['created_at']),
+            'collections'   => $user_from ? (UserCollections::where('user_id',$user_from->id)->where('status',1)->where('type',3)->where('type_id',$tweet['id'])->first() ? 1 : 0) : 0,
+            'is_download'   => $tweet['is_download'],
         ];
     }
-
 }
 
 

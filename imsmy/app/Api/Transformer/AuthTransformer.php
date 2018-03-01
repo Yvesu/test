@@ -8,6 +8,7 @@
 
 namespace App\Api\Transformer;
 
+use App\Models\User;
 use App\Models\UserToken;
 use Config;
 use CloudStorage;
@@ -47,6 +48,9 @@ class AuthTransformer extends Transformer
             Redis::del($key);
         }
         Redis::setex($key,60*1440 ,$auth->token);
+
+        $ip = getIP();
+        User::find($auth->id)->update(['last_ip'=>$ip]);
 
         return [
             'id'           => (string)$auth->id,
