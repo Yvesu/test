@@ -132,7 +132,7 @@ class FilmfestIssueController extends Controller
             $filmfest_id = $request->get('id');
             $filmfest = Filmfests::find($filmfest_id);
             $data = [
-                'cover'=>$filmfest->cover,
+                'cover'=>'http://'.$filmfest->cover,
                 'detail'=>$filmfest->detail,
                 'holdTime'=>date('Y.m.d',$filmfest->time_start).'-'.date('Y.m.d',$filmfest->time_end),
                 'submitTime'=>date('Y.m.d',$filmfest->submit_start_time).'-'.date('Y.m.d',$filmfest->submit_end_time),
@@ -231,7 +231,7 @@ class FilmfestIssueController extends Controller
             $filmfest_id = $request->get('id');
             $filmfest = Filmfests::find($filmfest_id);
             $data = [
-                'cover'=>$filmfest->cover,
+                'cover'=>'http://'.$filmfest->cover,
                 'des'=>$filmfest->des,
             ];
             return response()->json(['data'=>$data],200);
@@ -1097,6 +1097,9 @@ class FilmfestIssueController extends Controller
             preg_match($rule1,$html,$width);
             preg_match($rule2,$html,$height);
             preg_match($rule3,$html,$duration);
+            $width =rtrim( explode(' ',$width[0])[1],',');
+            $height = rtrim(explode(' ',$height[0])[1],',');
+            $duration = (int)trim(rtrim(explode(' ',$duration[0])[1],','),'"');
             if($width<1920 || $height<1080 || $width/$height != 16/9){
                 return response()->json(['message'=>'格式不正确'],200);
             }
@@ -1125,22 +1128,24 @@ class FilmfestIssueController extends Controller
                     $joinvideo -> duration = $joinvideo->duration + $duration;
                     $joinvideo -> save();
 
-                }
-                $newJoinVideo = new JoinVideo;
-                if($filmfest->period){
-                    $newJoinVideo -> name = '第'.$filmfest->period.'届'.$filmfest->name.'片头片尾';
                 }else{
-                    $newJoinVideo -> name = $filmfest->name.'片头片尾';
+                    $newJoinVideo = new JoinVideo;
+                    if($filmfest->period){
+                        $newJoinVideo -> name = '第'.$filmfest->period.'届'.$filmfest->name.'片头片尾';
+                    }else{
+                        $newJoinVideo -> name = $filmfest->name.'片头片尾';
+                    }
+                    $newJoinVideo -> intro = '头尾尺寸必须一致';
+                    $newJoinVideo -> head_video = "video.cdn.hivideo.com/".$address;
+                    $newJoinVideo -> active = 1;
+                    $newJoinVideo -> weight_height = $width.'*'.$height;
+                    $newJoinVideo -> activity_id = $activity_id;
+                    $newJoinVideo -> created_at = time();
+                    $newJoinVideo -> updated_at = time();
+                    $newJoinVideo -> duration = $duration;
+                    $newJoinVideo -> save();
                 }
-                $newJoinVideo -> intro = '头尾尺寸必须一致';
-                $newJoinVideo -> head_video = "video.cdn.hivideo.com/".$address;
-                $newJoinVideo -> active = 1;
-                $newJoinVideo -> weight_height = $width.'*'.$height;
-                $newJoinVideo -> activity_id = $activity_id;
-                $newJoinVideo -> created_at = time();
-                $newJoinVideo -> updated_at = time();
-                $newJoinVideo -> duration = $duration;
-                $newJoinVideo -> save();
+
 
 //                $log = new FilmfestUserReviewChildLog;
 //                $log -> user_id = $user;
@@ -1181,6 +1186,9 @@ class FilmfestIssueController extends Controller
             preg_match($rule1,$html,$width);
             preg_match($rule2,$html,$height);
             preg_match($rule3,$html,$duration);
+            $width =rtrim( explode(' ',$width[0])[1],',');
+            $height = rtrim(explode(' ',$height[0])[1],',');
+            $duration = (int)trim(rtrim(explode(' ',$duration[0])[1],','),'"');
             if($width<1920 || $height<1080 || $width/$height != 16/9){
                 return response()->json(['message'=>'格式不正确'],200);
             }
@@ -1210,22 +1218,24 @@ class FilmfestIssueController extends Controller
                     $joinvideo -> duration = $joinvideo->duration + $duration;
                     $joinvideo -> save();
 
-                }
-                $newJoinVideo = new JoinVideo;
-                if($filmfest->period){
-                    $newJoinVideo -> name = '第'.$filmfest->period.'届'.$filmfest->name.'片头片尾';
                 }else{
-                    $newJoinVideo -> name = $filmfest->name.'片头片尾';
+                    $newJoinVideo = new JoinVideo;
+                    if($filmfest->period){
+                        $newJoinVideo -> name = '第'.$filmfest->period.'届'.$filmfest->name.'片头片尾';
+                    }else{
+                        $newJoinVideo -> name = $filmfest->name.'片头片尾';
+                    }
+                    $newJoinVideo -> intro = '头尾尺寸必须一致';
+                    $newJoinVideo -> tail_video = "video.cdn.hivideo.com/".$address;
+                    $newJoinVideo -> active = 1;
+                    $newJoinVideo -> weight_height = $width.'*'.$height;
+                    $newJoinVideo -> activity_id = $activity_id;
+                    $newJoinVideo -> created_at = time();
+                    $newJoinVideo -> updated_at = time();
+                    $newJoinVideo -> duration = $duration;
+                    $newJoinVideo -> save();
                 }
-                $newJoinVideo -> intro = '头尾尺寸必须一致';
-                $newJoinVideo -> tail_video = "video.cdn.hivideo.com/".$address;
-                $newJoinVideo -> active = 1;
-                $newJoinVideo -> weight_height = $width.'*'.$height;
-                $newJoinVideo -> activity_id = $activity_id;
-                $newJoinVideo -> created_at = time();
-                $newJoinVideo -> updated_at = time();
-                $newJoinVideo -> duration = $duration;
-                $newJoinVideo -> save();
+
 
 //                $log = new FilmfestUserReviewChildLog;
 //                $log -> user_id = $user;
@@ -1317,7 +1327,7 @@ class FilmfestIssueController extends Controller
             if($message2[0]['code']==200){
 //                DB::beginTransaction();
                 $filmfest = Filmfests::find($filmfest_id);
-                $filmfest -> tail_leader = "http://video.cdn.hivideo.com/".$address;
+                $filmfest -> warter_mark = "http://img.cdn.hivideo.com/".$address;
                 $filmfest -> time_update = time();
                 $filmfest -> save();
 

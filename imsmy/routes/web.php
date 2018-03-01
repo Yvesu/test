@@ -80,6 +80,10 @@ Route::group(['namespace'=>'NewWeb'],function (){
      * 首页
      */
 //    Route::get('/','TestIndexController@index');
+    Route::get('/bcsff2302226',function (){
+        return view('Hivideo');
+    });
+
     Route::get('/',function (){
         return view('stick');
     });
@@ -99,6 +103,7 @@ Route::get('index1','NewWeb\Test\ProductionController@index1');
 $api -> version('v1',function($api) {
 
 //    $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'api'],function ($api){
+    $api -> post('notice_transcoding','App\Http\Controllers\NewWeb\Application\ApplicationController@qiepian');
     $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
 
         /**
@@ -209,6 +214,11 @@ $api -> version('v1',function($api) {
             $api -> group(['prefix'=>'user'],function ($api){
 
                 /**
+                 * 头像和昵称
+                 */
+                $api -> post('avatar-nickname','User\UserController@avatarNickname');
+
+                /**
                  * 用户首页
                  */
                 $api -> post('index','User\UserController@index');
@@ -252,6 +262,11 @@ $api -> version('v1',function($api) {
                  * 竞赛详情页
                  */
                 $api -> post('match/index','User\UserController@matchIndex');
+
+                /**
+                 * 竞赛详情
+                 */
+                $api -> post('match/des/html','User\UserController@matchDesHtml');
 
                 /**
                  * 竞赛详情页-添加关注
@@ -306,7 +321,12 @@ $api -> version('v1',function($api) {
              */
             $api -> group(['prefix'=>'filmfest'],function($api){
 
+                $api->post('into-filmfest','User\FilmfestController@intoFilmfest');
+
                 $api->group(['middleware'=>'filmfestUser:id'],function ($api){
+
+
+
                     /**
                      * 分析页
                      */
@@ -663,8 +683,12 @@ $api -> version('v1',function($api) {
                     $api -> post('page_three','Application\ApplicationController@pageThree');
                     $api -> post('page_four','Application\ApplicationController@pageFour');
                     $api -> post('page_submit','Application\ApplicationController@pageSubmit');
+                    $api -> post('page_getsubmit','Application\ApplicationController@getSubmit');
                     //  鉴黄
                     $api -> post('page_check','Application\ApplicationController@check');
+                    $api -> post('page_usevideo','Application\ApplicationController@usevideo');
+                    //  加片头片尾
+                    $api -> post('add_title_tail','Application\ApplicationController@addTitleTail');
                     /**
                      * 影片单元选择类别
                      */

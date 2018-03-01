@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\NewWeb\User;
 
 use App\Http\Middleware\Filmfest;
+use App\Models\Filmfest\FilmfestUniversity;
 use App\Models\Filmfest\JoinUniversity;
 use App\Models\FilmfestFilmType;
 use App\Models\Filmfests;
@@ -55,10 +56,9 @@ class FilmfestController extends Controller
 //                    $q->where('filmfests.id','=',$id);
 //                })->get()->count();
             //  参与院校
-            $joinUniversityNum = TweetProduction::select('id')->where('is_current','1')
-                ->whereHas('filmfest',function ($q) use($id){
-                    $q->where('filmfests.id','=',$id);
-                })->count('join_university_id');
+            $joinUniversityNum = JoinUniversity::whereHas('filmfests',function ($q) use($id){
+                $q->where('filmfests.id',$id);
+            })->get()->count();
             //  历届参与院校
 //            $historyUniversityNum = JoinUniversity::select('id')
 //                ->whereHas('filmfests',function ($q) use($id){
@@ -80,7 +80,7 @@ class FilmfestController extends Controller
                 })->get()->count();
             //  私有数量
             $privateNum = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','>',2);
+                $q->where('status','<>',2);
             })->whereHas('filmfest',function ($q) use($id){
                 $q->where('filmfests.id','=',$id);
             })->whereHas('tweet',function ($q) {
@@ -90,7 +90,7 @@ class FilmfestController extends Controller
 
             //  公有数量
             $publicNum = TweetProduction::select('id')->whereHas('filmfestProduction',function ($q){
-                $q->where('status','>',2);
+                $q->where('status','<>',2);
             })->whereHas('filmfest',function ($q) use($id){
                 $q->where('filmfests.id','=',$id);
             })->whereHas('tweet',function ($q) {
@@ -169,9 +169,9 @@ class FilmfestController extends Controller
                 $data2 = $this->baseData($id,$content,$visible = 2);
                 $data3 = $this->baseData($id,$content,$visible = 3);
                 if($sumNum == 0){
-                    $data4 = '0%';
+                    $data4 = 0;
                 }else{
-                    $data4 = (round($data3/$sumNum,2)*100);
+                    $data4 = floor(round($data3/$sumNum,2)*100);
                 }
                 $tempData = [
                     'name'=>$content,
@@ -778,27 +778,31 @@ class FilmfestController extends Controller
             if($school->count()>0){
                 foreach($school as $k => $v)
                 {
-                    $count = 0;
-                    if($v->filmfests()->first()){
-                        if($v->filmfests()->first()->tweetProduction()->first()){
-                            foreach($v->filmfests()->first()->tweetProduction()->get() as $kk => $vv)
-                            {
-                                if($vv){
-                                    $count += $vv->tweet->like_count;
-                                }else{
-                                    $count += 0;
-                                }
 
-                            }
-                            $tempData = [
-                                $v->id => $count
-                            ];
-                        }else{
-                            continue;
-                        }
-                    }else {
-                        continue;
-                    }
+                    $count = FilmfestUniversity::where('university_id',$v->id)->where('filmfest_id',$filmfest_id)->first()->join_count;
+//                    $productions = $v->tweetProduction()->get();
+//                    if($productions->count()>0){
+//                        foreach ($productions as $kk => $vv)
+//                        {
+//                            $filmfestProduction = $vv->filmfestProduction()->get();
+//                            if($filmfestProduction->count()>0){
+//                                foreach ($filmfestProduction as $kkk => $vvv)
+//                                {
+//                                    if($vvv->filmfests_id != $filmfest_id || $vvv->join_university_id != $v->id){
+//                                        continue;
+//                                    }else{
+//                                        $count += $vvv->like_count;
+//                                    }
+//                                }
+//                            }else{
+//                                continue;
+//                            }
+//                        }
+                        $tempData[$v->id] = $count;
+//                    }else{
+//                        continue;
+//                    }
+
                 }
             }
             arsort($tempData);
@@ -830,30 +834,31 @@ class FilmfestController extends Controller
             if($school->count()>0){
                 foreach($school as $k => $v)
                 {
-                    $count = 0;
-                    if($v->filmfests()->first()){
-                        if($v->filmfests()->first()->tweetProduction()->first()){
-                            foreach($v->filmfests()->first()->tweetProduction()->get() as $kk => $vv)
-                            {
-                                if($vv){
-                                    $count += $vv->tweet->like_count;
-                                }else{
-                                    $count += 0;
-                                }
-
-                            }
-                            $tempData = [
-                                $v->id => $count
-                            ];
-                        }else{
-                            continue;
-                        }
-                    }else {
-                        continue;
-                    }
+                    $count = FilmfestUniversity::where('university_id',$v->id)->where('filmfest_id',$filmfest_id)->first()->join_count;
+//                    $productions = $v->tweetProduction()->get();
+//                    if($productions->count()>0){
+//                        foreach ($productions as $kk => $vv)
+//                        {
+//                            $filmfestProduction = $vv->filmfestProduction()->get();
+//                            if($filmfestProduction->count()>0){
+//                                foreach ($filmfestProduction as $kkk => $vvv)
+//                                {
+//                                    if($vvv->filmfests_id != $filmfest_id || $vvv->join_university_id != $v->id){
+//                                        continue;
+//                                    }else{
+//                                        $count += $vvv->like_count;
+//                                    }
+//                                }
+//                            }else{
+//                                continue;
+//                            }
+//                        }
+                    $tempData[$v->id] = $count;
+//                    }else{
+//                        continue;
+//                    }
                 }
             }
-
             arsort($tempData);
             $data = [];
             foreach ($tempData as $k => $v)
@@ -933,9 +938,12 @@ class FilmfestController extends Controller
                 $topData = [];
             }
             //  头像
-            $avatar = User::find($user)->avatar;
+            $useruseruser = User::find($user);
+            $avatar = 'http://'.$useruseruser->avatar;
+            $nickname = $useruseruser->nickname;
             $topData['avatar']=$avatar;
             $topData['userGroupName']=$userGroupName;
+            $topData['nickname']=$nickname;
             $topData['des'] = ['des'=>'成员','sumPeopleNum'=>$sumPeopleNum];
 
             //  主体数据
@@ -947,6 +955,8 @@ class FilmfestController extends Controller
                     $q->where('name','not like','冻结')->where('name','not like','发起者')->where('filmfest_id',$filmfest_id)->where('status',1);
                 })->whereHas('filmfestUserGroup',function ($q) use($userGroupId){
                     $q->where('filmfest_user_user_group.id',$userGroupId);
+                })->whereHas('filmfest_role',function ($q)use($filmfest_id){
+                    $q->where('role_name','not like','冻结')->where('role_name','not like','发起者')->where('filmfest_id',$filmfest_id)->where('status',1);
                 })
                     ->limit($page*($this->paginate))
                     ->orderBy('id')
@@ -955,7 +965,7 @@ class FilmfestController extends Controller
                     foreach ($adminUser as $k => $v)
                     {
                         $tempUserId = $v->id;
-                        $tempAvatar= $v->avatar;
+                        $tempAvatar= 'http://'.$v->avatar;
                         $tempNickName = $v->nickname;
                         $tempPhone = $v->hasOneLocalAuth()->first()?$v->hasOneLocalAuth->username:'';
                         $tempRole = FilmfestUserRole::where('filmfest_id',$filmfest_id)
@@ -976,11 +986,11 @@ class FilmfestController extends Controller
                         $num = FilmfestUserReviewLog::where('filmfest_id',$filmfest_id)
                             ->where('user_id',$tempUser)->count('production_id');
 
-                        $undeterminedNum = FilmfestUserReviewLog::where('status','=',2)
-                            ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
-
-                        $designateNum = FilmfestUserReviewLog::where('status','=',1)
-                            ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
+//                        $undeterminedNum = FilmfestUserReviewLog::where('status','=',2)
+//                            ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
+//
+//                        $designateNum = FilmfestUserReviewLog::where('status','=',1)
+//                            ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
 
                         $complete_watch_num = FilmfestUserReviewLog::where('is_complete_watch','=',1)
                             ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
@@ -1005,8 +1015,8 @@ class FilmfestController extends Controller
                             'phone'=>$tempPhone,
                             'role'=>$role,
                             'num'=>$num,
-                            'undeterminedNum'=>$undeterminedNum,
-                            'designateNum'=>$designateNum,
+//                            'undeterminedNum'=>$undeterminedNum,
+//                            'designateNum'=>$designateNum,
                             'complete_watch_num_proportion'=>$complete_watch_num_proportion,
                             'again_watch_num_proportion'=>$again_watch_num_proportion,
                         ];
@@ -1015,7 +1025,7 @@ class FilmfestController extends Controller
                     }
                     return response()->json(['topData'=>$topData,'mainData'=>$mainData]);
                 }else{
-                    return response()->json(['message'=>'还没有人是这个分组的管理员，请您块去添加'],200);
+                    return response()->json(['topData'=>$topData,'message'=>'还没有人是这个分组的管理员，请您块去添加'],200);
                 }
             }else{
                 if($roleGroup->count()>0){
@@ -1023,14 +1033,17 @@ class FilmfestController extends Controller
                         $q->where('filmfest_user_role_group.id',$type)->where('status',1);
                     })->whereHas('filmfestUserGroup',function ($q)use($userGroupId){
                         $q->where('filmfest_user_user_group.id',$userGroupId);
-                    })->limit($page*($this->paginate))
+                    })->whereHas('filmfest_role',function ($q)use($filmfest_id){
+                        $q->where('role_name','not like','发起者')->where('filmfest_id',$filmfest_id)->where('status',1);
+                    })
+                        ->limit($page*($this->paginate))
                         ->orderBy('id')
                         ->get();
                     if($adminUser->count()>0){
                         foreach ($adminUser as $k => $v)
                         {
                             $tempUserId = $v->id;
-                            $tempAvatar= $v->avatar;
+                            $tempAvatar= 'http://'.$v->avatar;
                             $tempNickName = $v->nickname;
                             $tempPhone = $v->hasOneLocalAuth()->first()?$v->hasOneLocalAuth->usesrname:'';
                             $tempRole = FilmfestUserRole::where('filmfest_id',$filmfest_id)
@@ -1053,11 +1066,11 @@ class FilmfestController extends Controller
                             $num = FilmfestUserReviewLog::where('filmfest_id',$filmfest_id)
                                 ->where('user_id',$tempUser)->count('production_id');
 
-                            $undeterminedNum = FilmfestUserReviewLog::where('status','=',2)
-                                ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
+//                            $undeterminedNum = FilmfestUserReviewLog::where('status','=',2)
+//                                ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
 
-                            $designateNum = FilmfestUserReviewLog::where('status','=',1)
-                                ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
+//                            $designateNum = FilmfestUserReviewLog::where('status','=',1)
+//                                ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
 
                             $complete_watch_num = FilmfestUserReviewLog::where('is_complete_watch','=',1)
                                 ->where('filmfest_id',$filmfest_id)->where('user_id',$tempUser)->count('production_id');
@@ -1082,8 +1095,8 @@ class FilmfestController extends Controller
                                 'phone'=>$tempPhone,
                                 'role'=>$role,
                                 'num'=>$num,
-                                'undeterminedNum'=>$undeterminedNum,
-                                'designateNum'=>$designateNum,
+//                                'undeterminedNum'=>$undeterminedNum,
+//                                'designateNum'=>$designateNum,
                                 'complete_watch_num_proportion'=>$complete_watch_num_proportion,
                                 'again_watch_num_proportion'=>$again_watch_num_proportion,
                             ];
@@ -1093,10 +1106,10 @@ class FilmfestController extends Controller
                         return response()->json(['topData'=>$topData,'mainData'=>$mainData]);
 
                     }else{
-                        return response()->json(['message'=>'还没有人是这个分组的管理员，请您块去添加'],200);
+                        return response()->json(['topData'=>$topData,'message'=>'暂无成员！！'],200);
                     }
                 }else{
-                    return response()->json(['message'=>'还没有分组']);
+                    return response()->json(['topData'=>$topData,'message'=>'还没有分组']);
                 }
             }
 
@@ -1116,13 +1129,15 @@ class FilmfestController extends Controller
         if($is_issue){
             $menu = [
                 [
-                    'icon'=>'bar-chart',
+                    'icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/analysis.png',
+                    'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/analysis_l.png',
                     'key'=>'analyse',
                     'des'=>'分析页',
                     'uri'=>'/manage/analyse'
                 ],
                 [
-                    'icon'=>'user',
+                    'icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/examination.png',
+                    'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/examination_l.png',
                     'key'=>'sub1',
                     'des'=>'审片室',
                     'uri'=>'',
@@ -1156,22 +1171,27 @@ class FilmfestController extends Controller
                         'des'=>$v->name,
                         'uri'=>'/manage/working-team',
                         'key'=>'working-team',
-                        'icon'=>'team',
+                        'icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/working_group.png',
+                        'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/working_group_l.png',
                     ];
                     array_push($menu,$tempData);
                 }
             }
-            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'setting'],['des'=>'导出表格','uri'=>'','key'=>'','icon'=>'']);
+            array_push($menu,['des'=>'设置','uri'=>'/manage/set','key'=>'set','icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/set.png',
+                'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/set_l.png',],['des'=>'导出表格','uri'=>'/manage/export-excel','key'=>'export-excel','icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/excel.png',
+                'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/excel_l.png',]);
         }else{
             $menu = [
                 [
-                    'icon'=>'bar-chart',
+                    'icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/analysis.png',
+                    'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/analysis_l.png',
                     'key'=>'analyse',
                     'des'=>'分析页',
                     'uri'=>'/manage/analyse'
                 ],
                 [
-                    'icon'=>'user',
+                    'icon'=>'http://img.cdn.hivideo.com/hivideo/web/icon/examination.png',
+                    'iconActive'=>'http://img.cdn.hivideo.com/hivideo/web/icon/examination_l.png',
                     'key'=>'sub1',
                     'des'=>'审片室',
                     'uri'=>'',
@@ -1300,7 +1320,7 @@ class FilmfestController extends Controller
                             continue;
                         }else{
                             $user_id = $v->id;
-                            $avatar = $v->avatar;
+                            $avatar = 'http://'.$v->avatar;
                             $nickName = $v->nickname;
                             $fansNum = $v->hasManySubscriptions()->get()->count();
                             $tempData = [
@@ -1318,7 +1338,7 @@ class FilmfestController extends Controller
                     }
                 }
             }else{
-                return response()->json(['message'=>'您还没有关注认证用户，请先关注'],200);
+                return response()->json(['message'=>'您还没有关注认证用户，请先关注','limitNum'=>$limitNum,'vacancyNum'=>$vacancyNum,'usabelNum'=>$usabelNum,'filmfest_id'=>$filmfest_id],200);
             }
 
             return response()->json(['limitNum'=>$limitNum,'vacancyNum'=>$vacancyNum,'data'=>$data,'usabelNum'=>$usabelNum,'filmfest_id'=>$filmfest_id],200);
@@ -1470,6 +1490,7 @@ class FilmfestController extends Controller
                             $user -> is_film_add =1;
                             $user -> created_at = time();
                             $user -> updated_at = time();
+                            $user -> avatar = 'img.cdn.hivideo.com/hivideo/web/headportraiticon_300*300_.png';
                             $user -> save();
 
                             $finallyUser = new TestUser;
@@ -1608,7 +1629,7 @@ class FilmfestController extends Controller
                 $logNum = $logs ->count();
 
                 $logs = FilmfestUserReviewChildLog::where('user_id',$id)->where('filmfest_id',$filmfest_id)
-                    ->orderBy('time_add','desc')->limit($page*(25))->get();
+                    ->orderBy('time_add','desc')->limit(25)->get();
 
                 $log = [];
 
@@ -1625,7 +1646,7 @@ class FilmfestController extends Controller
 
                 $data = [
                     'filmfest_id'=>$filmfest_id,
-                    'avatar'=>$avatar,
+                    'avatar'=>'http://'.$avatar,
                     'nickname'=>$nickName,
                     'phone'=>$phone,
                     'role'=>$role,
@@ -2070,6 +2091,49 @@ class FilmfestController extends Controller
             return response()->json(['message'=>'发送成功'],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function intoFilmfest(Request $request)
+    {
+        try{
+            $filmfest_id = $request->get('id');
+            $user = \Auth::guard('api')->user()->id;
+            $time = time();
+            $filmfest = Filmfests::select(['id','period','name','logo'])->where('id','=',$filmfest_id)->whereHas('user',function ($q) use($user){
+                $q->where('user.id','=',$user);
+            })->first();
+
+            if($filmfest && $time>($filmfest->close_filmfest_time)){
+                $is_enter_end = User::where('id',$user)->whereHas('filmfestUserRoleGroup',function ($q) use($filmfest_id){
+                    $q->where('filmfest_user_role_group.filmfest_id',$filmfest_id)->where('filmfest_user_role_group.enter_end_status',1);
+                })->first();
+            }else{
+                $is_enter_end = true;
+            }
+            $issue = User::where('id',$user)->whereHas('filmfest_role',function ($q)use($filmfest_id){
+                $q->where('role_name','like','%发起%')->where('filmfest_id',$filmfest_id);
+            })->first();
+            if($filmfest && ($is_enter_end || $issue)){
+                $name = '第'.$filmfest->period.'届'.$filmfest->name;
+                $logo = 'http://'.$filmfest->logo;
+                $id = $filmfest->id;
+                $data = [
+                    'name'=>$name,
+                    'id'=>$id,
+                    'logo'=>$logo,
+                ];
+                return response()->json(['data'=>$data],200);
+            }else{
+                $filmfest = Filmfests::find($filmfest_id);
+                $name = '第'.$filmfest->period.'届'.$filmfest->name;
+                $logo = 'http://'.$filmfest->logo;
+                return response()->json(['message'=>'您不具备此权限','name'=>$name,'logo'=>$logo],200);
+            }
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['message'=>'not_found'],200);
         }
     }
 

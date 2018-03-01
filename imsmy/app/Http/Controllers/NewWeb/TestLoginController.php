@@ -145,6 +145,7 @@ class TestLoginController extends Controller
                             $user -> is_phonenumber = 1;
                             $user -> created_at = time();
                             $user -> updated_at = time();
+                            $user -> avatar = 'img.cdn.hivideo.com/hivideo/web/headportraiticon_300*300_.png';
                             $user -> save();
 
                             $finallyUser = new TestUser;
