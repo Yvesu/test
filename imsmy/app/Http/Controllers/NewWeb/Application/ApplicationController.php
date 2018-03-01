@@ -31,6 +31,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use CloudStorage;
+use Qiniu\Auth;
+use Qiniu\Processing\PersistentFop;
 
 class ApplicationController extends Controller
 {
@@ -41,19 +43,26 @@ class ApplicationController extends Controller
     {
         try{
             $filmfest_id = $request->get('filmfests_id',null);
-            $filmfest_name = $request->get('filmfest_name');
+//            $filmfest_name = $request->get('filmfest_name');
+            $filmfest = Filmfests::find($filmfest_id);
+            $logo = 'http://'.$filmfest->logo;
+            $filmfest_name = '第'.$filmfest->period.'届'.$filmfest->name;
             $user = \Auth::guard('api')->user()->id;
             $ok = Filmfests::where('id','=',$filmfest_id)->whereHas('user',function ($q) use($user){
                 $q->where('user.id',$user);
             })->first();
+            $open = Filmfests::find($filmfest_id)->is_open;
+            if((int)$open===0){
+                return response()->json(['name'=>$filmfest_name,'message'=>'竞赛未开启,不能报名','logo'=>$logo],200);
+            }
             if($ok){
-                return response()->json(['message'=>'您是管理者，不可以参与']);
+                return response()->json(['name'=>$filmfest_name,'message'=>'您是管理者，不可以参与','logo'=>$logo]);
             }else{
                 $is_over = Application::where('user_id',$user)->where('is_over','=',1)->where('filmfests_id',$filmfest_id)->first();
                 if($is_over){
-                    return response()->json(['message'=>'您已经报过名了'],200);
+                    return response()->json(['message'=>'您已经报过名了','name'=>$filmfest_name,'logo'=>$logo],200);
                 }else{
-                    return response()->json(['data'=>['name'=>$filmfest_name,'id'=>$filmfest_id]],200);
+                    return response()->json(['data'=>['name'=>$filmfest_name,'id'=>$filmfest_id,'logo'=>$logo]],200);
                 }
             }
         }catch (ModelNotFoundException $q){
@@ -77,6 +86,7 @@ class ApplicationController extends Controller
                 $filmfest_name = $filmfest->name;
                 $period = $filmfest->period;
                 $des = $filmfest -> des;
+                $nameRule = $filmfest->name_rule_data;
             }else{
                 return response()->json(['message'=>'该电影节不存在'],200);
             }
@@ -107,10 +117,16 @@ class ApplicationController extends Controller
 //                        'protocol_address' => $protocol_address,
                         'number'=>$oldData->number,
                         'user_id'=>$user,
+                        'nameRuleData'=>$nameRule,
                     ];
                 }else{
                     DB::beginTransaction();
-                    $number = (Application::where('filmfests_id','=',$filmfest_id)->get()->max('number'))+1;
+                    $num = Application::where('filmfests_id','=',$filmfest_id)->get();
+                    if($num->count()<=0){
+                        $number = (int)((Filmfests::find($filmfest_id)->number_title).'0001');
+                    }else{
+                        $number = (Application::where('filmfests_id','=',$filmfest_id)->get()->max('number'))+1;
+                    }
                     $newApplication = new Application;
                     $newApplication -> user_id = $user;
                     $newApplication -> filmfests_id = $filmfest_id;
@@ -130,7 +146,8 @@ class ApplicationController extends Controller
 //                        'protocol' => '',
                         'papers' => '',
 //                        'protocol_address' => '',
-                        'number'=> '',
+                        'number'=> $number,
+                        'nameRuleData'=>$nameRule,
                     ];
                 }
             }elseif ($status == 1){
@@ -147,6 +164,7 @@ class ApplicationController extends Controller
                     'papers'=>$oldData->papers,
 //                    'protocol_address' => $protocol_address,
                     'number'=>$oldData->number,
+                    'nameRuleData'=>$nameRule,
                 ];
             }else{
                 return response()->json(['message'=>'not_found'],404);
@@ -634,9 +652,8 @@ class ApplicationController extends Controller
             $communication_detail_address = $request->get('communication_detail_address',null);
             $creater_des = $request->get('creater_des',null);
             $other_creater_des = $request->get('other_creater_des',null);
-            if(is_null($id)||is_null($filmfests_id)||is_null($creater_name)||is_null($director_name)||
-                is_null($photography_name)||is_null($scriptwriter_name)||is_null($cutting_name)||
-                is_null($hero_name)||is_null($heroine_name)||is_null($contact_phone)||is_null($contact_email)||is_null($school)||
+            if(is_null($id)||is_null($filmfests_id)||is_null($creater_name)||is_null($director_name)||is_null($scriptwriter_name)||
+                is_null($contact_phone)||is_null($contact_email)||is_null($school)||
                 is_null($major)||is_null($adviser_name)||is_null($adviser_phone)||
                 is_null($enter_school_time)||is_null($communication_address_country)||
                 is_null($communication_detail_address)||is_null($creater_des)||is_null($other_creater_des)){
@@ -711,11 +728,16 @@ class ApplicationController extends Controller
                 $contact_phone_way -> save();
             }
             DB::commit();
+            $filmfest = Filmfests::find($filmfests_id);
             $data = [
                 'id'=>$id,
                 'user_id'=> $user,
                 'filmfests_id'=>$filmfests_id,
                 'university_id'=>$application->university_id,
+                'nameRuleClips'=>$filmfest->name_rule_clips,
+                'nameRulePoster'=>$filmfest->name_rule_poster,
+                'nameRuleProduction'=>$filmfest->name_rule_production,
+                'application_id'=>$application->number,
             ];
             return response()->json(['data'=>$data],200);
         }catch (ModelNotFoundException $q){
@@ -723,7 +745,7 @@ class ApplicationController extends Controller
         }
     }
 
-    public function pageSubmit(Request $request)
+    public function pageSubmit1(Request $request)
     {
         try{
             $application_id = $request ->get('id',null);                    //  报名表id
@@ -814,9 +836,9 @@ class ApplicationController extends Controller
                 }else{
                     return response()->json(['message'=>'片花保存失败',200]);
                 }
-                $cover = CloudStorage::saveCover($movie_clips,$movie_clips,$width,$height);
+                $cover = CloudStorage::saveCover($movie_clips,$movie_clips,$movie_clips_width,$movie_clips_height);
                 if($cover){
-                    $movie_clips_screen_shot = $movie_clips.'vframe-001_'.$width.'*'.$height.'_.jpg';
+                    $movie_clips_screen_shot = $movie_clips.'vframe-001_'.$movie_clips_width.'*'.$movie_clips_height.'_.jpg';
                 }else{
                     return response()->json(['message'=>'保存图片失败'],200);
                 }
@@ -842,6 +864,8 @@ class ApplicationController extends Controller
                         $oldVideoDuration =$oldTweet->duration;
                         $oldVideo = $oldTweet->video;
                         $widthAndHeight = $oldTweet->screen_shot;
+                        $width = explode('*',$widthAndHeight)[0];
+                        $height = explode('*',$widthAndHeight)[1];
                         if(!$production){
                             return response()->json(['message'=>'数据不存在'],200);
                         }
@@ -886,7 +910,7 @@ class ApplicationController extends Controller
                         $application_form -> number = $number;
                         $application_form -> save();
                         $units = $application_form->filmType()->get();
-                        $is_pass = false;
+                        $pass = [];
                         if($units->count()>0){
                             foreach ($units as $item => $value)
                             {
@@ -895,14 +919,24 @@ class ApplicationController extends Controller
                                 if($filmfestFilmType->is_auto_pass === 1){
                                     if($oldVideoDuration<($filmfestFilmType->lt_time) || $oldVideoDuration>($filmfestFilmType->gt_time)){
                                         $is_pass = true;
+                                        array_push($pass,$is_pass);
                                     }else{
                                         $is_pass = false;
+                                        array_push($pass,$is_pass);
                                     }
                                 }
 
                             }
                         }
-
+                        if(is_null($pass)){
+                            $is_pass = true;
+                        }else{
+                            if(in_array(false,$pass)){
+                                $is_pass = false;
+                            }else{
+                                $is_pass = true;
+                            }
+                        }
                         $filmfestProductionData = new FilmfestsProductions;
                         $filmfestProductionData -> filmfests_id = $filmfests_id;
                         $filmfestProductionData -> tweet_productions_id = $tweet_production_id;
@@ -927,7 +961,7 @@ class ApplicationController extends Controller
                             $newProductionFilmType -> save();
                         }
 
-                        $active_id = Filmfest::find($filmfests_id)->active_id;
+                        $active_id = Filmfests::find($filmfests_id)->active_id;
                         $active = Activity::find($active_id);
                         $active->work_count = $active->work_count + 1;
                         $active->users_count = $active->users_count + 1;
@@ -948,67 +982,9 @@ class ApplicationController extends Controller
                         $newActivityTweet -> time_update = time();
                         $newActivityTweet -> save();
 
-                        $filmfest = Filmfests::find($filmfests_id);
-                        $titleStatus = $filmfest->titles_of_film_status;
-                        $tailStatus = $filmfest->tail_leader_status;
-                        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                            $joinStatus = 1;
-                        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                            $joinStatus = 3;
-                        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                            $joinStatus = 2;
-                        }else{
-                            $joinStatus = false;
-                        }
-                        if($joinStatus){
-                            $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                            CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                            $bucket = 'hivideo-video';
-                            $width = explode('*',$widthAndHeight)[0];
-                            $height = explode('*',$widthAndHeight)[1];
-                            if($width>=1280 || $height>=960){
-                                $choice = 1;
-                            }else{
-                                $choice = 0;
-                            }
-                            $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                            $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                            $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                            if($messagen ){
-                                if($choice === 1){
-                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                    $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                    $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                    $newJoinVideoTweet -> time_add = time();
-                                    $newJoinVideoTweet -> time_update = time();
-                                    $newJoinVideoTweet -> save();
-                                }else{
-                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                    $newJoinVideoTweet -> time_add = time();
-                                    $newJoinVideoTweet -> time_update = time();
-                                    $newJoinVideoTweet -> save();
-                                }
-
-                            }
-
-                        }
-
                         DB::commit();
-                        return response()->json(['message'=>'success','tweet_id'=>$production_id],200);
+//                        $this->check($production_id);
+                        return response()->json(['transcoding_id'=>null,'message'=>'success','tweet_id'=>$production_id,'height'=>$height,'width'=>$width,'filmfest_id'=>$filmfests_id],200);
                     }else{
                         $cloud_file = CloudStorageFile::where('id','=',$production_id)->first();
                         if($cloud_file){
@@ -1097,13 +1073,13 @@ class ApplicationController extends Controller
                                 $bucket = 'hivideo-video';
                                 $key = $address;
                                 if($width>=1280){
-                                    $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
-                                    if($message){
+                                    $message10 = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
+                                    if($message10){
                                         $finallyAddress = str_replace($ex,'m3u8',$newAddress);
                                         $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
 //                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
                                         $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                        $production -> transcoding_id = $message;
+                                        $production -> transcoding_id = $message10;
                                         $production -> video ='v.cdn.hivideo.com/'.$newAddress;
                                         $production -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
                                         $production -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
@@ -1150,7 +1126,7 @@ class ApplicationController extends Controller
                                         $application_form -> save();
 
                                         $units = $application_form->filmType()->get();
-                                        $is_pass = false;
+                                        $pass = [];
                                         if($units->count()>0){
                                             foreach ($units as $item => $value)
                                             {
@@ -1159,11 +1135,22 @@ class ApplicationController extends Controller
                                                 if($filmfestFilmType->is_auto_pass === 1){
                                                     if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
                                                         $is_pass = true;
+                                                        array_push($pass,$is_pass);
                                                     }else{
                                                         $is_pass = false;
+                                                        array_push($pass,$is_pass);
                                                     }
                                                 }
 
+                                            }
+                                        }
+                                        if(is_null($pass)){
+                                            $is_pass = true;
+                                        }else{
+                                            if(in_array(false,$pass)){
+                                                $is_pass = false;
+                                            }else{
+                                                $is_pass = true;
                                             }
                                         }
 
@@ -1218,7 +1205,7 @@ class ApplicationController extends Controller
                                         $content -> updated_at = time();
                                         $content ->save();
 
-                                        $active_id = Filmfest::find($filmfests_id)->active_id;
+                                        $active_id = Filmfests::find($filmfests_id)->active_id;
                                         $active = Activity::find($active_id);
                                         $active->work_count = $active->work_count + 1;
                                         $active->users_count = $active->users_count + 1;
@@ -1239,183 +1226,9 @@ class ApplicationController extends Controller
                                         $newActivityTweet -> time_update = time();
                                         $newActivityTweet -> save();
 
-                                        $filmfest = Filmfests::find($filmfests_id);
-                                        $titleStatus = $filmfest->titles_of_film_status;
-                                        $tailStatus = $filmfest->tail_leader_status;
-                                        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                            $joinStatus = 1;
-                                        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                            $joinStatus = 3;
-                                        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                            $joinStatus = 2;
-                                        }else{
-                                            $joinStatus = false;
-                                        }
-                                        if($joinStatus){
-                                            $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                            CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                                            $bucket = 'hivideo-video';
-                                            $width = explode('*',$widthAndHeight)[0];
-                                            $height = explode('*',$widthAndHeight)[1];
-                                            if($width>=1280 || $height>=960){
-                                                $choice = 1;
-                                            }else{
-                                                $choice = 0;
-                                            }
-                                            $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                            $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                            $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                            if($messagen ){
-                                                if($choice === 1){
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }else{
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }
-
-                                            }
-
-                                        }
-
-                                        $filmfest = Filmfests::find($filmfests_id);
-                                        $titleStatus = $filmfest->titles_of_film_status;
-                                        $tailStatus = $filmfest->tail_leader_status;
-                                        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                            $joinStatus = 1;
-                                        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                            $joinStatus = 3;
-                                        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                            $joinStatus = 2;
-                                        }else{
-                                            $joinStatus = false;
-                                        }
-                                        if($joinStatus){
-                                            $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                            CloudStorage::joint($id,$join_video_id,null,$joinStatus);
-                                            $bucket = 'hivideo-video';
-                                            if($width>=1280 || $height>=960){
-                                                $choice = 1;
-                                            }else{
-                                                $choice = 0;
-                                            }
-                                            $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                            $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                            $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                            if($messagen ){
-                                                if($choice === 1){
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }else{
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }
-
-                                            }
-
-                                        }
-
-                                        $filmfest = Filmfests::find($filmfests_id);
-                                        $titleStatus = $filmfest->titles_of_film_status;
-                                        $tailStatus = $filmfest->tail_leader_status;
-                                        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                            $joinStatus = 1;
-                                        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                            $joinStatus = 3;
-                                        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                            $joinStatus = 2;
-                                        }else{
-                                            $joinStatus = false;
-                                        }
-                                        if($joinStatus){
-                                            $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                            CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                                            $bucket = 'hivideo-video';
-                                            $width = explode('*',$widthAndHeight)[0];
-                                            $height = explode('*',$widthAndHeight)[1];
-                                            if($width>=1280 || $height>=960){
-                                                $choice = 1;
-                                            }else{
-                                                $choice = 0;
-                                            }
-                                            $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                            $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                            $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                            if($messagen ){
-                                                if($choice === 1){
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }else{
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }
-
-                                            }
-
-                                        }
-
                                         DB::commit();
-                                        return response()->json(['message'=>'success','tweet_id'=>$id],200);
+//                                        $this->check($id);
+                                        return response()->json(['transcoding_id'=>$message10,'message'=>'success','tweet_id'=>$id,'height'=>$height,'width'=>$width,'filmfest_id'=>$filmfests_id],200);
 
                                     }else{
                                         $production -> active =8;
@@ -1426,10 +1239,10 @@ class ApplicationController extends Controller
                                         return response()->json(['message'=>'转码失败'],200);
                                     }
                                 }else{
-                                    $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=0);
-                                    if($message){
+                                    $message10 = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=0);
+                                    if($message10){
                                         $finallyAddress = str_replace($ex,'m3u8',$newAddress);
-                                        $production -> transcoding_id = $message;
+                                        $production -> transcoding_id = $message10;
                                         $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
                                         $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
                                         $production -> video ='v.cdn.hivideo.com/'.$newAddress;
@@ -1477,7 +1290,7 @@ class ApplicationController extends Controller
                                         $application_form -> save();
 
                                         $units = $application_form->filmType()->get();
-                                        $is_pass = false;
+                                        $pass = [];
                                         if($units->count()>0){
                                             foreach ($units as $item => $value)
                                             {
@@ -1486,11 +1299,22 @@ class ApplicationController extends Controller
                                                 if($filmfestFilmType->is_auto_pass === 1){
                                                     if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
                                                         $is_pass = true;
+                                                        array_push($pass,$is_pass);
                                                     }else{
                                                         $is_pass = false;
+                                                        array_push($pass,$is_pass);
                                                     }
                                                 }
 
+                                            }
+                                        }
+                                        if(is_null($pass)){
+                                            $is_pass = true;
+                                        }else{
+                                            if(in_array(false,$pass)){
+                                                $is_pass = false;
+                                            }else{
+                                                $is_pass = true;
                                             }
                                         }
 
@@ -1543,7 +1367,7 @@ class ApplicationController extends Controller
                                         $content -> updated_at = time();
                                         $content ->save();
 
-                                        $active_id = Filmfest::find($filmfests_id)->active_id;
+                                        $active_id = Filmfests::find($filmfests_id)->active_id;
                                         $active = Activity::find($active_id);
                                         $active->work_count = $active->work_count + 1;
                                         $active->users_count = $active->users_count + 1;
@@ -1564,67 +1388,9 @@ class ApplicationController extends Controller
                                         $newActivityTweet -> time_update = time();
                                         $newActivityTweet -> save();
 
-                                        $filmfest = Filmfests::find($filmfests_id);
-                                        $titleStatus = $filmfest->titles_of_film_status;
-                                        $tailStatus = $filmfest->tail_leader_status;
-                                        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                            $joinStatus = 1;
-                                        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                            $joinStatus = 3;
-                                        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                            $joinStatus = 2;
-                                        }else{
-                                            $joinStatus = false;
-                                        }
-                                        if($joinStatus){
-                                            $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                            CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                                            $bucket = 'hivideo-video';
-                                            $width = explode('*',$widthAndHeight)[0];
-                                            $height = explode('*',$widthAndHeight)[1];
-                                            if($width>=1280 || $height>=960){
-                                                $choice = 1;
-                                            }else{
-                                                $choice = 0;
-                                            }
-                                            $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                            $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                            $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                            if($messagen ){
-                                                if($choice === 1){
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }else{
-                                                    $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                                    $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                                    $newJoinVideoTweet = new JoinVideoTweet;
-                                                    $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                                    $newJoinVideoTweet -> tweet_id = $production_id;
-                                                    $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                                    $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                                    $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                                    $newJoinVideoTweet -> time_add = time();
-                                                    $newJoinVideoTweet -> time_update = time();
-                                                    $newJoinVideoTweet -> save();
-                                                }
-
-                                            }
-
-                                        }
-
                                         DB::commit();
-                                        return response()->json(['message'=>'success','tweet_id'=>$id],200);
+//                                        $this->check($id);
+                                        return response()->json(['transcoding_id'=>$message10,'message'=>'success','tweet_id'=>$id,'height'=>$height,'width'=>$width,'filmfest_id'=>$filmfests_id],200);
                                     }else{
                                         $production -> active =8;
                                         $production -> updated_at = time();
@@ -1743,13 +1509,13 @@ class ApplicationController extends Controller
                         $bucket = 'hivideo-video';
                         $key = $address;
                         if($width>=1280){
-                            $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
-                            if($message){
+                            $message10 = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=1);
+                            if($message10){
                                 $finallyAddress = str_replace($ex,'m3u8',$newAddress);
                                 $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
 //                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
                                 $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                $production -> transcoding_id = $message;
+                                $production -> transcoding_id = $message10;
                                 $production -> video ='v.cdn.hivideo.com/'.$newAddress;
                                 $production -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
                                 $production -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
@@ -1796,7 +1562,7 @@ class ApplicationController extends Controller
                                 $application_form -> save();
 
                                 $units = $application_form->filmType()->get();
-                                $is_pass = false;
+                                $pass = [];
                                 if($units->count()>0){
                                     foreach ($units as $item => $value)
                                     {
@@ -1805,11 +1571,22 @@ class ApplicationController extends Controller
                                         if($filmfestFilmType->is_auto_pass === 1){
                                             if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
                                                 $is_pass = true;
+                                                array_push($pass,$is_pass);
                                             }else{
                                                 $is_pass = false;
+                                                array_push($pass,$is_pass);
                                             }
                                         }
 
+                                    }
+                                }
+                                if(is_null($pass)){
+                                    $is_pass = true;
+                                }else{
+                                    if(in_array(false,$pass)){
+                                        $is_pass = false;
+                                    }else{
+                                        $is_pass = true;
                                     }
                                 }
 
@@ -1863,7 +1640,7 @@ class ApplicationController extends Controller
                                 $content -> updated_at = time();
                                 $content ->save();
 
-                                $active_id = Filmfest::find($filmfests_id)->active_id;
+                                $active_id = Filmfests::find($filmfests_id)->active_id;
                                 $active = Activity::find($active_id);
                                 $active->work_count = $active->work_count + 1;
                                 $active->users_count = $active->users_count + 1;
@@ -1884,67 +1661,9 @@ class ApplicationController extends Controller
                                 $newActivityTweet -> time_update = time();
                                 $newActivityTweet -> save();
 
-                                $filmfest = Filmfests::find($filmfests_id);
-                                $titleStatus = $filmfest->titles_of_film_status;
-                                $tailStatus = $filmfest->tail_leader_status;
-                                if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                    $joinStatus = 1;
-                                }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                    $joinStatus = 3;
-                                }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                    $joinStatus = 2;
-                                }else{
-                                    $joinStatus = false;
-                                }
-                                if($joinStatus){
-                                    $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                    CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                                    $bucket = 'hivideo-video';
-                                    $width = explode('*',$widthAndHeight)[0];
-                                    $height = explode('*',$widthAndHeight)[1];
-                                    if($width>=1280 || $height>=960){
-                                        $choice = 1;
-                                    }else{
-                                        $choice = 0;
-                                    }
-                                    $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                    $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                    $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                    if($messagen ){
-                                        if($choice === 1){
-                                            $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                            $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                            $newJoinVideoTweet = new JoinVideoTweet;
-                                            $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                            $newJoinVideoTweet -> tweet_id = $production_id;
-                                            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                            $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                            $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                            $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                            $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                            $newJoinVideoTweet -> time_add = time();
-                                            $newJoinVideoTweet -> time_update = time();
-                                            $newJoinVideoTweet -> save();
-                                        }else{
-                                            $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                            $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                            $newJoinVideoTweet = new JoinVideoTweet;
-                                            $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                            $newJoinVideoTweet -> tweet_id = $production_id;
-                                            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                            $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                            $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                            $newJoinVideoTweet -> time_add = time();
-                                            $newJoinVideoTweet -> time_update = time();
-                                            $newJoinVideoTweet -> save();
-                                        }
-
-                                    }
-
-                                }
-
                                 DB::commit();
-                                return response()->json(['message'=>'success','tweet_id'=>$id],200);
+//                                $this->check($id);
+                                return response()->json(['transcoding_id'=>$message10,'message'=>'success','tweet_id'=>$id,'height'=>$height,'width'=>$width,'filmfest_id'=>$filmfests_id],200);
 
                             }else{
                                 $production -> active =8;
@@ -1955,10 +1674,10 @@ class ApplicationController extends Controller
                                 return response()->json(['message'=>'转码失败'],200);
                             }
                         }else{
-                            $message = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=0);
-                            if($message){
+                            $message10 = CloudStorage::transcoding($bucket,$key,$width,$height,$choice=0);
+                            if($message10){
                                 $finallyAddress = str_replace($ex,'m3u8',$newAddress);
-                                $production -> transcoding_id = $message;
+                                $production -> transcoding_id = $message10;
                                 $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
                                 $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
                                 $production -> video ='v.cdn.hivideo.com/'.$newAddress;
@@ -2006,7 +1725,7 @@ class ApplicationController extends Controller
                                 $application_form -> save();
 
                                 $units = $application_form->filmType()->get();
-                                $is_pass = false;
+                                $pass = [];
                                 if($units->count()>0){
                                     foreach ($units as $item => $value)
                                     {
@@ -2015,11 +1734,22 @@ class ApplicationController extends Controller
                                         if($filmfestFilmType->is_auto_pass === 1){
                                             if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
                                                 $is_pass = true;
+                                                array_push($pass,$is_pass);
                                             }else{
                                                 $is_pass = false;
+                                                array_push($pass,$is_pass);
                                             }
                                         }
 
+                                    }
+                                }
+                                if(is_null($pass)){
+                                    $is_pass = true;
+                                }else{
+                                    if(in_array(false,$pass)){
+                                        $is_pass = false;
+                                    }else{
+                                        $is_pass = true;
                                     }
                                 }
 
@@ -2081,7 +1811,7 @@ class ApplicationController extends Controller
                                 }
 
 
-                                $active_id = Filmfest::find($filmfests_id)->active_id;
+                                $active_id = Filmfests::find($filmfests_id)->active_id;
                                 $active = Activity::find($active_id);
                                 $active->work_count = $active->work_count + 1;
                                 $active->users_count = $active->users_count + 1;
@@ -2102,67 +1832,9 @@ class ApplicationController extends Controller
                                 $newActivityTweet -> time_update = time();
                                 $newActivityTweet -> save();
 
-                                $filmfest = Filmfests::find($filmfests_id);
-                                $titleStatus = $filmfest->titles_of_film_status;
-                                $tailStatus = $filmfest->tail_leader_status;
-                                if((int)$titleStatus === 1 && (int)$tailStatus === 1){
-                                    $joinStatus = 1;
-                                }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
-                                    $joinStatus = 3;
-                                }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
-                                    $joinStatus = 2;
-                                }else{
-                                    $joinStatus = false;
-                                }
-                                if($joinStatus){
-                                    $join_video_id = JoinVideo::where('activity_id',$active_id)->first();
-                                    CloudStorage::joint($production_id,$join_video_id,null,$joinStatus);
-                                    $bucket = 'hivideo-video';
-                                    $width = explode('*',$widthAndHeight)[0];
-                                    $height = explode('*',$widthAndHeight)[1];
-                                    if($width>=1280 || $height>=960){
-                                        $choice = 1;
-                                    }else{
-                                        $choice = 0;
-                                    }
-                                    $joinVideo = str_replace('v.cdn.hivideo.com','&'.$production_id.'&&',$oldVideo);
-                                    $ex = pathinfo($joinVideo, PATHINFO_EXTENSION);
-                                    $messagen = CloudStorage::transcoding($bucket,$joinVideo,$width,$height,$choice);
-                                    if($messagen ){
-                                        if($choice === 1){
-                                            $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                            $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                            $newJoinVideoTweet = new JoinVideoTweet;
-                                            $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                            $newJoinVideoTweet -> tweet_id = $production_id;
-                                            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                            $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                            $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
-                                            $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
-                                            $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                            $newJoinVideoTweet -> time_add = time();
-                                            $newJoinVideoTweet -> time_update = time();
-                                            $newJoinVideoTweet -> save();
-                                        }else{
-                                            $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$joinVideo);
-                                            $finallyAddress = str_replace($ex,'m3u8',$joinVideo);
-                                            $newJoinVideoTweet = new JoinVideoTweet;
-                                            $newJoinVideoTweet -> join_video_id = $join_video_id;
-                                            $newJoinVideoTweet -> tweet_id = $production_id;
-                                            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
-                                            $newJoinVideoTweet -> video ='v.cdn.hivideo.com/'.$joinVideo;
-                                            $newJoinVideoTweet -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
-                                            $newJoinVideoTweet -> time_add = time();
-                                            $newJoinVideoTweet -> time_update = time();
-                                            $newJoinVideoTweet -> save();
-                                        }
-
-                                    }
-
-                                }
-
                                 DB::commit();
-                                return response()->json(['message'=>'success','tweet_id'=>$id],200);
+//                                $this->check($id);
+                                return response()->json(['transcoding_id'=>$message10,'message'=>'success','tweet_id'=>$id,'height'=>$height,'width'=>$width,'filmfest_id'=>$filmfests_id],200);
                             }else{
                                 $production -> active =8;
                                 $production -> updated_at = time();
@@ -2184,11 +1856,715 @@ class ApplicationController extends Controller
                     }
                 }
             }else{
-                return response()->json(['message'=>'异常'],200);
+                return response()->json(['message'=>'异常21'],200);
             }
 
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function pageSubmit(Request $request)
+    {
+        try{
+            $application_id = $request ->get('id',null);                    //  报名表id
+            $filmfests_id = $request->get('filmfests_id',null);             //  电影节id
+            $user = $user = \Auth::guard('api')->user()->id;          //  用户id
+            $movie_clips = $request->get('movie_clips',null);               //  片花地址
+            $is_original_clips = $request->get('is_original_clips',0);      //  是否有原视频作为片花
+            $is_cloud_clips = $request->get('is_cloud_clips',0);            //  片花是否是云空间的文件
+            $clips_id = $request->get('clips_id',null);                     //  原片花视频id
+            $is_original_video = $request->get('is_original_video',0);      //  是否原有视频
+            $address = $request->get('address',null);                       //  视频地址
+            $production_id = $request->get('production_id',null);           //  原视频动态id
+            $university_id = $request->get('university_id',null);           //  学校id
+            $poster = $request->get('poster',null);                        //  海报地址
+            $is_download = $request->get('is_download',1);                  //  能否下载
+            $is_reply = $request->get('is_reply',1);                        //  能否评论
+            $visible = $request->get('visible',0);                          //  观看权限
+            $size = $request->get('size',0);                                //  视频大小
+            $is_cloud = $request->get('is_cloud',0);                        //  是否是云空间的视频
+            if($visible==3){
+                $is_download = 0;
+                $is_reply = 0;
+                $visible = 2;
+            }
+            $is_over = Application::where('user_id',$user)->where('is_over','=',1)->where('filmfests_id',$filmfests_id)->first();
+            if($is_over){
+                return response()->json(['message'=>'您已经报过名了'],200);
+            }
+            $ok = Filmfests::where('id','=',$user)->whereHas('user',function ($q) use($user){
+                $q->where('user.id',$user);
+            })->first();
+            if($ok){
+                return response()->json(['message'=>'您是管理者，不可以参与']);
+            }
+            //  保存片花和海报
+            /**
+             * 是否用原视频做片花
+             */
+            if($is_original_clips == 1){
+                if($is_cloud_clips==1){
+                    //  云空间视频暂时无封面，先搁置
+                    $movie_clip = CloudStorageFile::find($clips_id);
+                    $movie_clips_video = $movie_clip->address;
+                    $movie_clips_screen_shot = $movie_clip->screenshot;
+                    $movie_clips_duration = $movie_clip->duration;
+                    $message2[0]['code']=200;
+                    $movie_clips_transcoding = $movie_clip->transcoding_video;
+                    $movie_clips_video_m3u8 = $movie_clip->video_m3u8;
+                }else{
+                    $movie_clip = Tweet::find($clips_id)->video;
+                    $movie_clips_video = $movie_clip->video;
+                    $movie_clips_screen_shot = $movie_clip->screen_shot;
+                    $movie_clips_duration = $movie_clip->duration;
+                    $movie_clips_video_m3u8 = $movie_clip->video_m3u8;
+                    $movie_clips_transcoding = $movie_clip->transcoding_video;
+                    $message2[0]['code']=200;
+                }
+            }else{
+                $keys2 = [];
+                array_push($keys2,$movie_clips);
+                $keyPairs2 = array();
+                foreach ($keys2 as $key)
+                {
+                    $keyPairs2[$key] = $key;
+                }
+                $srcbucket2 = 'hivideo-video-ects';
+                $destbucket2 = 'hivideo-video';
+                $message2 = CloudStorage::copyfile($keyPairs2,$srcbucket2,$destbucket2);
+                $url = "http://video.ects.cdn.hivideo.com/".$movie_clips.'?avinfo';
+                $ex = pathinfo($movie_clips, PATHINFO_EXTENSION);
+                $fenBianLv = CloudStorage::getWidthAndHeight($movie_clips);
+                $html = file_get_contents($url);
+                $rule1 = "/\"width\":.*?,/";
+                $rule2 = "/\"height\":.*?,/";
+                $rule3 = "/\"duration\":.*?,/";
+                preg_match($rule1,$html,$width);
+                preg_match($rule2,$html,$height);
+                preg_match($rule3,$html,$duration);
+                $movie_clips_width =rtrim( explode(' ',$width[0])[1],',');
+                $movie_clips_height = rtrim(explode(' ',$height[0])[1],',');
+                $movie_clips_duration = (int)trim(rtrim(explode(' ',$duration[0])[1],','),'"');
+                $newName = str_replace('.'.$ex,'_'.$ex.'.m3u8',$movie_clips);
+                $message = CloudStorage::transcoding($destbucket2,$movie_clips,$movie_clips_width,$movie_clips_height,$choice=0);
+                if($message){
+                    $movie_clips_video = 'v.cdn.hivideo.com/'.$movie_clips;
+                    $movie_clips_transcoding = 'v.cdn.hivideo.com/'.$newName;
+                    $movie_clips_video_m3u8 = 'v.cdn.hivideo.com/'.str_replace($ex,'m3u8',$movie_clips);
+                }else{
+                    return response()->json(['message'=>'片花保存失败',200]);
+                }
+                $cover = CloudStorage::saveCover($movie_clips,$movie_clips,$movie_clips_width,$movie_clips_height);
+                if($cover){
+                    $movie_clips_screen_shot = $movie_clips.'vframe-001_'.$movie_clips_width.'*'.$movie_clips_height.'_.jpg';
+                }else{
+                    return response()->json(['message'=>'保存图片失败'],200);
+                }
+
+
+            }
+            $keys1 = [];
+            array_push($keys1,$poster);
+            $keyPairs1 = array();
+            foreach($keys1 as $key)
+            {
+                $keyPairs1[$key] = $key;
+            }
+            $srcbucket1 = 'hivideo-img-ects';
+            $destbucket1 = 'hivideo-img';
+            $message1 = CloudStorage::copyfile($keyPairs1,$srcbucket1,$destbucket1);
+            if($message1[0]['code']==200 && $message2[0]['code']==200){
+                if($is_original_video == 1){
+                    return response()->json(['message'=>'暂无服务']);
+                }else{
+                    if(is_null($address)||is_null($size)){
+                        return response()->json(['error'=>'数据不合法'],200);
+                    }
+                    $url = "http://video.ects.cdn.hivideo.com/".$address.'?avinfo';
+                    $html = file_get_contents($url);
+                    $rule1 = "/\"width\":.*?,/";
+                    $rule2 = "/\"height\":.*?,/";
+                    $rule3 = "/\"duration\":.*?,/";
+                    preg_match($rule1,$html,$width);
+                    preg_match($rule2,$html,$height);
+                    preg_match($rule3,$html,$duration);
+                    $width =rtrim( explode(' ',$width[0])[1],',');
+                    $height = rtrim(explode(' ',$height[0])[1],',');
+                    $duration = (int)trim(rtrim(explode(' ',$duration[0])[1],','),'"');
+                    DB::beginTransaction();
+                    $tweet = new Tweet;
+                    $tweet -> created_at = time();
+                    $tweet -> updated_at = time();
+                    $tweet -> user_id = $user;
+                    $tweet -> type = 3;
+                    $tweet -> active = 0;
+                    $tweet -> is_download = $is_download;
+                    $tweet -> is_reply = $is_reply;
+                    $tweet -> size = $size;
+                    $tweet -> video = $address;
+                    $tweet -> duration = $duration;
+                    $tweet -> visible = $visible;
+                    $tweet -> save();
+                    DB::commit();
+                    $id = $tweet->id;
+                    $keys1 = [];
+                    DB::beginTransaction();
+                    $production = Tweet::find($id);
+                    $address = $production->video;
+                    //  扩展名
+                    $ex = pathinfo($address, PATHINFO_EXTENSION);
+                    //  分辨率
+                    $fenBianLv = $width.'*'.$height;
+                    $newAddress = str_replace('.'.$ex, '_'.$fenBianLv.'.'.$ex, $address);
+
+                    $production -> active = 0;
+                    $production -> video =$newAddress;
+//                    if($width>=1280){
+//                        $finallyAddress = str_replace($ex,'m3u8',$newAddress);
+//                        $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+//                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$newAddress.'.m3u8';
+//                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
+                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+//                        $production -> high_video = 'v.cdn.hivideo.com/high/'.$finallyAddress;
+//                        $production -> norm_video = 'v.cdn.hivideo.com/norm/'.$finallyAddress;
+//                        $production -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
+                        $production -> is_transcod = 1;
+                        $production -> updated_at = time();
+                        $production -> save();
+
+                        $channel = 11;
+                        ChannelTweet::where('tweet_id',$id)->where('channel_id','=',11)->delete();
+                        $channelTweet = new ChannelTweet;
+                        $channelTweet -> channel_id = $channel;
+                        $channelTweet -> tweet_id = $id;
+                        $channelTweet -> save();
+
+                        if(Application::where('filmfests_id',$filmfests_id)->where('number','>',0)->orderBy('id')->first()){
+                            $number = Application::where('filmfests_id',$filmfests_id)->max('number');
+                            $number = 1 + $number;
+                        }else{
+                            $firstData = '00000001';
+                            $number_title = Filmfests::where('id','=',$filmfests_id)->first()->number_title;
+                            $number = (int)($number_title.$firstData);
+                        }
+
+                        $childData = new TweetProduction;
+                        $childData -> tweet_id = $id;
+                        $childData -> is_current = 1;
+                        $childData -> time_add = time();
+                        $childData -> time_update = time();
+                        $childData -> poster = $poster;
+                        $childData -> movie_clips = $movie_clips_video;
+                        $childData -> movie_clips_screen_shot = $movie_clips_screen_shot;
+                        $childData -> movie_clips_duration = $movie_clips_duration;
+                        $childData -> movie_clios_video_m3u8 = $movie_clips_video_m3u8;
+                        $childData -> movie_clios_transcoding = $movie_clips_transcoding;
+                        $childData -> join_university_id = $university_id;
+                        $childData -> save();
+
+                        $application_form = Application::where('id','=',$application_id)->first();
+                        $application_form -> time_update = time();
+                        $application_form -> production_id = $childData->id;
+                        $application_form -> is_over = 1;
+                        $application_form -> number = $number;
+                        $application_form -> save();
+
+                        $units = $application_form->filmType()->get();
+                        $pass = [];
+                        if($units->count()>0){
+                            foreach ($units as $item => $value)
+                            {
+                                $filmfestFilmType = FilmfestFilmfestType::where('filmfest_id',$filmfests_id)
+                                    ->where('type_id',$value->id)->first();
+                                if($filmfestFilmType->is_auto_pass === 1){
+                                    if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
+                                        $is_pass = true;
+                                        array_push($pass,$is_pass);
+                                    }else{
+                                        $is_pass = false;
+                                        array_push($pass,$is_pass);
+                                    }
+                                }
+
+                            }
+                        }
+                        if(is_null($pass)){
+                            $is_pass = true;
+                        }else{
+                            if(in_array(false,$pass)){
+                                $is_pass = false;
+                            }else{
+                                $is_pass = true;
+                            }
+                        }
+
+                        $filmfestProductionData = new FilmfestsProductions;
+                        $filmfestProductionData -> filmfests_id = $filmfests_id;
+                        $filmfestProductionData -> tweet_productions_id = $childData->id;
+                        $filmfestProductionData -> time_add = time();
+                        $filmfestProductionData -> time_update = time();
+                        if(!$is_pass){
+                            $filmfestProductionData -> status = 4;
+                        }else{
+                            $filmfestProductionData -> status = 0;
+
+                        }
+                        $filmfestProductionData -> save();
+
+                        $applicationProduction = new TweetProductionApplication;
+                        $applicationProduction -> application_id = $application_id;
+                        $applicationProduction -> tweet_production_id = $childData->id;
+                        $applicationProduction -> time_add = time();
+                        $applicationProduction -> time_update = time();
+                        $applicationProduction -> save();
+
+
+                        $productionFilmfestTypes = FilmTypeApplication::where('application_id','=',$application_id)->get();
+                        foreach ($productionFilmfestTypes as $item => $value)
+                        {
+                            $newProductionFilmType = new ProductionFilmType;
+                            $newProductionFilmType -> join_type_id = $value->type_id;
+                            $newProductionFilmType -> production_id = $childData->id;;
+                            $newProductionFilmType -> time_add = time();
+                            $newProductionFilmType -> time_update = time();
+                            $newProductionFilmType -> save();
+                        }
+
+
+                        $oldFilmfestUniversity = FilmfestUniversity::where('university_id',$university_id)->where('filmfest_id',$filmfests_id)->first();
+                        if(!$oldFilmfestUniversity){
+                            $newFilmfestUniversity = new FilmfestUniversity;
+                            $newFilmfestUniversity -> university_id = $university_id;
+                            $newFilmfestUniversity -> filmfest_id = $filmfests_id;
+                            $newFilmfestUniversity -> time_add = time();
+                            $newFilmfestUniversity -> time_update = time();
+                            $newFilmfestUniversity -> join_count = 1;
+                            $newFilmfestUniversity -> save();
+                        }else{
+                            $oldFilmfestUniversity -> join_count = $oldFilmfestUniversity -> join_count + 1;
+                            $oldFilmfestUniversity -> save();
+                        }
+
+                        $content = new TweetContent;
+                        $content -> tweet_id = $id;
+                        $content -> content = $application_form->production_des;
+                        $content -> created_at = time();
+                        $content -> updated_at = time();
+                        $content ->save();
+
+                        $active_id = Filmfests::find($filmfests_id)->active_id;
+                        $active = Activity::find($active_id);
+                        $active->work_count = $active->work_count + 1;
+                        $active->users_count = $active->users_count + 1;
+                        $active->save();
+
+                        $newActivityUser = new ActivityUser;
+                        $newActivityUser -> activity_id = $active_id;
+                        $newActivityUser -> user_id = $user;
+                        $newActivityUser -> time_add = time();
+                        $newActivityUser -> time_update = time();
+                        $newActivityUser -> save();
+
+                        $newActivityTweet = new TweetActivity;
+                        $newActivityTweet -> activity_id = Filmfests::find($filmfests_id)->active_id;
+                        $newActivityTweet -> tweet_id = $id;
+                        $newActivityTweet -> user_id = $user;
+                        $newActivityTweet -> time_add = time();
+                        $newActivityTweet -> time_update = time();
+                        $newActivityTweet -> save();
+
+                        DB::commit();
+//                                $this->check($id);
+                        $shouldData = [
+                            'address'=>$address,
+                            'tweet_id'=>$id,
+                            'height'=>$height,
+                            'width'=>$width,
+                            'filmfest_id'=>$filmfests_id
+                        ];
+                        return response()->json(['message'=>'success','data'=>$shouldData],200);
+
+
+//                    else{
+//                        $finallyAddress = str_replace($ex,'m3u8',$newAddress);
+//                        $transcoding_video = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+////                        $production -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
+//                        $production -> video ='v.cdn.hivideo.com/'.$newAddress;
+////                        $production -> video_m3u8 ='v.cdn.hivideo.com/'.$finallyAddress;
+//                        $production -> is_transcod = 1;
+//                        $production -> updated_at = time();
+//                        $production -> save();
+//
+//
+//                        $channel = 11;
+//                        ChannelTweet::where('tweet_id',$id)->where('channel_id','=',11)->delete();
+//                        $channelTweet = new ChannelTweet;
+//                        $channelTweet -> channel_id = $channel;
+//                        $channelTweet -> tweet_id = $id;
+//                        $channelTweet -> save();
+//
+//                        if(Application::where('filmfests_id',$filmfests_id)->where('number','>',0)->orderBy('id')->first()){
+//                            $number = Application::where('filmfests_id',$filmfests_id)->max('number');
+//                            $number = 1 + $number;
+//                        }else{
+//                            $firstData = '00000001';
+//                            $number_title = Filmfests::where('id','=',$filmfests_id)->first()->number_title;
+//                            $number = (int)($number_title.$firstData);
+//                        }
+//
+//                        $childData = new TweetProduction;
+//                        $childData -> tweet_id = $id;
+//                        $childData -> is_current = 1;
+//                        $childData -> time_add = time();
+//                        $childData -> time_update = time();
+//                        $childData -> poster = $poster;
+//                        $childData -> movie_clips = $movie_clips_video;
+//                        $childData -> movie_clips_screen_shot = $movie_clips_screen_shot;
+//                        $childData -> movie_clips_duration = $movie_clips_duration;
+//                        $childData -> movie_clios_video_m3u8 = $movie_clips_video_m3u8;
+//                        $childData -> movie_clios_transcoding = $movie_clips_transcoding;
+//                        $childData -> join_university_id = $university_id;
+//                        $childData -> save();
+//
+//                        $application_form = Application::where('id','=',$application_id)->first();
+//                        $application_form -> time_update = time();
+//                        $application_form -> production_id = $childData->id;
+//                        $application_form -> is_over = 1;
+//                        $application_form -> number = $number;
+//                        $application_form -> save();
+//
+//                        $units = $application_form->filmType()->get();
+//                        $pass = [];
+//                        if($units->count()>0){
+//                            foreach ($units as $item => $value)
+//                            {
+//                                $filmfestFilmType = FilmfestFilmfestType::where('filmfest_id',$filmfests_id)
+//                                    ->where('type_id',$value->id)->first();
+//                                if($filmfestFilmType->is_auto_pass === 1){
+//                                    if($duration<($filmfestFilmType->lt_time) || $duration>($filmfestFilmType->gt_time)){
+//                                        $is_pass = true;
+//                                        array_push($pass,$is_pass);
+//                                    }else{
+//                                        $is_pass = false;
+//                                        array_push($pass,$is_pass);
+//                                    }
+//                                }
+//
+//                            }
+//                        }
+//                        if(is_null($pass)){
+//                            $is_pass = true;
+//                        }else{
+//                            if(in_array(false,$pass)){
+//                                $is_pass = false;
+//                            }else{
+//                                $is_pass = true;
+//                            }
+//                        }
+//
+//                        $filmfestProductionData = new FilmfestsProductions;
+//                        $filmfestProductionData -> filmfests_id = $filmfests_id;
+//                        $filmfestProductionData -> tweet_productions_id = $childData->id;
+//                        $filmfestProductionData -> time_add = time();
+//                        $filmfestProductionData -> time_update = time();
+//                        if(!$is_pass){
+//                            $filmfestProductionData -> status = 4;
+//                        }else{
+//                            $filmfestProductionData -> status = 0;
+//
+//                        }
+//                        $filmfestProductionData -> save();
+//
+//                        DB::table('zx_tweet_content')->insert(
+//                            [
+//                                'tweet_id'=>$id,
+//                                'content'=>$application_form->production_des,
+//                                'created_at'=>time(),
+//                                'updated_at'=>time()
+//                            ]
+//                        );
+//
+//                        $applicationProduction = new TweetProductionApplication;
+//                        $applicationProduction -> application_id = $application_id;
+//                        $applicationProduction -> tweet_production_id = $childData->id;
+//                        $applicationProduction -> time_add = time();
+//                        $applicationProduction -> time_update = time();
+//                        $applicationProduction -> save();
+//
+//                        $productionFilmfestTypes = FilmTypeApplication::where('application_id','=',$application_id)->get();
+//                        foreach ($productionFilmfestTypes as $item => $value)
+//                        {
+//                            $newProductionFilmType = new ProductionFilmType;
+//                            $newProductionFilmType -> join_type_id = $value->type_id;
+//                            $newProductionFilmType -> production_id = $childData->id;;
+//                            $newProductionFilmType -> time_add = time();
+//                            $newProductionFilmType -> time_update = time();
+//                            $newProductionFilmType -> save();
+//                        }
+//                        $oldFilmfestUniversity = FilmfestUniversity::where('university_id',$university_id)->where('filmfest_id',$filmfests_id)->first();
+//                        if(!$oldFilmfestUniversity){
+//                            $newFilmfestUniversity = new FilmfestUniversity;
+//                            $newFilmfestUniversity -> university_id = $university_id;
+//                            $newFilmfestUniversity -> filmfest_id = $filmfests_id;
+//                            $newFilmfestUniversity -> time_add = time();
+//                            $newFilmfestUniversity -> time_update = time();
+//                            $newFilmfestUniversity -> join_count = 1;
+//                            $newFilmfestUniversity -> save();
+//                        }else{
+//                            $oldFilmfestUniversity -> join_count = $oldFilmfestUniversity -> join_count + 1;
+//                            $oldFilmfestUniversity -> save();
+//                        }
+//
+//
+//                        $active_id = Filmfests::find($filmfests_id)->active_id;
+//                        $active = Activity::find($active_id);
+//                        $active->work_count = $active->work_count + 1;
+//                        $active->users_count = $active->users_count + 1;
+//                        $active->save();
+//
+//                        $newActivityUser = new ActivityUser;
+//                        $newActivityUser -> activity_id = $active_id;
+//                        $newActivityUser -> user_id = $user;
+//                        $newActivityUser -> time_add = time();
+//                        $newActivityUser -> time_update = time();
+//                        $newActivityUser -> save();
+//
+//                        $newActivityTweet = new TweetActivity;
+//                        $newActivityTweet -> activity_id = Filmfests::find($filmfests_id)->active_id;
+//                        $newActivityTweet -> tweet_id = $id;
+//                        $newActivityTweet -> user_id = $user;
+//                        $newActivityTweet -> time_add = time();
+//                        $newActivityTweet -> time_update = time();
+//                        $newActivityTweet -> save();
+//
+//                        DB::commit();
+////                                $this->check($id);
+//                        $shouldData = [
+//                            'address'=>$address,
+//                            'tweet_id'=>$id,
+//                            'height'=>$height,
+//                            'width'=>$width,
+//                            'filmfest_id'=>$filmfests_id
+//                        ];
+//                        return response()->json(['message'=>'success','data'=>$shouldData],200);
+//
+//                    }
+
+                }
+            }else{
+                return response()->json(['message'=>'片花或海报保存失败'],200);
+            }
+
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function qiepian()
+    {
+        $NotifyData = file_get_contents("php://input");
+        $res = json_decode($NotifyData)->code;
+        if ($res === 0 ) {
+            $key = json_decode($NotifyData)->items[0]->key;
+            switch ($key) {
+                case strstr($key, 'norm'):
+                    $tweet_id = getNeedBetween($key, '&', '&&');
+                    $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['norm_video' => $new_url]);
+                    $production_id = Tweet::find($tweet_id)->tweetProduction()->first()->id;
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id', 1)
+                        ->where('tweet_productions_id', $production_id)->first();
+                    $filmfestProduction->videoStatus = 0;
+                    $filmfestProduction->save();
+                    break;
+                case strstr($key, 'adapt'):
+                    $tweet_id = getNeedBetween($key, '&', '&&');
+                    $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['transcoding_video' => $new_url]);
+                    $production_id = Tweet::find($tweet_id)->tweetProduction()->first()->id;
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id', 1)
+                        ->where('tweet_productions_id', $production_id)->first();
+                    $filmfestProduction->videoStatus = 0;
+                    $filmfestProduction->save();
+                    break;
+                case strstr($key, 'original'):
+                    $tweet_id = getNeedBetween($key, '&', '&&');
+                    $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['video_m3u8' => $new_url]);
+                    $production_id = Tweet::find($tweet_id)->tweetProduction()->first()->id;
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id', 1)
+                        ->where('tweet_productions_id', $production_id)->first();
+                    $filmfestProduction->videoStatus = 0;
+                    $filmfestProduction->save();
+                    break;
+                case strstr($key, 'high'):
+                    $tweet_id = getNeedBetween($key, '&', '&&');
+                    $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+                    $new_res = Tweet::find($tweet_id)->update(['high_video' => $new_url]);
+                    $production_id = Tweet::find($tweet_id)->tweetProduction()->first()->id;
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id', 1)
+                        ->where('tweet_productions_id', $production_id)->first();
+                    $filmfestProduction->videoStatus = 0;
+                    $filmfestProduction->save();
+                    break;
+                default :
+                    die;
+
+            }
+        }
+    }
+    
+    public function getSubmit(Request $request)
+    {
+        try{
+            $address = $request->get('address');
+            $tweet_id = $request->get('id');
+            $height = (int)$request->get('height');
+            $width = (int)$request->get('width');
+            $filmfest_id = $request->get('filmfest_id');
+            if($width>=1280){
+                $choice = 1;
+            }else{
+                $choice = 0;
+            }
+            $keys1 = [];
+            array_push($keys1,$address);
+            $keyPairs1 = array();
+            foreach($keys1 as $key)
+            {
+                $keyPairs1[$key] = $key;
+            }
+            $srcbucket = 'hivideo-video-ects';
+            $destbucket = 'hivideo-video';
+            $notice = 'http://www.hivideo.com/api/notice_transcoding';
+            //  扩展名
+            $ex = pathinfo($address, PATHINFO_EXTENSION);
+            //  分辨率
+            $fenBianLv = CloudStorage::getWidthAndHeight($address);
+            //  移动到正式空间  还没改名字
+            $message = CloudStorage::copyfile($keyPairs1,$srcbucket,$destbucket);
+            $newAddress = str_replace('.'.$ex, '_'.$fenBianLv.'.'.$ex, $address);
+            //  重命名
+            $move = CloudStorage::reNameFile($destbucket,$address,$destbucket,$newAddress);
+            //  截图
+            $cover = CloudStorage::saveCover($address,$newAddress,$width,$height);
+            $bb = 'img.cdn.hivideo.com/'.$address.'vframe-001_'.$fenBianLv.'_.jpg';
+            //  转码
+            $message = CloudStorage::transcoding_tweet($tweet_id,$destbucket,$newAddress,$width,$height,$choice,$notice);
+            // 更改状态
+            $tweet = Tweet::find($tweet_id);
+            $tweet -> screen_shot = $bb;
+            $tweet -> save();
+            $this->check($tweet_id);
+            //  鉴黄
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found']);
+        }
+    }
+
+//    public function addTitleTail($tweet_id, $filmfest_id,$width,$height)
+    public function addTitleTail(Request $request)
+    {
+        $tweet_id=$request->get('tweet_id');
+        $filmfest_id=$request->get('filmfest_id');
+        $width=$request->get('width');
+        $height=$request->get('height');
+        $filmfest = Filmfests::find($filmfest_id);
+        $tweet = Tweet::find($tweet_id);
+        $titleStatus = $filmfest->titles_of_film_status;
+        $tailStatus = $filmfest->tail_leader_status;
+        if((int)$titleStatus === 1 && (int)$tailStatus === 1){
+            $joinStatus = 1;
+        }elseif ((int)$tailStatus !== 1 && (int)$titleStatus ===1){
+            $joinStatus = 3;
+        }elseif ((int)$tailStatus === 1 && (int)$titleStatus !==1){
+            $joinStatus = 2;
+        }else{
+            $joinStatus = false;
+        }
+        if($width>=1280 || $height>=980){
+            $choice = 1;
+        }else{
+            $choice = 0;
+        }
+        $bucket = 'hivideo-video';
+        $active_id = $filmfest->active_id;
+        $address = str_replace('v.cdn.hivideo.com/','&'.$tweet_id.'&&',$tweet->video);
+        $join_video_id = JoinVideo::where('activity_id',$active_id)->first()->id;
+        if($joinStatus){
+            $message = CloudStorage::joint_tranding($tweet_id,$join_video_id,$notice = null,$joinStatus,$width,$height,$choice,$filmfest_id);
+            $ex = pathinfo($tweet->video, PATHINFO_EXTENSION);
+            $transcoding_video = str_replace($ex,'_'.$ex.'.m3u8',$address);
+            $video_m3u8 = str_replace($ex,'.m3u8',$address);
+            $high_video = 'high'.$video_m3u8;
+            $norm_video = 'norm'.$video_m3u8;
+            $newJoinVideoTweet = new JoinVideoTweet;
+            $newJoinVideoTweet -> join_video_id = $join_video_id;
+            $newJoinVideoTweet -> tweet_id = $tweet_id;
+            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$transcoding_video;
+            $newJoinVideoTweet -> video_m3u8 = 'v.cdn.hivideo.com/'.$video_m3u8;
+            if($choice == 1){
+                $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/'.$high_video;
+                $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/'.$norm_video;
+            }
+            $newJoinVideoTweet -> time_add = time();
+            $newJoinVideoTweet -> time_update = time();
+            $newJoinVideoTweet -> video = 'v.cdn.hivideo.com/'.$address;
+            $newJoinVideoTweet -> save();
+            return response()->json(['message'=>'success']);
+        }else{
+            $newJoinVideoTweet = new JoinVideoTweet;
+            $newJoinVideoTweet -> join_video_id = $join_video_id;
+            $newJoinVideoTweet -> tweet_id = $tweet_id;
+            $newJoinVideoTweet -> transcoding_video = 'v.cdn.hivideo.com/'.$tweet->transcoding_video;
+            $newJoinVideoTweet -> video_m3u8 = 'v.cdn.hivideo.com/'.$tweet->video_m3u8;
+            if($choice == 1){
+                $newJoinVideoTweet -> high_video = 'v.cdn.hivideo.com/'.$tweet->high_video;
+                $newJoinVideoTweet -> norm_video = 'v.cdn.hivideo.com/'.$tweet->$norm_video;
+            }
+            $newJoinVideoTweet -> time_add = time();
+            $newJoinVideoTweet -> time_update = time();
+            $newJoinVideoTweet -> video = 'v.cdn.hivideo.com/'.$address;
+            $newJoinVideoTweet -> save();
+
+            return response()->json(['message'=>'success']);
+        }
+    }
+
+    public function usevideo(Request $request)
+    {
+
+        $id = $request->get('id',null);
+        $filmfest_id = $request->get('filmfest_id',null);
+        $tweet_id = $request->get('tweet_id');
+        $tweet = Tweet::find($tweet_id);
+        $production_id = $tweet->tweetProduction()->first()->id;
+        if(!$id){
+            return response()->json(['message'=>'结束'],200);
+        }else{
+            set_time_limit(0);
+            do{
+                $url = "http://api.qiniu.com/status/get/prefop?id=".$id;
+                $html = json_decode(file_get_contents($url));
+                if($html->code == 3 && $html->desc=='The fop is failed'){
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                        ->where('tweet_productions_id',$production_id)->first();
+                    $filmfestProduction -> videoStatus = 0;
+                    $filmfestProduction -> save();
+                    return response()->json(['message'=>'结束'],200);
+                }
+                if($html->code ==0){
+                    $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                        ->where('tweet_productions_id',$production_id)->first();
+                    $filmfestProduction -> videoStatus = 2;
+                    $filmfestProduction -> save();
+                }
+            }while($html->code ==0);
+            $this->check($tweet_id);
+            return response()->json(['message'=>'success'],200);
         }
     }
 
@@ -2322,9 +2698,10 @@ class ApplicationController extends Controller
     }
 
 
-    public function check(Request $request)
+    public function check($id)
+//    public function check(Request $request)
     {
-        $id = $request->get('id');
+//        $id = $request->get('tweet_id');
         //        //获取动态信息
         $tweet = Tweet::find($id);
 //        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
@@ -2344,115 +2721,115 @@ class ApplicationController extends Controller
             ],
         ];
 
-        $context = stream_context_create($opts);
-        $image_qpulp = file_get_contents($url, false, $context);
-
-        $image_qpulp_res = json_decode($image_qpulp, true);
-
-        if ($image_qpulp_res['result']['label'] == 0) {
-            // 七牛检测未通过  涉及色情
-            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-
-            //创建记录
-            $tweet_qiniu_check = TweetQiniuCheck::create([
-                'user_id'   => $tweet->user_id,
-                'tweet_id' => $tweet->id,
-                'image_qpulp' => 2,
-                'create_time' => time(),
-            ]);
-
-            //创建私信
-            $tweet =  Tweet::find( $tweet->id);
-            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-            $time = time();
-            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-            PrivateLetter::create([
-                'from' => 1000437,
-                'to'    => $tweet->user_id,
-                'content'   => $tweet_content,
-                'user_type' => '1',
-                'created_at' => $time,
-                'updated_at' =>$time,
-            ]);
-
-        } else if ($image_qpulp_res['result']['label'] == 1) {
-            // 七牛检测未通过  涉及色情
-            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-            //创建记录
-            $tweet_qiniu_check = TweetQiniuCheck::create([
-                'user_id'   => $tweet->user_id,
-                'tweet_id' => $tweet->id,
-                'image_qpulp' => 1,
-                'create_time' => time(),
-            ]);
-
-//            创建私信
-            $tweet =  Tweet::find( $tweet->id);
+//        $context = stream_context_create($opts);
+//        $image_qpulp = file_get_contents($url, false, $context);
 //
-            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+//        $image_qpulp_res = json_decode($image_qpulp, true);
 
-            $time = time();
-            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-            PrivateLetter::create([
-                'from' => 1000437,
-                'to'    => $tweet->user_id,
-                'content'   => $tweet_content,
-                'user_type' => '1',
-                'created_at' => $time,
-                'updated_at' =>$time,
-            ]);
-
-        } else {
-            $tweet_qiniu_check = TweetQiniuCheck::create([
-                'user_id'   => $tweet->user_id,
-                'tweet_id' => $tweet->id,
-                'image_qpulp' => 0,
-                'create_time' => time(),
-            ]);
-        }
+//        if ($image_qpulp_res['result']['label'] == 0) {
+//            // 七牛检测未通过  涉及色情
+//            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+//
+//            //创建记录
+//            $tweet_qiniu_check = TweetQiniuCheck::create([
+//                'user_id'   => $tweet->user_id,
+//                'tweet_id' => $tweet->id,
+//                'image_qpulp' => 2,
+//                'create_time' => time(),
+//            ]);
+//
+//            //创建私信
+//            $tweet =  Tweet::find( $tweet->id);
+//            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+//            $time = time();
+//            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+//            PrivateLetter::create([
+//                'from' => 1000437,
+//                'to'    => $tweet->user_id,
+//                'content'   => $tweet_content,
+//                'user_type' => '1',
+//                'created_at' => $time,
+//                'updated_at' =>$time,
+//            ]);
+//
+//        } else if ($image_qpulp_res['result']['label'] == 1) {
+//            // 七牛检测未通过  涉及色情
+//            Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+//            //创建记录
+//            $tweet_qiniu_check = TweetQiniuCheck::create([
+//                'user_id'   => $tweet->user_id,
+//                'tweet_id' => $tweet->id,
+//                'image_qpulp' => 1,
+//                'create_time' => time(),
+//            ]);
+//
+////            创建私信
+//            $tweet =  Tweet::find( $tweet->id);
+////
+//            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+//
+//            $time = time();
+//            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+//            PrivateLetter::create([
+//                'from' => 1000437,
+//                'to'    => $tweet->user_id,
+//                'content'   => $tweet_content,
+//                'user_type' => '1',
+//                'created_at' => $time,
+//                'updated_at' =>$time,
+//            ]);
+//
+//        } else {
+//            $tweet_qiniu_check = TweetQiniuCheck::create([
+//                'user_id'   => $tweet->user_id,
+//                'tweet_id' => $tweet->id,
+//                'image_qpulp' => 0,
+//                'create_time' => time(),
+//            ]);
+//        }
 
         //政治人物检测
-        $url_z = CloudStorage::qpolitician($tweet->screen_shot);  //tupian
-
-        $opts_2 = [
-            'http' => [
-                'method' => 'GET',
-                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
-                    "Referer:http://www.goobird.com",
-            ],
-        ];
-        $context = stream_context_create($opts_2);
-        $qpolitician = file_get_contents($url_z, false, $context);
-
-        //取数据
-        $qpolitician_result = json_decode($qpolitician, true);
-
-        //写入检测记录
-        foreach ($qpolitician_result['result']['detections'] as $v) {
-            if (array_key_exists("sample", $v)) {
-                //写入记录
-                TweetQiniuCheck::where('id', '=', $tweet_qiniu_check->id)->update(['qpolitician' => 1]);
-
-                //修改状态
-                Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
-
-                //创建私信
-                $tweet =  Tweet::find( $tweet->id);
-
-                $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-                $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-                $time = time();
-
-                PrivateLetter::create([
-                    'from' => 1000240,
-                    'to'    => $tweet->user_id,
-                    'content'   => $tweet_content,
-                    'user_type' => '1',
-                    'created_at' => $time,
-                    'updated_at' =>$time,
-                ]);
-            }
-        }
+//        $url_z = CloudStorage::qpolitician($tweet->screen_shot);  //tupian
+//
+//        $opts_2 = [
+//            'http' => [
+//                'method' => 'GET',
+//                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
+//                    "Referer:http://www.goobird.com",
+//            ],
+//        ];
+//        $context = stream_context_create($opts_2);
+//        $qpolitician = file_get_contents($url_z, false, $context);
+//
+//        //取数据
+//        $qpolitician_result = json_decode($qpolitician, true);
+//
+//        //写入检测记录
+//        foreach ($qpolitician_result['result']['detections'] as $v) {
+//            if (array_key_exists("sample", $v)) {
+//                //写入记录
+//                TweetQiniuCheck::where('id', '=', $tweet_qiniu_check->id)->update(['qpolitician' => 1]);
+//
+//                //修改状态
+//                Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
+//
+//                //创建私信
+//                $tweet =  Tweet::find( $tweet->id);
+//
+//                $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+//                $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+//                $time = time();
+//
+//                PrivateLetter::create([
+//                    'from' => 1000240,
+//                    'to'    => $tweet->user_id,
+//                    'content'   => $tweet_content,
+//                    'user_type' => '1',
+//                    'created_at' => $time,
+//                    'updated_at' =>$time,
+//                ]);
+//            }
+//        }
 
         $notice = "http://hivideo.com/api/yellowcheck";
         CloudStorage::yellowCheck($id,$tweet->video,$notice);

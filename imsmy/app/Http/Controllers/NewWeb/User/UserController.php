@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\NewWeb\User;
 
 use App\Models\AdvertisingRotation;
+use App\Models\Filmfest\Application;
 use App\Models\Filmfests;
+use App\Models\FilmfestsProductions;
 use App\Models\Friend;
 use App\Models\PrivateLetter;
 use App\Models\Subscription;
@@ -23,10 +25,25 @@ class UserController extends Controller
 
     private $protocol = 'http://';
 
+
+    public function avatarNickname(Request $request)
+    {
+        try{
+            $user_id = \Auth::guard('api')->user()->id;
+            $user_avatar = 'http://'.User::find($user_id)->avatar;
+            $user_nickname = User::find($user_id)->nickname;
+            $data = [['avatar'=>$user_avatar],['nickname'=>$user_nickname]];
+            return response()->json(['data'=>$data],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],200);
+        }
+    }
+
     public function index(Request $request)
     {
         try{
             $user = \Auth::guard('api')->user()->id;
+            $nickname = User::find($user)->nickname;
             if((\Auth::guard('api')->user()->role) == 1){
                 $role = [
                     [
@@ -73,7 +90,7 @@ class UserController extends Controller
                 $prevLoginData = '这是您的第一次登录!';
             }
 
-            return response()->json(['role'=>$role,'login'=>$prevLoginData],200);
+            return response()->json(['role'=>$role,'login'=>$prevLoginData,'nickname'=>$nickname],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found']);
         }
@@ -117,7 +134,7 @@ class UserController extends Controller
                     ofAttention($subscriptions,$friends, $user)
                         ->where('active','=',1)
                         ->orderBy($orderBy,'desc')
-                        ->limit($page*($this->paginate))
+                        ->offset(($page)*($this->paginate))
                         ->get();
                     foreach ($maindata as $k => $v)
                     {
@@ -172,7 +189,7 @@ class UserController extends Controller
                             $original_id = $v->original;
                             $prefix_tweet = [
                                 'original_tweet'=>$original_tweet,
-                                'original_avatar'=>$original_avatar,
+                                'original_avatar'=>'http://'.$original_avatar,
                                 'original_name'=>$original_name,
                                 'original_id'=>$original_id,
                                 'original_tweet_id'=>$original_tweet_id,
@@ -220,7 +237,7 @@ class UserController extends Controller
                 ofAttention($subscriptions,$friends, $user)
                     ->where('active','=',1)
                     ->orderBy($orderBy,'desc')
-                    ->limit($page*($this->paginate))
+                    ->limit(($page)*($this->paginate))
                     ->get();
                 foreach ($maindata as $k => $v)
                 {
@@ -295,14 +312,15 @@ class UserController extends Controller
             if($layout == 1){
                 $data = [];
                 $my_id = \Auth::guard('api')->user()->id;
-                $maindata = Tweet::where([['active','=',1],['user_id',$my_id],['type','=',0]])
-                    ->orWhere([['active','=',1],['user_id',$my_id],['type','=',3]])
-                    ->orderBy($orderBy,'desc')->limit($page*($this->paginate))->get();
+                $maindata = Tweet::where([['active','<=',1],['user_id',$my_id],['type','=',0]])
+                    ->orWhere([['active','<=',1],['user_id',$my_id],['type','=',3]])
+                    ->orderBy($orderBy,'desc')->limit(($page)*($this->paginate))->get();
                 foreach ($maindata as $k => $v)
                 {
+
                     $userName = $v->belongsToUser->nickname;
                     $time = $v->created_at;
-                    $content = $v->hasOneContent->content;
+                    $content = $v->hasOneContent()->first()?$v->hasOneContent->content:'';
                     $reply = [];
                     $replys = TweetReply::where('tweet_id',$v->id)->where('reply_id','=',null)
                         ->orderBy('like_count','desc')->limit(3)->get();
@@ -355,12 +373,50 @@ class UserController extends Controller
                     }else{
                         $prefix_tweet = '';
                     }
+                    $video = $v->type==3?$this->protocol.$v->transcoding_video:$this->protocol.$v->video;
+                    //  临时的
+                    $production = $v->tweetProduction()->first();
+                    if($production){
+                        $production = $production->id;
+                        $status = FilmfestsProductions::where('filmfests_id',1)->where('tweet_productions_id',$production)->first()->videoStatus;
+                        $filmfest_id = FilmfestsProductions::where('tweet_productions_id',$production)->first()->filmfests_id;
+                        $filmfest = Filmfests::select(['period','name','time_end'])->where('id',$filmfest_id)->first();
+                        $label = '参与第'.$filmfest->period.$filmfest->name;
+                        $application = Application::where('production_id',$production)->where('filmfests_id',$filmfest_id)->first();
+                        if($application){
+                            $number = $application->number;
+                        }else{
+                            $number = '';
+                        }
+                        if($status == 1){
+                            $status = 2;
+                            $statusDes = '处理中';
+                        }elseif($status == 0){
+                            $status = 1;
+                            $statusDes = '正常';
+                        }else{
+                            $status = 0;
+                            $statusDes = '失败';
+                            $video = $this->protocol.$v->video;
+                        }
+                        if(time()<$filmfest->time_end){
+                            $is_block = 1;
+                        }else{
+                            $is_block = 0;
+                        }
+                    }else{
+                        $status = 1;
+                        $statusDes = '正常';
+                        $label = '';
+                        $number = '';
+                        $is_block = 0;
+                    }
                     $cover = $v->screen_shot?$this->protocol.$v->screen_shot:'';
                     $duration = floor((($v->duration)/60));
                     $duration .= ':';
                     $duration .= (($v->duration)%60)<10?'0'.($v->duration)%60:($v->duration)%60;
-                    $video = $v->type==3?$this->protocol.$v->transcoding_video:$this->protocol.$v->video;
                     $avatar = $this->protocol.$v->belongsToUser->avatar;
+
                     $tempData = [
                         'grade'=>$grade,
                         'userName'=>$userName,
@@ -378,6 +434,11 @@ class UserController extends Controller
                         'id'=>$v->id,
                         'video'=>$video,
                         'avatar'=>$avatar,
+                        'status'=>$status,
+                        'status_des'=>$statusDes,
+                        'label'=>$label,
+                        'number'=>$number,
+                        'is_block'=>$is_block,
                     ];
 
                     array_push($data,$tempData);
@@ -385,10 +446,11 @@ class UserController extends Controller
                 }
             }else{
                 $data = [];
+                dd();
                 $my_id = \Auth::guard('api')->user()->id;
                 $maindata = Tweet::where([['active','=',1],['user_id',$my_id],['type','=',0]])
                     ->orWhere([['active','=',1],['user_id',$my_id],['type','=',3]])
-                    ->orderBy($orderBy,'desc')->limit($page*20)->get();
+                    ->orderBy($orderBy,'desc')->limit(($page)*20)->get();
                 foreach ($maindata as $k => $v)
                 {
                     $userName = $v->belongsToUser->nickname;
@@ -404,6 +466,11 @@ class UserController extends Controller
                     }else{
                         $is_original = true;
                     }
+                    $production = $v->tweetProduction()->first()->id;
+                    $status = FilmfestsProductions::where('filmfests_id',1)->where('tweet_productions_id',$production)->first()->videoStatus;
+                    $filmfest_id = FilmfestsProductions::where('tweet_productions_id',$production)->first()->filmfest_id;
+                    $filmfest = Filmfests::select(['period','name'])->where('id',$filmfest_id)->first();
+                    $label = '参与第'.$filmfest->period.$filmfest->name;
                     $cover = $v->screen_shot?$this->protocol.$v->screen_shot:'';
                     $duration = floor((($v->duration)/60));
                     $duration .= ':';
@@ -421,6 +488,7 @@ class UserController extends Controller
                         'id'=>$v->id,
                         'video'=>$video,
                         'avatar'=>$avatar,
+                        'label'=>$label,
                     ];
 
                     array_push($data,$tempData);
@@ -430,6 +498,20 @@ class UserController extends Controller
             return response()->json(['data'=>$data],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
+
+    public function matchDesHtml(Request $request)
+    {
+        $filmfest_id = $request->get('filmfest_id');
+        $data = Filmfests::find($filmfest_id);
+        $des = $data->des;
+        $name = '第'.$data->period.'届'.$data->name;
+        if($des){
+            return response()->json(['data'=>$des,'name'=>$name],200);
+        }else{
+            return response()->json(['message'=>'暂无详情'],200);
         }
     }
 
@@ -479,7 +561,7 @@ class UserController extends Controller
                     ];
                     array_push($advert,$tempAdvertisingData);
                 }
-                $tweet = Tweet::where('active','=',1)->orderBy($orderBy,'desc')->limit($page*($this->paginate))->get();
+                $tweet = Tweet::where('active','=',1)->orderBy($orderBy,'desc')->limit(($page)*($this->paginate))->get();
                 $data = [];
                 foreach ($tweet as $k => $v)
                 {
@@ -533,7 +615,7 @@ class UserController extends Controller
                         $original_id = $v->original;
                         $prefix_tweet = [
                             'original_tweet'=>$original_tweet,
-                            'original_avatar'=>$original_avatar,
+                            'original_avatar'=>'http://'.$original_avatar,
                             'original_name'=>$original_name,
                             'original_id'=>$original_id,
                             'original_tweet_id'=>$original_tweet_id,
@@ -592,7 +674,7 @@ class UserController extends Controller
                     array_push($advert,$tempAdvertisingData);
                 }
                 $data = [];
-                $maindata = Tweet::where('active','=',1)->orderBy($orderBy,'desc')->limit($page*20)->get();
+                $maindata = Tweet::where('active','=',1)->orderBy($orderBy,'desc')->limit(($page)*20)->get();
                 foreach ($maindata as $k => $v) {
                     $userName = $v->belongsToUser()->first()?$v->belongsToUser->nickname:"";
                     $time = $v->created_at;
@@ -695,19 +777,19 @@ class UserController extends Controller
             }
             if($type == 0){
                 $mainData = Filmfests::where('is_open',1)->StartTime($symbolST,$timeST)->EndTime($symbolET,$timeET)
-                    ->orderBy($by,$order)->limit($page*4)->get();
+                    ->orderBy($by,$order)->limit(($page)*10)->get();
             }elseif ($type == 999){
                 $mainData = Filmfests::whereHas('user',function ($q) use($user){
                     $q->where('user.id',$user);
                 })->orWhereHas('application',function ($q) use($user){
                     $q->where('application_form.user_id','=',$user);
                 })->StartTime($symbolST,$timeST)->EndTime($symbolET,$timeET)
-                    ->orderBy($by,$order)->limit($page*4)->get();
+                    ->orderBy($by,$order)->limit($page*10)->get();
             }else{
                 $mainData = Filmfests::where('is_open',1)->whereHas('category',function ($q) use($type){
                     $q->where('filmfest_category.id',$type);
                 })->StartTime($symbolST,$timeST)->EndTime($symbolET,$timeET)
-                    ->orderBy($by,$order)->limit($page*4)->get();
+                    ->orderBy($by,$order)->limit(($page)*10)->get();
             }
             $data = [];
             foreach ($mainData as $k => $v)
@@ -721,11 +803,14 @@ class UserController extends Controller
                         $status = '已结束';
                     }
                 }
+                if($v->is_open == 0){
+                    $status = '未开始';
+                }
                 $label = '';
                 foreach ($v->application as $kk => $vv)
                 {
                     if($vv->user_id == $user){
-                        $label = '参与';
+                        $label = false;
                         break;
                     }else{
                         continue;
@@ -734,7 +819,7 @@ class UserController extends Controller
                 foreach($v->user as $kk => $vv)
                 {
                     if($vv->id == $user){
-                        $label = '管理';
+                        $label = true;
                         break;
                     }else{
                         continue;
@@ -743,7 +828,7 @@ class UserController extends Controller
                 $tempData  = [
                     'label'=>$label,
                     'id'=>$v->id,
-                    'cover'=>$v->cover,
+                    'cover'=>'http://'.$v->cover,
                     'name'=>$v->name,
                     'detail'=>$v->detail,
                     'status'=>$status,
@@ -766,8 +851,10 @@ class UserController extends Controller
                 $user = $v->belongsToUser()->first()?$v->belongsToUser->nickname:"";
                 $tempAdvertisingData = [
                     'address' => $address,
-                    'image' => $image,
+                    'image' => 'http://'.$image,
                     'user' => $user,
+                    'type'=>$v->channel,
+                    'id'=>$v->into_id
                 ];
                 array_push($advert,$tempAdvertisingData);
             }
@@ -989,8 +1076,8 @@ class UserController extends Controller
                 //  相关暂时没有写
                 $data = [
                     'user_id'=>$user_id,
-                    'cover'=>$cover,
-                    'avatar'=>$avatar,
+                    'cover'=>'http://'.$cover,
+                    'avatar'=>'http://'.$avatar,
                     'nickname'=>$nikcname,
                     'verify_info'=>$verify_info,
                     'operation'=>$operation,

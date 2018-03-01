@@ -9,6 +9,7 @@
 namespace App\Services;
 
 use App\Models\Cloud\QiniuUrl;
+use App\Models\FilmfestsProductions;
 use App\Models\JoinVideo;
 use App\Models\Tweet;
 use Illuminate\Support\Facades\DB;
@@ -317,6 +318,11 @@ class CloudStorage
             throw new \Exception($error->message(),$error->code());
         }
         return $ret;
+    }
+
+    public function oneBucketCopyFile($key,$srcbucket,$destbucket,$desctKey)
+    {
+        $ops = BucketManager::copy($srcbucket,$key,$destbucket,$desctKey,true);
     }
 
     public function copyFile2($key,$srcbucket,$destbucket,$destkey)
@@ -763,20 +769,20 @@ class CloudStorage
      * @return bool
      * 转码
      */
-    public function transcoding($bucket,$key,$width,$height,$choice)
+    public function transcoding($bucket,$key,$width,$height,$choice,$notice,$id)
     {
         $pipeline = 'hivideo_alternative';
-        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline,$notice);
         $ex = pathinfo($key, PATHINFO_EXTENSION);
 //        $fileKey = $key.'.m3u8';
-        $fileKey = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+        $fileKey = 'adapt&'.$id.'&&'.str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
         $fops ='adapt/m3u8/multiResolution/';
         $fops .= (int)($width/3).':'.(int)($height/3).',';
         $fops .= (int)($width/2).':'.(int)($height/2).',';
         $fops .= $width.':'.$height.'/';
         $fops .= 'envBandWidth/200000,500000,2400000/multiVb/200k,500k,8500k/hlstime/10|saveas/';
         $fops .= base64_urlSafeEncode("$bucket:$fileKey");
-        list($id, $err) = $pfop->execute($key, $fops);
+        list($id1, $err) = $pfop->execute($key, $fops);
         $key3 = str_replace($ex,'m3u8',$key);
         $fileKey3 = $key3;
         $fops3 = 'avthumb/m3u8/noDomain/1/segtime/5|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey3);
@@ -792,16 +798,32 @@ class CloudStorage
             if($err != null || $err1 != null || $err2 != null){
                 return false;
             }else{
-                return true;
+                return $id1;
             }
         }else{
             if ($err != null) {
                 return false;
             } else {
-                return $id;
+                return $id1;
             }
         }
 
+    }
+
+    public function videoMark($file,$imgUrl,$place)
+    {
+        $pipeline = 'hivideo_transcode';
+        $accessKey = 'NVsOLitxzARKF2ZFcTdmqfPc82I3dRQYN3-CYqJY';
+        $secretKey = 'i_Jq4G9ijLS-YWsVJI3Gdfydn372pzgLZTHJ5ZTm';
+        $auth = new Auth($accessKey, $secretKey);
+        $bucket = 'hivideo-video';
+        $url = $this->downloadUrl($file);
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        $pfop = new PersistentFop($auth, $bucket, $pipeline,null,true);
+        $waterImg = base64_urlSafeEncode("$imgUrl");
+        $save = base64_urlSafeEncode("$bucket".":"."$file_url");
+        $fops = 'avthumb/mp4/wmImage/'.$waterImg.'/wmGravity/'.$place.'/wmConstant/0|saveas/'.$save;
+        list($id, $err) = $pfop->execute($file_url, $fops);
     }
 
     public function imgWaterMark($bucket,$key,$markContent)
@@ -831,19 +853,7 @@ class CloudStorage
         }
     }
 
-    public function listenTranscoding($id,$bucket)
-    {
-        $pfop = new PersistentFop($this->auth,$bucket);
-        list($ret, $err1) = $pfop->status($id);
-        set_time_limit(0);
-        if($ret['code']==0){
-            return true;
-        }elseif ($ret['code']==3 && $ret['des']=='The fop is failed'){
-            return false;
-        }elseif ($ret['code']==1 || $ret['code']==2){
-            $this->listenTranscoding($id,$bucket);
-        }
-    }
+
 
 
 
@@ -907,25 +917,25 @@ class CloudStorage
        $tweet = Tweet::find($id);
        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
        $url = $this->downloadUrl($tweet->video);
-       $file_url = ltrim(parse_url($url)['path'], '/');
-       switch ($status){
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        switch ($status){
            case 1:
-               $join_video = JoinVideo::find($join_id,['head_video','tail_video']);
+               $join_video = JoinVideo::find($join_id);
                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
            case 2:
-               $join_video = JoinVideo::find($join_id,['tail_video']);
+               $join_video = JoinVideo::find($join_id);
                $head_url = false;
                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
            case 3:
-               $join_video = JoinVideo::find($join_id,['head_video']);
+               $join_video = JoinVideo::find($join_id);
                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
                $tail_url = false;
                break;
            default:
-               $join_video = JoinVideo::find($join_id,['head_video','tail_video']);
+               $join_video = JoinVideo::find($join_id);
                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
@@ -939,13 +949,351 @@ class CloudStorage
        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
-       if (!$join_video->tail_video){
+       if (!$tail_url){
            $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
-       }elseif(!$join_video->head_video){
+       }elseif(!$head_url){
            $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
        }
         list($id, $err) = $pfop->execute($file_url, $fops);
      }
+
+
+//    public function joint_tranding($id,$join_id,$notice = null,$status=1,$width,$height)
+//    {
+//        $tweet = Tweet::find($id);
+//        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
+//        $url = $this->downloadUrl($tweet->video);
+//        $file_url = ltrim(parse_url($url)['path'], '/');
+//        switch ($status){
+//            case 1:
+//                $join_video = JoinVideo::find($join_id);
+//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+//                break;
+//            case 2:
+//                $join_video = JoinVideo::find($join_id);
+//                $head_url = false;
+//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+//                break;
+//            case 3:
+//                $join_video = JoinVideo::find($join_id);
+//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//                $tail_url = false;
+//                break;
+//            default:
+//                $join_video = JoinVideo::find($join_id);
+//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+//                break;
+//        }
+//        $bucket = 'hivideo-video';
+//        $pipeline = 'hivideo_alternative';
+//        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+//        $head_url = ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//        $a = 'tempvideo/'.ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/')
+//        $encodedUrl1 = base64_urlSafeEncode( $a );
+//        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
+//        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+//        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+//        if (!$tail_url){
+//            $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+//        }elseif(!$head_url){
+//            $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
+//        }
+//        set_time_limit(0);
+//        $fops1 = 'avthumb/mp4/s/'.(int)($width).'x'.(int)($height).'|saveas/'.base64_urlSafeEncode($bucket.':'.$a);
+//        list($id, $err2) = $pfop->execute($head_url,$fops1);
+//        $message = $this->listenTranscoding($id,$bucket);
+//        list($id, $err) = $pfop->execute($file_url, $fops);
+//
+//    }
+
+    public function joint_tranding($id,$join_id,$notice = null,$status=1,$width,$height,$choice,$filmfest_id)
+    {
+        $tweet = Tweet::find($id);
+        $production_id = $tweet->tweetProduction()->first()->id;
+
+        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
+
+        $file_url = str_replace('v.cdn.hivideo.com/','',$tweet->video);
+
+        $join_video = JoinVideo::find($join_id);
+        $bucket = 'hivideo-video';
+        $pipeline = 'hivideo_alternative';
+        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+        set_time_limit(0);
+        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+        switch ($status) {
+            case 1:
+                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempHead = 'tempvideo/' . $head;
+                $tempTail = 'tempvideo/' . $tail;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id1, $err2) = $pfop->execute($head, $fops1);
+                list($id2, $err2) = $pfop->execute($tail, $fops2);
+                $this->listenTranscoding($id1,$bucket);
+                $this->listenTranscoding($id2,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                set_time_limit(0);
+                do{
+                    list($ret, $err1) = $pfop->status($id2);
+                    if($ret['code']==3 && $ret['des']=='The fop is failed'){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 0;
+                        $filmfestProduction -> save();
+                        return false;
+                    }
+                    if($ret['code']==0){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 2;
+                        $filmfestProduction -> save();
+                    }
+                }while($ret['code']==0);
+                break;
+            case 2:
+
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempTail = 'tempvideo/' . $tail;
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id, $err2) = $pfop->execute($tail, $fops2);
+                $message = $this->listenTranscoding($id,$bucket);
+                $head_url = false;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                set_time_limit(0);
+                do{
+                    list($ret, $err1) = $pfop->status($id2);
+                    if($ret['code']==3 && $ret['des']=='The fop is failed'){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 0;
+                        $filmfestProduction -> save();
+                        return false;
+                    }
+                    if($ret['code']==0){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 2;
+                        $filmfestProduction -> save();
+                    }
+                }while($ret['code']==0);
+                break;
+            case 3:
+//                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+//                $head = str_replace('v.cdn.hivideo.com','',$join_video->head_video);
+                $head = 'filmfestival/bcsff/titles/bcsff_titles.mp4';
+                $tempHead = 'tempvideo/'.$id.$head;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                list($id1, $err2) = $pfop->execute($head, $fops1);
+                $message = $this->listenTranscoding($id1,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = false;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+                list($id2, $err) = $pfop->execute($file_url, $fops);
+                set_time_limit(0);
+                do{
+                    list($ret, $err1) = $pfop->status($id2);
+                    if($ret['code']==3 && $ret['des']=='The fop is failed'){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 0;
+                        $filmfestProduction -> save();
+                        return false;
+                    }
+                    if($ret['code']==0){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 2;
+                        $filmfestProduction -> save();
+                    }
+                }while($ret['code']==0);
+
+//                $this->transcoding($bucket,'&'.$id.'&&'.$file_url,$width,$height,$choice);
+                break;
+            default :
+                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempHead = 'tempvideo/' . $head;
+                $tempTail = 'tempvideo/' . $tail;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id1, $err2) = $pfop->execute($head, $fops1);
+                list($id2, $err2) = $pfop->execute($tail, $fops2);
+                $message = $this->listenTranscoding($id1,$bucket);
+                $message = $this->listenTranscoding($id2,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                set_time_limit(0);
+                do{
+                    list($ret, $err1) = $pfop->status($id2);
+                    if($ret['code']==3 && $ret['des']=='The fop is failed'){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 0;
+                        $filmfestProduction -> save();
+                        return false;
+                    }
+                    if($ret['code']==0){
+                        $filmfestProduction = FilmfestsProductions::where('filmfests_id',$filmfest_id)
+                            ->where('tweet_productions_id',$production_id)->first();
+                        $filmfestProduction -> videoStatus = 2;
+                        $filmfestProduction -> save();
+                    }
+                }while($ret['code']==0);
+                break;
+        }
+
+
+        return true;
+
+
+    }
+
+    public function joint_tranding_ects($id,$join_id,$notice = null,$status=1,$width,$height)
+    {
+        $tweet = Tweet::find($id);
+//        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
+//        $url = $this->downloadUrl($tweet->video);
+        $file_url = '55.mp4';
+        $join_video = JoinVideo::find($join_id);
+        $bucket = 'hivideo-video';
+        $pipeline = 'hivideo_alternative';
+        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+        set_time_limit(0);
+        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+
+        switch ($status) {
+            case 1:
+                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempHead = 'tempvideo/' . $head;
+                $tempTail = 'tempvideo/' . $tail;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id1, $err2) = $pfop->execute($head, $fops1);
+                list($id2, $err2) = $pfop->execute($tail, $fops2);
+                $message = $this->listenTranscoding($id1,$bucket);
+                $message = $this->listenTranscoding($id2,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                break;
+            case 2:
+
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempTail = 'tempvideo/' . $tail;
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id, $err2) = $pfop->execute($tail, $fops2);
+                $message = $this->listenTranscoding($id,$bucket);
+                $head_url = false;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                break;
+            case 3:
+                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+//                $head = 'filmfestival/bcsff/titles/bcsff_titles.mp4';
+                $tempHead = 'tempvideo/' . $head;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                list($id, $err2) = $pfop->execute($head, $fops1);
+                $message = $this->listenTranscoding($id,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = false;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+                list($id1, $err) = $pfop->execute($file_url, $fops);
+
+
+                break;
+            default :
+                $head = ltrim(parse_url($this->downloadUrl($join_video->head_video))['path'], '/');
+                $tail = ltrim(parse_url($this->downloadUrl($join_video->tail_video))['path'], '/');
+                $tempHead = 'tempvideo/' . $head;
+                $tempTail = 'tempvideo/' . $tail;
+                $fops1 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempHead);
+                $fops2 = 'avthumb/mp4/s/' . (int)($width) . 'x' . (int)($height) . '|saveas/' . base64_urlSafeEncode($bucket . ':' . $tempTail);
+                list($id1, $err2) = $pfop->execute($head, $fops1);
+                list($id2, $err2) = $pfop->execute($tail, $fops2);
+                $message = $this->listenTranscoding($id1,$bucket);
+                $message = $this->listenTranscoding($id2,$bucket);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempHead;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/" . $tempTail;
+                $encodedUrl1 = base64_urlSafeEncode($head_url);
+                $encodedUrl2 = base64_urlSafeEncode($tail_url);
+                $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+                list($id, $err) = $pfop->execute($file_url, $fops);
+                break;
+        }
+
+
+    }
+
+
+//    public function joint_tranding_ects($id,$notice = null,$width,$height)
+//    {
+//
+//
+//
+//        $file_url = '11.mp4';
+//
+//        $head_url = '00.mp4';
+//
+//        $bucket = 'hivideo-video-ects';
+//        $pipeline = 'hivideo_alternative';
+//        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+////       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+////       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+//        $fileKey1 = 'tempvideo/'.$head_url;
+//        $a = "http://ozszh1ayh.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($fileKey1))['path'], '/');
+//        $encodedUrl1 = base64_urlSafeEncode( $a );
+//        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+//
+//        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+//
+//        set_time_limit(0);
+//        $fops1 = 'avthumb/mp4/s/'.(int)($width).'x'.(int)($height).'|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey1);
+//        list($id, $err2) = $pfop->execute($head_url,$fops1);
+//        $b = $this->listenTranscoding($id,$bucket);
+//        list($id, $err) = $pfop->execute($file_url, $fops);
+//
+//
+//
+//    }
+
+    public function listenTranscoding($id,$bucket)
+    {
+        $pfop = new PersistentFop($this->auth,$bucket);
+        list($ret, $err1) = $pfop->status($id);
+        set_time_limit(0);
+        if($ret['code']==0){
+            $a = 1;
+        }elseif ($ret['code']==3 && $ret['des']=='The fop is failed'){
+            $a = 0;
+        }elseif ($ret['code']==1 || $ret['code']==2){
+            $this->listenTranscoding($id,$bucket);
+        }
+    }
+
 
     public function yellowCheck($id,$url,$notice = null)
     {
