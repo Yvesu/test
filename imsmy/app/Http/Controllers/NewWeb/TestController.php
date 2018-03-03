@@ -5,6 +5,8 @@ namespace App\Http\Controllers\NewWeb;
 use App\Http\Middleware\FilmfestUserRole;
 use App\Models\Filmfest\Application;
 use App\Models\FilmfestUser\FilmfestUserReviewChildLog;
+use App\Models\QiniuTest\QiniuCloudTest;
+use App\Models\Tweet;
 use App\Models\User;
 use App\Facades\CloudStorage;
 use Illuminate\Http\Request;
@@ -122,51 +124,55 @@ class TestController extends Controller
 //        $pdf->Output('t.pdf', 'D');//I输出、D下载
 //    }
 
-
-    public function test(Request $request)
-    {
-        try{
-            $filmfest_id = 1;
-            $user_id = 1000437;
-            $nickName = User::find($user_id)->nickname;
-            $role = 2;
-            if(is_null($user_id)||is_null($role)){
-                return response()->json(['message'=>'缺少数据'],200);
-            }
-            $data = FilmfestUserReviewChildLog::where('user_id',$user_id)->where('filmfest_id',$filmfest_id)
-                ->orderBy('time_add','desc')->get();
-            $title = [
-                0=>'时间',
-                1=>'行为',
-            ];
-            $export = null;
-            foreach($data as $k => $v)
-            {
-                $time = date('Y年m月d日. H:i',$v->time_add);
-                $content = ($v->doing).'  '.($v->cause);
-                $export[$k][0] = $time;
-                $export[$k][1] = $content;
-            }
-            $data = array_merge($title,$export);
-            $head = $role.$nickName.'操作日志';
-            Excel::create($head,function ($excel) use($data,$head){
-                $excel->sheet($head,function ($sheet) use($data){
-                    $sheet->setWidth(
-                        array(
-                            'A'=>10,
-                            'B'=>30,
-                        )
-                    );
-                    $sheet->rows($data);
-                    ob_end_clean();
-                });
-            })->export('xls');
-
-        }catch (ModelNotFoundException $q){
-            return response()->json(['error'=>'not_found'],404);
-        }
-
-    }
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * 测试生产excel
+     */
+//    public function test(Request $request)
+//    {
+//        try{
+//            $filmfest_id = 1;
+//            $user_id = 1000437;
+//            $nickName = User::find($user_id)->nickname;
+//            $role = 2;
+//            if(is_null($user_id)||is_null($role)){
+//                return response()->json(['message'=>'缺少数据'],200);
+//            }
+//            $data = FilmfestUserReviewChildLog::where('user_id',$user_id)->where('filmfest_id',$filmfest_id)
+//                ->orderBy('time_add','desc')->get();
+//            $title = [
+//                0=>'时间',
+//                1=>'行为',
+//            ];
+//            $export = null;
+//            foreach($data as $k => $v)
+//            {
+//                $time = date('Y年m月d日. H:i',$v->time_add);
+//                $content = ($v->doing).'  '.($v->cause);
+//                $export[$k][0] = $time;
+//                $export[$k][1] = $content;
+//            }
+//            $data = array_merge($title,$export);
+//            $head = $role.$nickName.'操作日志';
+//            Excel::create($head,function ($excel) use($data,$head){
+//                $excel->sheet($head,function ($sheet) use($data){
+//                    $sheet->setWidth(
+//                        array(
+//                            'A'=>10,
+//                            'B'=>30,
+//                        )
+//                    );
+//                    $sheet->rows($data);
+//                    ob_end_clean();
+//                });
+//            })->export('xls');
+//
+//        }catch (ModelNotFoundException $q){
+//            return response()->json(['error'=>'not_found'],404);
+//        }
+//
+//    }
 
 //    public function test(Request $request)
 //    {
@@ -194,4 +200,64 @@ class TestController extends Controller
 //        $a = CloudStorage::listenTranscoding('z0.5a94bc82b9465319005c48ed','hivideo-video-ects');
 //        dd($a);
 //    }
+
+    public function test()
+    {
+        $bucket = 'test';
+        $id = 1;
+        $width = 0;
+        $height = 0;
+        $notice = 'http://www.goobird.com/api/test-callback';
+        $key = 'tweet/video/user/1000437/1519807995_1280*720.mp4';
+        CloudStorage::join_ects_test($id,$join_id,$notice = null,$status=1);
+//        CloudStorage::transcoding_test($id,$bucket,$key,$width,$height,$notice);
+//        $a = stripos('adapt/m3u8/gsadfasg','adapt/m3u8');
+//        var_dump($a);
+    }
+
+    /**
+     * 测试七牛回调
+     */
+    public function testCallback()
+    {
+        $NotifyData = file_get_contents("php://input");
+        $res = json_decode($NotifyData)->code;
+        $id = json_decode($NotifyData)->id;
+        if ($res === 0 ) {
+            $key = json_decode($NotifyData)->items[0]->key;
+            $tweet_id = getNeedBetween($key, '&', '&&');
+            $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+            $new_res = new QiniuCloudTest;
+            $new_res -> content = '视频拼接成功，新文件地址为'.$new_url;
+            $new_res -> type = '视频拼接';
+            $new_res -> persistentId = $id;
+            $new_res -> code = json_decode($NotifyData)->items[0]->code;
+            $new_res -> time_add = time();
+            $new_res -> time_update = time();
+            $new_res -> save();
+        }elseif($res == 3){
+            $key = json_decode($NotifyData)->inputKey;
+            $tweet_id = Tweet::where('video','like','%'.$key.'%')->first()->id;
+            $new_res = new QiniuCloudTest;
+            $new_res -> content = '视频拼接失败，错误原因为：'.json_decode($NotifyData)->items[0]->error;
+            $new_res -> type = '视频切片兼转码';
+            $new_res -> key = $tweet_id;
+            $new_res -> persistentId = $id;
+            $new_res -> code = json_decode($NotifyData)->items[0]->code;
+            $new_res -> time_add = time();
+            $new_res -> time_update = time();
+            $new_res -> save();
+        }elseif($res == 4){
+            $key = json_decode($NotifyData)->items[0]->key;
+            $tweet_id = getNeedBetween($key, '&', '&&');
+            $new_res = new QiniuCloudTest;
+            $new_res -> content = $tweet_id.'视频拼接成功，回调失败错误原因为：'.json_decode($NotifyData)->items[0]->error;
+            $new_res -> type = '视频切片兼转码';
+            $new_res -> persistentId = $id;
+            $new_res -> code = json_decode($NotifyData)->items[0]->code;
+            $new_res -> time_add = time();
+            $new_res -> time_update = time();
+            $new_res -> save();
+        }
+    }
 }

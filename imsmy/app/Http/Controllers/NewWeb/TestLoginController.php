@@ -204,4 +204,22 @@ class TestLoginController extends Controller
             return response()->json(['token_absent'], $e->getStatusCode());
         }
     }
+
+
+    public function detectionToken(Request $request)
+    {
+        try{$token = JWTAuth::getToken();
+            $a = JWTAuth::invalidate($token);
+            if($a === true){
+                return response()->json(['status'=>1]);
+            }
+        }catch (TokenExpiredException $e) {
+            return response()->json(['token_expired'], $e->getStatusCode());
+        } catch (TokenInvalidException $e) {
+            return response()->json(['token_invalid'], $e->getStatusCode());
+        } catch (JWTException $e) {
+            return response()->json(['token_absent'], $e->getStatusCode());
+        }
+
+    }
 }

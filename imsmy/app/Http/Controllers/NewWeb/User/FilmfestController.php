@@ -2138,6 +2138,30 @@ class FilmfestController extends Controller
     }
 
 
+    public function filmfestOpenTime()
+    {
+        try{
+            $filmfest = Filmfests::find(1);
+            $startTime = $filmfest->time_start;
+            $countDownTime = ($startTime)-(time());
+            if($countDownTime>0){
+                $days = floor($countDownTime/86400);
+                $hours = floor(($countDownTime-86400*$days)/3600);
+                $minutes = floor((($countDownTime-86400*$days)-3600*$hours)/60);
+                $seconds = floor((($countDownTime-86400*$days)-3600*$hours)-60*$minutes);
+                $countDownTime = $days.'天  '.$hours.':'.$minutes.':'.$seconds;
+                if($days<=0){
+                    $countDownTime = $hours.':'.$minutes.':'.$seconds;
+                }
+            }else{
+                $countDownTime = 0;
+            }
+            return response()->json(['data'=>$countDownTime],200);
+        }catch (ModelNotFoundException $q){
+            return response()->json(['error'=>'not_found'],404);
+        }
+    }
+
 
 
 }

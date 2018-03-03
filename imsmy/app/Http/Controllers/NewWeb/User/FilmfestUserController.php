@@ -194,7 +194,7 @@ class FilmfestUserController extends Controller
                         $des = $v->production_des;
                         $name = $v->name;
                         $number = $v->number;
-                        $poster = $v->production()->first()->poster?$v->production->poster:$v->production()->first()->tweet()->first()->screen_shot;
+                        $poster = $v->production()->first()->poster?'img.cdn.hivideo.com/'.$v->production->poster:$v->production()->first()->tweet()->first()->screen_shot;
                         if((int)($v->productionTweet->status) === 4){
                             if((int)($v->productionTweet->again_select_status) === 1){
                                 $status = '通过';
@@ -246,7 +246,7 @@ class FilmfestUserController extends Controller
                             'des'=>$des,
                             'name'=>$name,
                             'number'=>$number,
-                            'poster'=>'http://img.cdn.hivideo.com/'.$poster,
+                            'poster'=>'http://'.$poster,
                             'status'=>$status,
                             'status_des'=>$statusDes,
                             'application_id'=>$application_id,
@@ -519,7 +519,7 @@ class FilmfestUserController extends Controller
                 })->first();
             $type = $request->get('type',1);
             if($production){
-                $poster = $production->poster?$production->poster:$production->tweet()->first()->screen_shot;
+                $poster = $production->poster?'img.cdn.hivideo.com/'.$production->poster:$production->tweet()->first()->screen_shot;
                 $application =  Application::find($application_id);
                 if((int)$type === 1){
                     $text = $application->production_des;
@@ -558,7 +558,7 @@ class FilmfestUserController extends Controller
 
                 }
                 $data = [
-                    'poster'=>'http://img.cdn.hivideo.com/'.$poster,
+                    'poster'=>'http://'.$poster,
                     'content'=>$text,
                 ];
                 return response()->json(['data'=>$data]);

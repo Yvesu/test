@@ -576,8 +576,10 @@ class CloudStorage
      */
     public function saveCover($key,$newAddress,$width,$height)
     {
-        $bucket = 'hivideo-video';
-        $fileBucket = 'hivideo-img';
+//        $bucket = 'hivideo-video';
+        $bucket = 'test-video';
+//        $fileBucket = 'hivideo-img';
+        $fileBucket = 'test-img';
         $pipeline = 'goobird-dev';
         $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
         $pipeline = 'hivideo_drm';
@@ -769,13 +771,13 @@ class CloudStorage
      * @return bool
      * 转码
      */
-    public function transcoding($bucket,$key,$width,$height,$choice,$notice,$id)
+    public function transcoding($bucket,$key,$width,$height,$choice)
     {
         $pipeline = 'hivideo_alternative';
-        $pfop = new PersistentFop($this->auth,$bucket,$pipeline,$notice);
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
         $ex = pathinfo($key, PATHINFO_EXTENSION);
 //        $fileKey = $key.'.m3u8';
-        $fileKey = 'adapt&'.$id.'&&'.str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+        $fileKey = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
         $fops ='adapt/m3u8/multiResolution/';
         $fops .= (int)($width/3).':'.(int)($height/3).',';
         $fops .= (int)($width/2).':'.(int)($height/2).',';
@@ -1304,6 +1306,51 @@ class CloudStorage
         $file_url = ltrim(parse_url($url)['path'], '/');
         $save = base64_urlSafeEncode($bucket .":&" .$id.'&&');
         $fops = "tupu-video/nrop/f/5/s/30"."|saveas/".$save;
+        list($id, $err) = $pfop->execute($file_url, $fops);
+    }
+
+    public function join_ects_test($id,$join_id,$notice = null,$status=1)
+    {
+        $tweet = Tweet::find($id);
+        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
+        $url = $this->downloadUrl($tweet->video);
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        switch ($status){
+            case 1:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+            case 2:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = false;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+            case 3:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = false;
+                break;
+            default:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+        }
+        $bucket = 'test-video';
+        $pipeline = 'hivideo_drm';
+        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+//       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+        $encodedUrl1 = base64_urlSafeEncode( $head_url );
+        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
+        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+        if (!$tail_url){
+            $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+        }elseif(!$head_url){
+            $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
+        }
         list($id, $err) = $pfop->execute($file_url, $fops);
     }
 }
