@@ -21,6 +21,7 @@ class CashRechargeOrder extends Common
         'status',
         'time_add',
         'time_update',
+        'active',
     ];
 
     public $timestamps = false;

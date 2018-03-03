@@ -53,7 +53,7 @@ class MakeAudioController extends BaseController
                 -> where('test_result',1)
                 -> ofSearch($search)
                 -> forPage($page, $this->paginate)
-                -> get(['id','name','intro','count','audition_address','address','integral','duration']);
+                -> get();
 
             // 调用内部函数，返回数据
             return $this -> handle($audio, $integral_ids);
@@ -79,14 +79,13 @@ class MakeAudioController extends BaseController
             foreach($audio as $key => $value) {
 
                 // 对id进行加密
-                $value -> file_id = Crypt::encrypt($value->id);
+//                $value -> file_id = Crypt::encrypt($value->id);
 
                 $value -> audition_address = CloudStorage::privateUrl_zip($value -> audition_address);
-
+                $value -> cover = CloudStorage::downloadUrl($value -> cover);
 
                 // 免费的文件和自己已经下载过的会有下载地址，收费的下载地址为空
                 if(0 == $value->integral || in_array($value->id, $integral_ids)){
-
 
                     $value -> address = CloudStorage::privateUrl_zip($value -> address);
 
@@ -96,7 +95,7 @@ class MakeAudioController extends BaseController
                 }
 
                 // 删除原id
-                unset($value -> id);
+//                unset($value -> id);
             }
 
             return response() -> json(['data'=>$audio],200);

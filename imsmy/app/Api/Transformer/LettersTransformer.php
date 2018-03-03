@@ -40,7 +40,7 @@ class LettersTransformer extends Transformer
                 'is_tweet'      =>  $letter->is_tweet,
                 'created_at'    =>  strtotime($letter -> created_at),
                 'user'          =>  $this -> usersTransformer->transform($letter->belongsToUser),
-                'son'           => $this->transformCollection($object->all())
+//                'son'           => $this->transformCollection($object->all())
             ];
         }else{
 

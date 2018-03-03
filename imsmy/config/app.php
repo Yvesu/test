@@ -149,7 +149,7 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
-	
+        Ignited\LaravelOmnipay\LaravelOmnipayServiceProvider::class,
 	/*
          * umeng
          */
@@ -305,6 +305,7 @@ return [
         // 自定义log
         'CommandLog' => App\Facades\CommandLog::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'Omnipay' => Ignited\LaravelOmnipay\Facades\OmnipayFacade::class,
 
     ],
 

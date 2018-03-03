@@ -2935,12 +2935,12 @@ class TweetController extends BaseController
      */
     private function check($id)
     {
-        //        //获取动态信息
+        //获取动态信息
         $tweet = Tweet::find($id);
 //        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
         //如果被删除则标记为检测通过
         if ($tweet->active === 3 || $tweet->active === 5 ){
-            YellowCheck::where('tweet_id',$id)->update(['active'=>2]);
+//            YellowCheck::where('tweet_id',$id)->update(['active'=>2]);
             die();
         }
         //封面路径

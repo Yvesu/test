@@ -8,9 +8,12 @@ use App\Api\Transformer\UsersWithFansTransformer;
 use App\Api\Transformer\TopicSimplyTransformer;
 use App\Api\Transformer\CompetitionTransformer;
 use App\Api\Transformer\Discover\HotActivityTransformer;
+use App\Models\CashRechargeOrder;
 use App\Models\Channel;
+use App\Models\PrivateLetter;
 use App\Models\TweetActivity;
 use App\Models\Activity;
+use App\Models\User\UserIntegral;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Validator;
@@ -63,9 +66,6 @@ class CompetitionController extends BaseController
     public function insert($id,Request $request)
     {
         try{
-            //扣除用户的积分
-
-
             // 验证接收数据格式是否正确
             $validator = Validator::make($request->all(), [
                 'comment'  => 'required|max:255',
@@ -100,12 +100,55 @@ class CompetitionController extends BaseController
                 'time_update'  => $time,
             ];
 
+            //判断用户积分
+            $user_intergral = UserIntegral::where('user_id',(int)$id)->first();
+
+            //用户积分不足
+            if (is_null($user_intergral)
+                || $user_intergral->integral_count === 0
+                || $user_intergral->integral_count < $bonus)
+            {
+                return response()->json(['message'=>'Insufficient user integration'],402);
+            }
+
             \DB::beginTransaction();
 
             $competition = Activity::create($arr);
 
-            if ($competition){
+            //扣除用户的积分
+            $result_decrement = UserIntegral::where('user_id',(int)$id)->decrement('integral_count',$bonus);
+
+            //生成订单记录
+            $order = [
+                'user_id'       => $id,
+                'order_number'  => createOrder(),
+                'gold_num'      => -$bonus,
+                'pay_type'      => 'Hi!video',
+                'status'        =>  1,
+                'time_add'      => $time,
+                'time_update'   => $time,
+            ];
+
+            // 生成订单
+            $order = CashRechargeOrder::create($order);
+
+            //生成私信通知
+            $date = date('Y-m-d H:i:s');
+            $content = "您于".$date."创建竞赛：".$arr['theme']."，成功支付".$bonus."金币。";
+            $time = time();
+            PrivateLetter::create([
+                'from' => 9,
+                'to'    => $id,
+                'content'   => $content,
+                'user_type' => '1',
+                'read_from'  => '1',
+                'created_at' => $time,
+                'updated_at' =>$time,
+            ]);
+
+            if ($competition && $result_decrement && $order){
                 \DB::commit();
+
                 return response()->json(['message'=>'success'],201);
             }else{
                 \DB::rollBack();

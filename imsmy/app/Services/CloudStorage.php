@@ -101,12 +101,12 @@ class CloudStorage
 
         return $this->baseurl . '/';
     }
+
     /**
      * 生成upload Token
      * @param null $policy
      * @return string
      */
-
     public function getToken($policy = null,$type,$location)
     {
         $this->bucket = QiniuUrl::where('type','=',$type)->where('location','=',$location)->first()->zone_name;
@@ -129,7 +129,6 @@ class CloudStorage
         }
     }
 
-    
     /**
      * 删除单个文件
      * @param $key
@@ -263,7 +262,6 @@ class CloudStorage
         $uploadManager = new UploadManager();
         return $uploadManager->putFile($token,$key,$filePath,['x:token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjE2MDE3OSwiaXNzIjoiaHR0cDpcL1wvd3d3Lmdvb2JpcmQuY29tXC9hcGlcL3VzZXJzXC9hdXRoZW50aWNhdGUiLCJpYXQiOjE0NjE3Mzk5ODgsImV4cCI6MTQ2MTc0MzU4OCwibmJmIjoxNDYxNzM5OTg4LCJqdGkiOiIzMjk5MDg2MTAyNzVmNTlkYTc0ODFlNGRjMmZmYTI3OCJ9.7r_wmzlH_rg2yJmvUQgS98k4ltmqbZ6FKMaQovrUwP0']);
     }*/
-
     public function batchStat($keys)
     {
         $ops = BucketManager::buildBatchStat($this->bucket,$keys);
@@ -407,7 +405,7 @@ class CloudStorage
      */
     public function transcoding_tweet($tid,$bucket,$key,$width,$height,$choice,$notice)
     {
-        $pipeline = 'hivideo_alternative';
+        $pipeline = config('constants.pipeline_transcoding');
         $pfop = new PersistentFop($this->auth,$bucket,$pipeline,$notice);
         $ex = pathinfo($key, PATHINFO_EXTENSION);
         $fileKey = str_replace($ex,'m3u8',$key);
@@ -446,8 +444,6 @@ class CloudStorage
         }
 
     }
-
-
 
     public function join_transcoding($bucket,$key,$width,$height,$choice,$notice)
     {
@@ -491,7 +487,6 @@ class CloudStorage
 
     }
 
-
     /**
      * @param $image
      * @return string
@@ -514,7 +509,6 @@ class CloudStorage
         return $url;
     }
 
-
     public function signAgain($data)
     {
         $http = \Config::get('constants.HTTP');
@@ -524,7 +518,6 @@ class CloudStorage
 
         return $qi->sign($data);
     }
-
 
     /**
      * @param $key
@@ -565,7 +558,6 @@ class CloudStorage
         }
     }
 
-
     /**
      * @param $key
      * @param $newAddress
@@ -591,7 +583,6 @@ class CloudStorage
             return $width.'*'.$height;
         }
     }
-
 
     /**
      * @param $key
@@ -627,7 +618,6 @@ class CloudStorage
         }
     }
 
-
     //  暂时无用
     public function DRM($bucket,$key)
     {
@@ -642,11 +632,6 @@ class CloudStorage
         } else {
             return true;
         }
-
-
-
-
-
     }
 
     //  暂时无用
@@ -712,9 +697,6 @@ class CloudStorage
                 return true;
             }
         }
-
-
-
     }
 
     //  暂时无用
@@ -758,7 +740,6 @@ class CloudStorage
             return $id;
         }
     }
-
 
     /**
      * @param $bucket
@@ -853,19 +834,15 @@ class CloudStorage
         }
     }
 
-
-
-
-
      public function Mark($file,$mark_url,$id,$noti,$nickname)
      {
-         $accessKey = 'NVsOLitxzARKF2ZFcTdmqfPc82I3dRQYN3-CYqJY';
-         $secretKey = 'i_Jq4G9ijLS-YWsVJI3Gdfydn372pzgLZTHJ5ZTm';
+         $accessKey = config('constants.AK');
+         $secretKey = config('constants.SK');
          $auth = new Auth($accessKey, $secretKey);
-         $bucket = 'hivideo-video';
+         $bucket = config('constants.video_bucket');
          $url = $this->downloadUrl($file);
          $file_url = ltrim(parse_url($url)['path'], '/');
-         $pipeline = 'goobird-dev';
+         $pipeline = config('constants.pipeline_mark');
          $not = $noti;
          $pfop = new PersistentFop($auth, $bucket, $pipeline, $not);
 //        $mark_uri= $this->downloadUrl($mark_url);
@@ -876,7 +853,6 @@ class CloudStorage
          $fond = base64_urlSafeEncode('微软雅黑');
          $font_color = base64_urlSafeEncode('#FFFFFF');
          $font_size = 20;
-//        $fops = "avthumb/mp4/s/640x360/vb/1.4m/wmImage/".$waterImg."/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/10/wmConstant/0|saveas/".$save;
          $fops = "avthumb/mp4/s/" . $wxl . "/vb/1.4m/wmImage/" . $waterImg . "/wmText/" . $text . "/wmGravityText/NorthWest/wmFont/" . $fond . "/wmFontColor/" . $font_color . "/wmFontSize/" . $font_size . "/wmGravity/NorthWest/wmOffsetX/10/wmOffsetY/20/wmConstant/0|saveas/" . $save;
          list($id, $err) = $pfop->execute($file_url, $fops);
      }
@@ -897,7 +873,6 @@ class CloudStorage
              }
      }
 
-
      public function deleteFile($bucket,$key)
      {
          $bucketMgr = new BucketManager($this->auth);
@@ -911,7 +886,6 @@ class CloudStorage
          }
      }
 
-
     public function joint($id,$join_id,$notice = null,$status=1)
     {
        $tweet = Tweet::find($id);
@@ -921,30 +895,28 @@ class CloudStorage
         switch ($status){
            case 1:
                $join_video = JoinVideo::find($join_id);
-               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               $head_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $tail_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
            case 2:
                $join_video = JoinVideo::find($join_id);
                $head_url = false;
-               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               $tail_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
            case 3:
                $join_video = JoinVideo::find($join_id);
-               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $head_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
                $tail_url = false;
                break;
            default:
                $join_video = JoinVideo::find($join_id);
-               $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-               $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+               $head_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+               $tail_url = $this->downloadUrl(config('constants.video_bucket_url_test')).ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
                break;
        }
-       $bucket = 'hivideo-video';
-        $pipeline = 'hivideo_alternative';
+       $bucket = config('constants.video_bucket');
+        $pipeline = config('constants.pipeline_transcoding');
         $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
-//       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-//       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
        $encodedUrl1 = base64_urlSafeEncode( $head_url );
        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
@@ -956,57 +928,6 @@ class CloudStorage
        }
         list($id, $err) = $pfop->execute($file_url, $fops);
      }
-
-
-//    public function joint_tranding($id,$join_id,$notice = null,$status=1,$width,$height)
-//    {
-//        $tweet = Tweet::find($id);
-//        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
-//        $url = $this->downloadUrl($tweet->video);
-//        $file_url = ltrim(parse_url($url)['path'], '/');
-//        switch ($status){
-//            case 1:
-//                $join_video = JoinVideo::find($join_id);
-//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
-//                break;
-//            case 2:
-//                $join_video = JoinVideo::find($join_id);
-//                $head_url = false;
-//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
-//                break;
-//            case 3:
-//                $join_video = JoinVideo::find($join_id);
-//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-//                $tail_url = false;
-//                break;
-//            default:
-//                $join_video = JoinVideo::find($join_id);
-//                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-//                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
-//                break;
-//        }
-//        $bucket = 'hivideo-video';
-//        $pipeline = 'hivideo_alternative';
-//        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
-//        $head_url = ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-//        $a = 'tempvideo/'.ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/')
-//        $encodedUrl1 = base64_urlSafeEncode( $a );
-//        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
-//        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
-//        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
-//        if (!$tail_url){
-//            $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
-//        }elseif(!$head_url){
-//            $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
-//        }
-//        set_time_limit(0);
-//        $fops1 = 'avthumb/mp4/s/'.(int)($width).'x'.(int)($height).'|saveas/'.base64_urlSafeEncode($bucket.':'.$a);
-//        list($id, $err2) = $pfop->execute($head_url,$fops1);
-//        $message = $this->listenTranscoding($id,$bucket);
-//        list($id, $err) = $pfop->execute($file_url, $fops);
-//
-//    }
 
     public function joint_tranding($id,$join_id,$notice = null,$status=1,$width,$height,$choice,$filmfest_id)
     {
@@ -1248,38 +1169,6 @@ class CloudStorage
 
     }
 
-
-//    public function joint_tranding_ects($id,$notice = null,$width,$height)
-//    {
-//
-//
-//
-//        $file_url = '11.mp4';
-//
-//        $head_url = '00.mp4';
-//
-//        $bucket = 'hivideo-video-ects';
-//        $pipeline = 'hivideo_alternative';
-//        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
-////       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
-////       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
-//        $fileKey1 = 'tempvideo/'.$head_url;
-//        $a = "http://ozszh1ayh.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($fileKey1))['path'], '/');
-//        $encodedUrl1 = base64_urlSafeEncode( $a );
-//        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
-//
-//        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
-//
-//        set_time_limit(0);
-//        $fops1 = 'avthumb/mp4/s/'.(int)($width).'x'.(int)($height).'|saveas/'.base64_urlSafeEncode($bucket.':'.$fileKey1);
-//        list($id, $err2) = $pfop->execute($head_url,$fops1);
-//        $b = $this->listenTranscoding($id,$bucket);
-//        list($id, $err) = $pfop->execute($file_url, $fops);
-//
-//
-//
-//    }
-
     public function listenTranscoding($id,$bucket)
     {
         $pfop = new PersistentFop($this->auth,$bucket);
@@ -1294,16 +1183,60 @@ class CloudStorage
         }
     }
 
-
     public function yellowCheck($id,$url,$notice = null)
     {
-        $bucket = 'hivideo-video';
-        $pipeline = 'hivideo_alternative';
+        $bucket = config('constants.video_bucket');
+        $pipeline = config('constants.pipeline_transcoding');
         $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
         $url = $this->downloadUrl($url);
         $file_url = ltrim(parse_url($url)['path'], '/');
         $save = base64_urlSafeEncode($bucket .":&" .$id.'&&');
         $fops = "tupu-video/nrop/f/5/s/30"."|saveas/".$save;
+        list($id, $err) = $pfop->execute($file_url, $fops);
+    }
+
+    public function join_ects_test($id,$join_id,$notice = null,$status=1)
+    {
+        $tweet = Tweet::find($id);
+        if ( !$tweet )    return response()->json(['message'=>'bad_request'],403);
+        $url = $this->downloadUrl($tweet->video);
+        $file_url = ltrim(parse_url($url)['path'], '/');
+        switch ($status){
+            case 1:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+            case 2:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = false;
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+            case 3:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = false;
+                break;
+            default:
+                $join_video = JoinVideo::find($join_id);
+                $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+                $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+                break;
+        }
+        $bucket = 'test-video';
+        $pipeline = 'hivideo_drm';
+        $pfop = new PersistentFop($this->auth, $bucket,$pipeline,$notice);
+//       $head_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->head_video))['path'], '/');
+//       $tail_url = "http://oz77q7smo.bkt.clouddn.com/".ltrim(parse_url($this -> downloadUrl($join_video->tail_video))['path'], '/');
+        $encodedUrl1 = base64_urlSafeEncode( $head_url );
+        $encodedUrl2 = base64_urlSafeEncode( $tail_url );
+        $save = base64_urlSafeEncode($bucket .":&" . $id . '&&' . $file_url);
+        $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."/".$encodedUrl2."|saveas/".$save;
+        if (!$tail_url){
+            $fops = "avconcat/2/format/mp4/index/2/".$encodedUrl1."|saveas/".$save;
+        }elseif(!$head_url){
+            $fops = "avconcat/2/format/mp4/index/1/".$encodedUrl2."|saveas/".$save;
+        }
         list($id, $err) = $pfop->execute($file_url, $fops);
     }
 }

@@ -184,6 +184,15 @@ $api->version(['v1'],function($api){
                 // 取消订单
                 $api -> post('pay/cancel', 'PayController@cancel');
 
+                //查看我的账户金币
+                $api->get('/mygold','PayController@mygold');
+
+                //交易记录
+                $api->get('/order/history','PayController@orderHistory');
+
+                //对订单的操作
+                $api->post('/order/operate','PayController@operateOrder');
+
                 /**
                  * 动态Tweets api
                  */
@@ -1284,6 +1293,11 @@ $api->version(['v1'],function($api){
             ->where('id','[0-9]+')
             ->where('user_id','[0-9]+');
 
+        //接收微信充值的通知
+        $api->any('/wechat/notice','PayController@wechatnotice');
+
+        //允许充值的金币数量
+        $api->get('/pay/gold','PayController@goldnum');
     });
 
 });

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea464922b327e586feed9b5b225659dd",
+    "content-hash": "7cddff0d7bbc8e42c3a8daeab4ed8fa0",
     "packages": [
         {
             "name": "appstract/laravel-opcache",
@@ -1388,6 +1388,58 @@
                 "purchase"
             ],
             "time": "2017-05-10T08:19:53+00:00"
+        },
+        {
+            "name": "lokielse/omnipay-wechatpay",
+            "version": "v1.0.23",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lokielse/omnipay-wechatpay.git",
+                "reference": "d16156fc5086124cbaadbefa5b7e23e5d5fef757"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/lokielse/omnipay-wechatpay/d16156fc5086124cbaadbefa5b7e23e5d5fef757.zip",
+                "reference": "d16156fc5086124cbaadbefa5b7e23e5d5fef757",
+                "shasum": ""
+            },
+            "require": {
+                "omnipay/common": "~2.0"
+            },
+            "require-dev": {
+                "omnipay/tests": "~2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Omnipay\\WechatPay\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Loki Else",
+                    "email": "lokielse@gmail.com"
+                }
+            ],
+            "description": "Wechat gateway for Omnipay payment processing library",
+            "homepage": "https://github.com/lokielse/omnipay-wechatpay",
+            "keywords": [
+                "app",
+                "gateway",
+                "omnipay",
+                "pay",
+                "payment",
+                "php",
+                "purchase",
+                "sdk",
+                "wechat",
+                "微信支付"
+            ],
+            "time": "2018-01-25T02:37:49+00:00"
         },
         {
             "name": "maximebf/debugbar",
