@@ -64,6 +64,7 @@ use App\Models\User;
 use App\Models\UsersLikes;
 use App\Models\UsersUnlike;
 use App\Models\Word_filter;
+use App\Services\SendPrivateLetter;
 use Carbon\Carbon;
 use CloudStorage;
 use function foo\func;
@@ -968,7 +969,7 @@ class TweetController extends BaseController
 
                 $file = $request->get('video');
 
-                $notice = 'http://www.goobird.com/api/notification';
+                $notice = config('app.url').'/api/notification';
 
                 $nickname = User::find($id)->nickname;
 
@@ -1117,7 +1118,7 @@ class TweetController extends BaseController
     {
         try {
             // 所取数据页数
-            if(!is_numeric($page = $request -> get('page',1)))
+            if(is_null($page = $request -> get('page',1)))
                 return response()->json(['error' => 'bad_request'],403);
 
             // 获取所有关注的用户id
@@ -2937,26 +2938,15 @@ class TweetController extends BaseController
     {
         //获取动态信息
         $tweet = Tweet::find($id);
-//        \DB::table('tweet_to_qiniu')->where('tweet_id', $id)->update(['active' => 2]);
+
         //如果被删除则标记为检测通过
         if ($tweet->active === 3 || $tweet->active === 5 ){
-//            YellowCheck::where('tweet_id',$id)->update(['active'=>2]);
             die();
         }
+
         //封面路径
         $url = CloudStorage::ImageCheck($tweet->screen_shot);
-
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
-                    "Referer:http://www.goobird.com",
-            ],
-        ];
-
-        $context = stream_context_create($opts);
-        $image_qpulp = file_get_contents($url, false, $context);
-
+        $image_qpulp = $this->curlCheck($url);
         $image_qpulp_res = json_decode($image_qpulp, true);
 
         if ($image_qpulp_res['result']['label'] == 0) {
@@ -2972,19 +2962,7 @@ class TweetController extends BaseController
             ]);
 
             //创建私信
-            $tweet =  Tweet::find( $tweet->id);
-            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-            $time = time();
-            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-            PrivateLetter::create([
-                'from' => 10,
-                'to'    => $tweet->user_id,
-                'content'   => $tweet_content,
-                'user_type' => '1',
-                'read_from'  => '1',
-                'created_at' => $time,
-                'updated_at' =>$time,
-            ]);
+            $this->sendPrivateLetter($tweet);
 
         } else if ($image_qpulp_res['result']['label'] == 1) {
             // 七牛检测未通过  涉及色情
@@ -2998,21 +2976,7 @@ class TweetController extends BaseController
             ]);
 
 //            创建私信
-            $tweet =  Tweet::find( $tweet->id);
-//
-            $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-
-            $time = time();
-            $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-            PrivateLetter::create([
-                'from' => 10,
-                'to'    => $tweet->user_id,
-                'content'   => $tweet_content,
-                'user_type' => '1',
-                'read_from'  => '1',
-                'created_at' => $time,
-                'updated_at' =>$time,
-            ]);
+            $this->sendPrivateLetter($tweet);
 
         } else {
             $tweet_qiniu_check = TweetQiniuCheck::create([
@@ -3024,19 +2988,8 @@ class TweetController extends BaseController
         }
 
         //政治人物检测
-        $url_z = CloudStorage::qpolitician($tweet->screen_shot);  //tupian
-
-        $opts_2 = [
-            'http' => [
-                'method' => 'GET',
-                'header' => "Content-type:application/x-www-form-urlencoded\r\n" .
-                    "Referer:http://www.goobird.com",
-            ],
-        ];
-        $context = stream_context_create($opts_2);
-        $qpolitician = file_get_contents($url_z, false, $context);
-
-        //取数据
+        $url_z = CloudStorage::qpolitician($tweet->screen_shot);
+        $qpolitician = $this->curlCheck($url_z);
         $qpolitician_result = json_decode($qpolitician, true);
 
         //写入检测记录
@@ -3049,25 +3002,11 @@ class TweetController extends BaseController
                 Tweet::where('id', '=', $tweet->id)->update(['active' => 6]);
 
                 //创建私信
-                $tweet =  Tweet::find( $tweet->id);
-
-                $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-                $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-                $time = time();
-
-                PrivateLetter::create([
-                    'from' => 10,
-                    'to'    => $tweet->user_id,
-                    'content'   => $tweet_content,
-                    'user_type' => '1',
-                    'read_from'  => '1',
-                    'created_at' => $time,
-                    'updated_at' =>$time,
-                ]);
+                $this->sendPrivateLetter($tweet);
             }
         }
 
-        $notice = "http://hivideo.com/api/yellowcheck";
+        $notice = config('app.url')."/api/yellowcheck";
         CloudStorage::yellowCheck($id,$tweet->video,$notice);
     }
 
@@ -3100,4 +3039,25 @@ class TweetController extends BaseController
         CloudStorage::transcoding_tweet($tid,'hivideo-video',$file_url,$width,$height,1,$notice);
     }
 
+    private function sendPrivateLetter($tweet)
+    {
+        //创建私信
+        $tweet =  Tweet::find( $tweet->id );
+        $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
+        $tweet_content = $tweet_content
+            ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..."
+            : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+        SendPrivateLetter::send($tweet->user_id,$tweet_content,'Hi!Video-编辑');
+    }
+
+    private function curlCheck($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch,CURLOPT_URL,$url);
+         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_REFERER, config('app.url'));
+        $info = curl_exec($ch);
+        curl_close($ch);
+        return $info;
+    }
 }

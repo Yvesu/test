@@ -375,6 +375,10 @@ class CloudStorage
      */
     public function publicImage($a)
     {
+        if(empty($a)){
+            return $a;
+        }
+
         $http = \Config::get('constants.HTTP');
 
         $url = $http.$a;

@@ -15,7 +15,7 @@ class UsersTransformer extends Transformer
             'cover'        =>  $user->cover,
             'verify'       =>  $user->verify,
 //            'hash_avatar'  =>  $user->hash_avatar,
-            'signature'    =>  $user->signature,
+            'signature'    =>  $user->signature ? $user->signature :'',
             'verify_info'  =>  $user->verify_info,
         ];
     }

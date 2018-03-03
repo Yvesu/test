@@ -5,6 +5,7 @@ namespace App\Api\Controllers;
 use App\Models\NoExitWord;
 use App\Models\Tweet;
 use App\Models\TweetQiniuCheck;
+use App\Services\SendPrivateLetter;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -40,17 +41,10 @@ class YellowNoticeController extends Controller
                 \DB::table('tweet_qiniu_check')->where('id', '=', $tweet_id->id)->update(['tupu_video' => 1]);
 
                 $tweet_content = TweetContent::where('tweet_id',$tweet->id)->first()->content;
-                $tweet_content = $tweet_content ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..." : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
-                $time = time();
-                PrivateLetter::create([
-                    'from' => 10,
-                    'to'    => $tweet->user_id,
-                    'content'   => $tweet_content,
-                    'user_type' => '1',
-                    'read_from'  => '1',
-                    'created_at' => $time,
-                    'updated_at' =>$time,
-                ]);
+                $tweet_content = $tweet_content
+                    ? "您最新发送的动态<{$tweet_content}>可能涉及违规,我们将尽快为您处理..."
+                    : "您于 ".date('Y-m-d H:i:s')." 发布的动态可能涉及违规,我们将尽快为您处理..." ;
+                SendPrivateLetter::send($tweet->user_id,$tweet_content,'Hi!Video-编辑');
             }
         }
     }

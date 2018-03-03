@@ -14,6 +14,7 @@ use App\Models\PrivateLetter;
 use App\Models\TweetActivity;
 use App\Models\Activity;
 use App\Models\User\UserIntegral;
+use App\Services\SendPrivateLetter;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Validator;
@@ -135,16 +136,7 @@ class CompetitionController extends BaseController
             //生成私信通知
             $date = date('Y-m-d H:i:s');
             $content = "您于".$date."创建竞赛：".$arr['theme']."，成功支付".$bonus."金币。";
-            $time = time();
-            PrivateLetter::create([
-                'from' => 9,
-                'to'    => $id,
-                'content'   => $content,
-                'user_type' => '1',
-                'read_from'  => '1',
-                'created_at' => $time,
-                'updated_at' =>$time,
-            ]);
+            SendPrivateLetter::send($id,$content,'Hi!Video-财务');
 
             if ($competition && $result_decrement && $order){
                 \DB::commit();

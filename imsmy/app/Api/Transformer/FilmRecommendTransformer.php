@@ -37,7 +37,7 @@ class FilmRecommendTransformer extends Transformer
 
         return [
             'id'            =>   $item->id,
-            'name'          =>   $item->filmfest->name,
+            'name'          =>   $item->filmfest->content,
             'comment'       =>   $item->filmfest->des,
             'cover'         =>   CloudStorage::downloadUrl( $item->filmfest->cover),
             'url'           =>   $item->filmfest->url,

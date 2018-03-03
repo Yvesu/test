@@ -7,7 +7,9 @@ use App\Models\CashGoldConversion;
 use App\Models\CashRechargeOrder;
 use App\Models\NoExitWord;
 use App\Models\PayType;
+use App\Models\PrivateLetter;
 use App\Models\User;
+use App\Services\SendPrivateLetter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Omnipay\Omnipay;
@@ -197,82 +199,62 @@ class PayController extends BaseController
         ])->send();
 
         if ($response->isPaid()) {
+            //转为数组
             $payData = $response->getRequestData();
+            //查询到订单
             $order = CashRechargeOrder::where('order_number',$payData['out_trade_no'])->first();
+            //如果订单不存在
             if (empty($order)) return;
+
+            //支付成功
             if ($payData['return_code'] === 'SUCCESS' && $order->status === 0 ){
                 \DB::beginTransaction();
+                $gold_num = CashGoldConversion::where('money', (int)$payData['total_fee'])-> first();
                 $order->status = 1;
                 $order->money = (int)$payData['total_fee'];
-                $order->gold_num =  CashGoldConversion::where('money', (int)$payData['total_fee'])-> first()->gold_num;
+                $order->gold_num =  $gold_num ->gold_num;
                 $result = $order->save();                   //修改订单状态
                 if ($result){
                     \DB::commit();
-                    $order = CashRechargeOrder::where('order_number',$payData['out_trade_no'])->first();
-                    $user_integral = User\UserIntegral::where('user_id',$order->user_id)->first();  //更新用户的积分
-                    if ($user_integral){            //用户的积分不为0
-                        \DB::beginTransaction();
-                        $user_integral->integral_count = $user_integral + $order->gold_num;
+
+                    //查询更新后的数据
+                    $order_server = CashRechargeOrder::find($order->id);
+
+                    //私信通知
+                    $date = date('Y-m-d H:i:s');
+                    $content = "您于".$date."成功充值". $gold_num ->gold_num ."金币。";
+                    SendPrivateLetter::send($order_server->user_id,$content,'Hi!Video-财务');
+
+                    //更新用户的积分
+                    $user_integral = User\UserIntegral::where('user_id',$order_server->user_id)->first();
+                    //用户充值过积分
+                    if ($user_integral){
+                        User\UserIntegral::where('user_id',$order_server->user_id)->increment('integral_count',$gold_num->gold_num);
                         $user_integral->update_at = time();
-                        $user_integral_result = $user_integral->save();
-                        if ($user_integral_result){
+                        $user_integral->save();
 
-
-                            //创建充值记录
-                            \DB::table('user_integral_income_log')->create([
-                                'user_id'   => $order->user_id,
-                                'up_count'  =>  $order->gold_num,
-                                'up_number' => $order->order_number,
-                                'status'    =>  1,
-                                'create_at' =>time(),
-                            ]);
-                            \DB::commit();
-                        }else{
-                            Log::info(json_encode($payData));
-                            \DB::rollBack();
-
-                        }
                     }else{                      //没有用户积分的数据
                         \DB::beginTransaction();
-                        $create_user_intergal = User\UserIntegral::create([
-                            'user_id'           => $order->user_id,
-                            'integral_count'    => $order->gold_num,
+                        User\UserIntegral::create([
+                            'user_id'           => $order_server->user_id,
+                            'integral_count'    => $gold_num->gold_num,
                             'create_at'         => time(),
                             'update_at'         => time(),
                         ]);
-
-                        if ($create_user_intergal){
-
-                            //创建充值记录
-                            \DB::table('user_integral_income_log')->create([
-                                'user_id'   => $order->user_id,
-                                'up_count'  =>  $order->gold_num,
-                                'up_number' => $order->order_number,
-                                'status'    =>  1,
-                                'create_at' =>time(),
-                            ]);
-                            \DB::commit();
-                        }else{
-
-                            Log::info(json_encode($payData));
-                            \DB::rollBack();
-                        }
                     }
                 }else{
                     \DB::rollBack();
                     Log::info(json_encode($payData));
-                    CashRechargeOrder::where('order_number',$payData['out_trade_no'])->update(['status'=>2]);
+                    CashRechargeOrder::where('order_number',$payData['out_trade_no'])->update(['status'=>3]);
                 }
             }
-
-
         }else{
             //pay fail
             $payData = $response->getRequestData();
             $order = CashRechargeOrder::where('order_number',$payData['out_trade_no'])->first();
             if (empty($order)) return;
             if ($payData['return_code'] === 'FAIL' && $order->status === 0 ){
-                $order->status = 2;
+                $order->status = 3;
                 $order->save();
             }
         }
@@ -375,7 +357,7 @@ class PayController extends BaseController
         //时间差
         $mistiming = time() - $order->time_add;
 
-        if ($mistiming <= 300) return response()->json(['message'=>'bad request'],403);
+        if ($mistiming <= 300) return response()->json(['message'=>'bad request'],406);
 
         //关闭微信端订单
         $gateway    = Omnipay::create('WechatPay');

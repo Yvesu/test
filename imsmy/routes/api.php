@@ -1140,7 +1140,7 @@ $api->version(['v1'],function($api){
                 $api->post('/font/testresult','MakeFontController@testResult');
 
                 //各种支付
-                $api->post('/pay', 'MakeFilterController@pay');
+                $api->post('/pay', 'PayTypeController@pay');
 
                 //创建收藏
                 $api->post('/user/collect','UserCollectController@createCollect');

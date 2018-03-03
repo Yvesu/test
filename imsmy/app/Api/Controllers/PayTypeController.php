@@ -54,7 +54,6 @@ class PayTypeController extends BaseController
                 //滤镜
                 return $this->audio($id,$user_Id);
 
-
             case 'audioeffect' :
                 //滤镜
                 return $this->audioeffect($id,$user_Id);

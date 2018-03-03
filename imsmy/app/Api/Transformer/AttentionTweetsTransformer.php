@@ -54,7 +54,7 @@ class AttentionTweetsTransformer extends Transformer
             'lat'               =>      $tweet->lat ?: '',
             'duration'          =>      $tweet->duration,
             'created_at'        =>      strtotime($tweet->created_at),
-            'phone'             =>      $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
+            'phone'             =>      is_null($tweet->hasOnePhone)?  null : $this->tweetPhoneTransformer->transform($tweet->hasOnePhone),
             'phone_id'          =>      $tweet->phone_id,
             'collections'       =>      $user ? (UserCollections::where('user_id',$user->id)->where('status',1)->where('type',3)->where('type_id',$tweet->id)->first() ? 1 : 0) : 0,
             'is_download'       =>      $tweet->is_download,

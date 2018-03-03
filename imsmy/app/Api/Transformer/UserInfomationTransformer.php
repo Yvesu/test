@@ -33,7 +33,7 @@ class UserInfomationTransformer extends Transformer
             'nickname'              =>  $user -> nickname,
             'avatar'                =>  CloudStorage::downloadUrl($user -> avatar),
             'title'                 =>  $user -> title,
-            'signature'             =>  $user -> signature,
+            'signature'             =>  $user -> signature ? $user -> signature :'',
             'sex'                   =>  $user -> sex,
             'location'              =>  $user -> location,
             'follower_count'        =>  $user -> fans_count,                       // 粉丝
