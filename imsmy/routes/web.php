@@ -80,12 +80,12 @@ Route::group(['namespace'=>'NewWeb'],function (){
      * 首页
      */
 //    Route::get('/','TestIndexController@index');
-    Route::get('/bcsff2302226',function (){
-        return view('Hivideo');
+    Route::get('/bcsff230222612',function (){
+        return view('stick');
     });
 
     Route::get('/',function (){
-        return view('stick');
+        return view('Hivideo');
     });
 
     Route::get('/user',function (){
@@ -104,7 +104,11 @@ $api -> version('v1',function($api) {
 
 //    $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'api'],function ($api){
     $api -> post('notice_transcoding','App\Http\Controllers\NewWeb\Application\ApplicationController@qiepian');
+    $api -> post('test-callback','App\Http\Controllers\NewWeb\TestController@testCallback');
     $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
+
+        //  首页北京大学生电影节开赛倒计时
+        $api -> post('filmfest/open-time','User\FilmfestController@filmfestOpenTime');
 
         /**
          * 测试页面登录
@@ -132,6 +136,11 @@ $api -> version('v1',function($api) {
         // 验证管理员的登录信息
         $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
 //        $api->group(['prefix'=>'test','middleware' => ['jwt.auth']],function($api) {
+
+            /**
+             * token是否失效
+             */
+            $api -> post('detection/token','TestLoginController@detectionToken');
 
             /**
              * 七牛云的路由

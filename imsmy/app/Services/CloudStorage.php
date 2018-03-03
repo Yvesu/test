@@ -568,8 +568,10 @@ class CloudStorage
      */
     public function saveCover($key,$newAddress,$width,$height)
     {
-        $bucket = 'hivideo-video';
-        $fileBucket = 'hivideo-img';
+//        $bucket = 'hivideo-video';
+        $bucket = 'test-video';
+//        $fileBucket = 'hivideo-img';
+        $fileBucket = 'test-img';
         $pipeline = 'goobird-dev';
         $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
         $pipeline = 'hivideo_drm';
@@ -750,13 +752,13 @@ class CloudStorage
      * @return bool
      * 转码
      */
-    public function transcoding($bucket,$key,$width,$height,$choice,$notice,$id)
+    public function transcoding($bucket,$key,$width,$height,$choice)
     {
         $pipeline = 'hivideo_alternative';
-        $pfop = new PersistentFop($this->auth,$bucket,$pipeline,$notice);
+        $pfop = new PersistentFop($this->auth,$bucket,$pipeline);
         $ex = pathinfo($key, PATHINFO_EXTENSION);
 //        $fileKey = $key.'.m3u8';
-        $fileKey = 'adapt&'.$id.'&&'.str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
+        $fileKey = str_replace('.'.$ex,'_'.$ex.'.m3u8',$key);
         $fops ='adapt/m3u8/multiResolution/';
         $fops .= (int)($width/3).':'.(int)($height/3).',';
         $fops .= (int)($width/2).':'.(int)($height/2).',';

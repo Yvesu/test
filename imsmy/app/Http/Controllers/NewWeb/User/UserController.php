@@ -32,7 +32,7 @@ class UserController extends Controller
             $user_id = \Auth::guard('api')->user()->id;
             $user_avatar = 'http://'.User::find($user_id)->avatar;
             $user_nickname = User::find($user_id)->nickname;
-            $data = [['avatar'=>$user_avatar],['nickname'=>$user_nickname]];
+            $data = ['avatar'=>$user_avatar,'nickname'=>$user_nickname];
             return response()->json(['data'=>$data],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],200);
@@ -373,16 +373,37 @@ class UserController extends Controller
                     }else{
                         $prefix_tweet = '';
                     }
-                    $video = $v->type==3?$this->protocol.$v->transcoding_video:$this->protocol.$v->video;
+                    if($v->type==3){
+                        if($v->video){
+                            $video = $this->protocol.$v->video;
+                        }
+                        if (!is_null($v->high_video)){
+                            $video = $this->protocol.$v->high_video;
+                        }
+
+                        if (!is_null($v->norm_video)){
+                            $video = $this->protocol.$v->norm_video;
+                        }
+                        if ($v->video_m3u8){
+                            $video = $this->protocol.$v->video_m3u8;
+                        }
+                        if ($v->transcoding_video){
+                            $video = $this->protocol.$v->transcoding_video;
+                        }
+                    }else{
+                        $video = $this->protocol.$v->video;
+                    }
+//                    $video = $v->type==3?$this->protocol.$v->transcoding_video:$this->protocol.$v->video;
                     //  临时的
                     $production = $v->tweetProduction()->first();
                     if($production){
                         $production = $production->id;
                         $status = FilmfestsProductions::where('filmfests_id',1)->where('tweet_productions_id',$production)->first()->videoStatus;
                         $filmfest_id = FilmfestsProductions::where('tweet_productions_id',$production)->first()->filmfests_id;
-                        $filmfest = Filmfests::select(['period','name','time_end'])->where('id',$filmfest_id)->first();
+                        $filmfest = Filmfests::select(['period','name','time_end','titles_of_film'])->where('id',$filmfest_id)->first();
                         $label = '参与第'.$filmfest->period.$filmfest->name;
                         $application = Application::where('production_id',$production)->where('filmfests_id',$filmfest_id)->first();
+                        $title = 'http://'.$filmfest->titles_of_film;
                         if($application){
                             $number = $application->number;
                         }else{
@@ -405,18 +426,19 @@ class UserController extends Controller
                             $is_block = 0;
                         }
                     }else{
+                        $title = '';
                         $status = 1;
                         $statusDes = '正常';
                         $label = '';
                         $number = '';
                         $is_block = 0;
+                        $filmfest_id = '';
                     }
                     $cover = $v->screen_shot?$this->protocol.$v->screen_shot:'';
                     $duration = floor((($v->duration)/60));
                     $duration .= ':';
                     $duration .= (($v->duration)%60)<10?'0'.($v->duration)%60:($v->duration)%60;
                     $avatar = $this->protocol.$v->belongsToUser->avatar;
-
                     $tempData = [
                         'grade'=>$grade,
                         'userName'=>$userName,
@@ -439,6 +461,8 @@ class UserController extends Controller
                         'label'=>$label,
                         'number'=>$number,
                         'is_block'=>$is_block,
+                        'title'=>$title,
+                        'filmfest_id'=>$filmfest_id,
                     ];
 
                     array_push($data,$tempData);
@@ -728,7 +752,7 @@ class UserController extends Controller
             if($time == 0){
                $timeST = 0;
                $timeET= 0;
-               $order = 'desc';
+               $order = 'asc';
                $by = 'id';
                $symbolST = '>';
                $symbolET = '>';
@@ -770,7 +794,7 @@ class UserController extends Controller
             }else{
                 $timeST = 0;
                 $timeET= 0;
-                $order = 'desc';
+                $order = 'asc';
                 $by = 'id';
                 $symbolST = '>';
                 $symbolET = '>';
