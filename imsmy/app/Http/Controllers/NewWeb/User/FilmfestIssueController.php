@@ -1327,7 +1327,7 @@ class FilmfestIssueController extends Controller
             if($message2[0]['code']==200){
 //                DB::beginTransaction();
                 $filmfest = Filmfests::find($filmfest_id);
-                $filmfest -> warter_mark = "http://img.cdn.hivideo.com/".$address;
+                $filmfest -> warter_mark = config('constants.image_bucket_url').'/'.$address;
                 $filmfest -> time_update = time();
                 $filmfest -> save();
 

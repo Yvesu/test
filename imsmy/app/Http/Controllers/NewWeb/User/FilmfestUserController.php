@@ -194,7 +194,7 @@ class FilmfestUserController extends Controller
                         $des = $v->production_des;
                         $name = $v->name;
                         $number = $v->number;
-                        $poster = $v->production()->first()->poster?'img.cdn.hivideo.com/'.$v->production->poster:$v->production()->first()->tweet()->first()->screen_shot;
+                        $poster = $v->production()->first()->poster?config('constants.image_bucket_url').'/'.$v->production->poster:$v->production()->first()->tweet()->first()->screen_shot;
                         if((int)($v->productionTweet->status) === 4){
                             if((int)($v->productionTweet->again_select_status) === 1){
                                 $status = '通过';
@@ -335,7 +335,7 @@ class FilmfestUserController extends Controller
                 ],
             ];
             $duration = floor(($production->movie_clips_duration)/60).':'.($production->movie_clips_duration)%60;
-            $screen_shot = 'http://img.cdn.hivideo.com/'.$production->movie_clips_screen_shot;
+            $screen_shot = 'http://'.config('constants.image_bucket_url').'/'.$production->movie_clips_screen_shot;
             return response()->json(['data'=>$data,'duration'=>$duration,'screen_shot'=>$screen_shot],200);
         }catch (ModelNotFoundException $q){
             return response()->json(['error'=>'not_found'],404);
@@ -519,7 +519,7 @@ class FilmfestUserController extends Controller
                 })->first();
             $type = $request->get('type',1);
             if($production){
-                $poster = $production->poster?'img.cdn.hivideo.com/'.$production->poster:$production->tweet()->first()->screen_shot;
+                $poster = $production->poster?config('constants.image_bucket_url').'/'.$production->poster:$production->tweet()->first()->screen_shot;
                 $application =  Application::find($application_id);
                 if((int)$type === 1){
                     $text = $application->production_des;
@@ -696,7 +696,7 @@ class FilmfestUserController extends Controller
             $contact_way = rtrim($contact_way,'、');
             $schoolAndMajor = $application->university_name.' '.$application->major;
             $communication_address = $application->communication_address_country.' '.$application->communication_address_province.' '.$application->communication_address_city.' '.$application->communication_address_county.' '.$application->communication_detail_address;
-            $papers = 'http://img.cdn.hivideo.com/'.$application->papers;
+            $papers = 'http://'.config('constants.image_bucket_url').'/'.$application->papers;
             $pdf->Ln(5);//换行符
             $html = "
             <h2 align=\"center\">第25届北京大学生电影节报名表</h2>

@@ -25,6 +25,9 @@ class UserController extends Controller
 
     private $protocol = 'http://';
 
+    const UseCdnVideo = 'test.v.cdn.hivideo.com/';
+    const UseCdnimg = 'test.img.cdn.hivideo.com/';
+
 
     public function avatarNickname(Request $request)
     {
