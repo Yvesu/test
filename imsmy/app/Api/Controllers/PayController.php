@@ -9,6 +9,7 @@ use App\Models\NoExitWord;
 use App\Models\PayType;
 use App\Models\PrivateLetter;
 use App\Models\User;
+use App\Models\WechatOrderNotice;
 use App\Services\SendPrivateLetter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -206,8 +207,13 @@ class PayController extends BaseController
             //如果订单不存在
             if (empty($order)) return;
 
+            //记录微信的返回消息
+            $wechatOrderNotice = $payData;
+            $wechatOrderNotice['order_id'] = $order->id;
+            WechatOrderNotice::create($wechatOrderNotice);
+
             //支付成功
-            if ($payData['return_code'] === 'SUCCESS' && $order->status === 0 ){
+            if ($payData['result_code'] === 'SUCCESS' && $order->status === 0 ){
                 \DB::beginTransaction();
                 $gold_num = CashGoldConversion::where('money', (int)$payData['total_fee'])-> first();
                 $order->status = 1;
@@ -224,6 +230,16 @@ class PayController extends BaseController
                     $date = date('Y-m-d H:i:s');
                     $content = "您于".$date."成功充值". $gold_num ->gold_num ."金币。";
                     SendPrivateLetter::send($order_server->user_id,$content,'Hi!Video-财务');
+
+                    //创建用户积分收入记录
+                    User\UserIntegralInCome::create([
+                            'user_id'=>$order_server->user_id,
+                            'up_number' =>$order_server->order_number,
+                            'up_count'  => $order_server->gold_num,
+                            'up_type'   => 'wechat',
+                            'status'    => 1,
+                            'create_at' => time(),
+                    ]);
 
                     //更新用户的积分
                     $user_integral = User\UserIntegral::where('user_id',$order_server->user_id)->first();

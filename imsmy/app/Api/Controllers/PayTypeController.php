@@ -494,12 +494,12 @@ class PayTypeController extends BaseController
 
         $record_result = User\UserIntegralExpend::create($arr);
 
-        if ($deduct_result && $record_result) {
+       if ($deduct_result && $record_result) {
             //确认操作
             \DB::commit();
 
             return response()->json(['message' => 'success'], 200);
-        }else{
+       }else{
 
             $arr = [
                 'user_id'       => $user_Id,
@@ -517,6 +517,6 @@ class PayTypeController extends BaseController
             //回滚
             \DB::rollBack();
             return response()->json(['message' => 'failed'], 500);
-        }
+       }
     }
 }

@@ -16,6 +16,7 @@ class UserIntegralExpend extends Model
         'pay_reason',
         'status',
         'create_at',
+        'type',
     ];
 
     public  $timestamps = false;

@@ -28,7 +28,7 @@ class QiNiuNotificationController extends BaseController
         if ($res ===0 ){
             $keyword= json_decode($NotifyData)->items[0]->key;
             $tweet_id=getNeedBetween($keyword, '&' , '&&' );
-            $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+            $new_url = config('constants.video_bucket_url').'/'.json_decode($NotifyData)->items[0]->key;
             $time = time();
 
             \DB::beginTransaction();
@@ -59,7 +59,7 @@ class QiNiuNotificationController extends BaseController
         if ($res === 0 ){
             $keyword= json_decode($NotifyData)->items[0]->key;
             $tweet_id=getNeedBetween($keyword, '&' , '&&' );
-            $new_url = 'v.cdn.hivideo.com/'.$keyword;
+            $new_url = config('constants.video_bucket_url').'/'.$keyword;
             $res = Tweet::find($tweet_id)->update(['join_video'=>$new_url]);
             if ($res){
                 TweetJoin::where('tweet_id',$tweet_id)->update(['active'=>'1']);
@@ -68,8 +68,8 @@ class QiNiuNotificationController extends BaseController
                 $width = substr($shot_width_height,0,strrpos($shot_width_height,'*'));
                 $height = substr($shot_width_height,strrpos($shot_width_height,'*')+1,strlen($shot_width_height));
                 if (  $width >= 1280  || $height >= 720   ){
-                    $notice = 'http://www.hivideo.com/api/notification/trans';
-                    CloudStorage::join_transcoding('hivideo-video',$keyword,$width,$height,1,$notice);
+                    $notice = config('app.url').'/api/notification/trans';
+                    CloudStorage::join_transcoding(config('constants.video_bucket'),$keyword,$width,$height,1,$notice);
                 }
             }
         }
@@ -84,25 +84,25 @@ class QiNiuNotificationController extends BaseController
             switch ($key){
                 case strstr($key,'norm'):
                     $tweet_id=getNeedBetween($key, '&' , '&&' );
-                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_url = config('constants.video_bucket_url').'/'.json_decode($NotifyData)->items[0]->key;
                     $new_res = Tweet::find($tweet_id)->update(['norm_video'=>$new_url]);
                     if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
                     break;
                 case strstr($key,'adapt'):
                     $tweet_id=getNeedBetween($key, '&' , '&&' );
-                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_url = config('constants.video_bucket_url').'/'.json_decode($NotifyData)->items[0]->key;
                     $new_res = Tweet::find($tweet_id)->update(['transcoding_video'=>$new_url]);
                     if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
                     break;
                 case strstr($key,'original'):
                     $tweet_id=getNeedBetween($key, '&' , '&&' );
-                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_url = config('constants.video_bucket_url').'/'.json_decode($NotifyData)->items[0]->key;
                     $new_res = Tweet::find($tweet_id)->update(['video_m3u8'=>$new_url]);
                     if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
                     break;
                 case strstr($key,'high'):
                     $tweet_id= getNeedBetween($key, '&' , '&&' );
-                    $new_url = 'v.cdn.hivideo.com/'.json_decode($NotifyData)->items[0]->key;
+                    $new_url = config('constants.video_bucket_url').'/'.json_decode($NotifyData)->items[0]->key;
                     $new_res = Tweet::find($tweet_id)->update(['high_video'=>$new_url]);
                     if ($new_res){TweetTrasf::where('tweet_id',$tweet_id)->update(['active'=>'1']);}
                     break;

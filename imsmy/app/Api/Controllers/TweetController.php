@@ -936,23 +936,12 @@ class TweetController extends BaseController
 
 //            大于10分钟  人工审核
             if( (int)$request->get('duration') >= 900){
-                //写入待检测
-//                需要人工审核
+
                 Tweet::find($tweet->id)->update(['active'=>0]);
 
-                $time = time();
                 $tweet_content =  "您最新发送的动态<{$content}>动态长度超出规定范畴,我们将尽快为您处理...";
-                PrivateLetter::create([
-                    'from' => 10,
-                    'to'    => $tweet->user_id,
-                    'content'   => $tweet_content,
-                    'user_type' => '1',
-                    'created_at' => $time,
-                    'updated_at' =>$time,
-                ]);
-
+                SendPrivateLetter::send($tweet->user_id,$tweet_content,'Hi!Video-编辑');
             }
-
 
 //            //当用户允许下载时添加下载地址的水印
 //            if((int)$request->get('is_download',1)===1){
