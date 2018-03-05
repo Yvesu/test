@@ -25,5 +25,5 @@ return [
     'sm_bucket'                     => 'test-file',
     'sm_bucket_url'                 => 'test.file.cdn.hivideo.com',
     'pipeline_mark'                 =>  'goobird-dev',
-    'pipeline_transcoding'          =>  'hivideo_alternative',
+    'pipeline_transcoding'          =>  'hivideo_drm',
 ];

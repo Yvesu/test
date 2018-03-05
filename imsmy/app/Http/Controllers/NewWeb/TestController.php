@@ -4,6 +4,7 @@ namespace App\Http\Controllers\NewWeb;
 
 use App\Http\Middleware\FilmfestUserRole;
 use App\Models\Filmfest\Application;
+use App\Models\Filmfest\TweetProductionApplication;
 use App\Models\FilmfestUser\FilmfestUserReviewChildLog;
 use App\Models\QiniuTest\QiniuCloudTest;
 use App\Models\Tweet;
@@ -205,11 +206,12 @@ class TestController extends Controller
     {
         $bucket = 'test';
         $id = 1;
-        $width = 0;
-        $height = 0;
-        $notice = 'http://www.goobird.com/api/test-callback';
-        $key = 'tweet/video/user/1000437/1519807995_1280*720.mp4';
-        CloudStorage::join_ects_test($id,$join_id,$notice = null,$status=1);
+        $width = 1280;
+        $height = 720;
+        $notice = 'http://www.goobird.com/api/test-callback2';
+        $key = 'test_title';
+        $join_id = 16;
+        CloudStorage::change_resolution($join_id,$bucket,$width,$height,$key,$notice);
 //        CloudStorage::transcoding_test($id,$bucket,$key,$width,$height,$notice);
 //        $a = stripos('adapt/m3u8/gsadfasg','adapt/m3u8');
 //        var_dump($a);
@@ -226,7 +228,7 @@ class TestController extends Controller
         if ($res === 0 ) {
             $key = json_decode($NotifyData)->items[0]->key;
             $tweet_id = getNeedBetween($key, '&', '&&');
-            $new_url = 'v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
+            $new_url = 'test.v.cdn.hivideo.com/' . json_decode($NotifyData)->items[0]->key;
             $new_res = new QiniuCloudTest;
             $new_res -> content = '视频拼接成功，新文件地址为'.$new_url;
             $new_res -> type = '视频拼接';
@@ -258,6 +260,39 @@ class TestController extends Controller
             $new_res -> time_add = time();
             $new_res -> time_update = time();
             $new_res -> save();
+        }
+    }
+
+    public function testCallback2()
+    {
+        $NotifyData = file_get_contents("php://input");
+        $res = json_decode($NotifyData)->code;
+        if($res == 0){
+            $key = json_decode($NotifyData)->items[0]->key;
+            $application_id = getNeedBetween($key, '&', '&&');
+            $application = Application::find($application_id);
+            $production_id = $application->production_id;
+            $production = $application->production()->first();
+            $tweet = $production->tweet()->first();
+            $tweet_id = $tweet->id;
+            $productionApplication = TweetProductionApplication::where('tweet_production_id',$production_id)
+                ->where('application_id',$application_id)->first();
+            $productionApplication -> status =  1;
+            $productionApplication -> time_update = time();
+            switch ($key){
+                case strstr($key,'title');
+                    $productionApplication -> title_temp_name = json_decode($NotifyData)->items[0]->key;
+                    break;
+                case strstr($key,'tail');
+                    $productionApplication -> tail_temp_name = json_decode($NotifyData)->items[0]->key;
+                    break;
+                default:
+                    break;
+            }
+            $productionApplication -> save();
+            $productionApplication_id = $productionApplication->id;
+            $notice = 'http://www.goobird.com/api/test-callback';
+            CloudStorage::join_ects_test($tweet_id,$productionApplication_id,$notice,$status=3);
         }
     }
 }

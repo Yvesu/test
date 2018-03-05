@@ -81,11 +81,11 @@ Route::group(['namespace'=>'NewWeb'],function (){
      */
 //    Route::get('/','TestIndexController@index');
     Route::get('/bcsff230222612',function (){
-        return view('stick');
+        return view('Hivideo');
     });
 
     Route::get('/',function (){
-        return view('Hivideo');
+        return view('stick');
     });
 
     Route::get('/user',function (){
@@ -103,8 +103,12 @@ Route::get('index1','NewWeb\Test\ProductionController@index1');
 $api -> version('v1',function($api) {
 
 //    $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'api'],function ($api){
+    //  报名表上传作品回调
     $api -> post('notice_transcoding','App\Http\Controllers\NewWeb\Application\ApplicationController@qiepian');
+    //  七牛测试接口回调1
     $api -> post('test-callback','App\Http\Controllers\NewWeb\TestController@testCallback');
+    //  七牛测试接口回调2
+    $api -> post('test-callback2','App\Http\Controllers\NweWeb\TestController@testCallback2');
     $api -> group(['namespace' => 'App\Http\Controllers\NewWeb','middleware' => 'test.user.auth'],function ($api){
 
         //  首页北京大学生电影节开赛倒计时
